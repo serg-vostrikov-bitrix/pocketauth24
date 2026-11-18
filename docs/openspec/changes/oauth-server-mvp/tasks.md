@@ -11,14 +11,14 @@
 
 ## 3. Portal registration and authentication
 
-- [ ] 3.1 Implement `POST /oauth/register/` with allowlist check, new and repeated registration
-- [ ] 3.2 Implement service-credential authentication for `POST /rest/{method}`, method dispatch with `invalid_client` and `ERROR_METHOD_NOT_FOUND` errors, and `result` / `error` response helpers
+- [x] 3.1 Implement `POST /oauth/register/` with allowlist check, new and repeated registration
+- [x] 3.2 Implement service-credential authentication for `POST /rest/{method}`, method dispatch with `invalid_client` and `ERROR_METHOD_NOT_FOUND` errors, and `result` / `error` response helpers
 
 ## 4. Application registry
 
 - [ ] 4.1 Implement `application.add` with `local.*` client_id format
 - [ ] 4.2 Implement `application.update` and `application.delete` with ownership check; delete cascades tokens
-- [ ] 4.3 Implement `application.list` returning an empty list
+- [x] 4.3 Implement `application.list` returning an empty list
 
 ## 5. Token service
 

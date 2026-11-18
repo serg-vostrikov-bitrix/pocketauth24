@@ -1095,7 +1095,7 @@ git commit -m "feat: add storage schema and portal registration with allowlist"
 
 ### Task 4: Portal RPC authentication, method dispatch and `application.list`
 
-- [ ] Task 4 complete: Portal RPC authentication, method dispatch and `application.list`
+- [x] Task 4 complete: Portal RPC authentication, method dispatch and `application.list`
 
 tasks.md: **3.2**, **4.3**, and the re-registration scenario of **3.1**
 
@@ -1114,7 +1114,7 @@ tasks.md: **3.2**, **4.3**, and the re-registration scenario of **3.1**
   - `methods/applications.ts`: `applicationList: Method`.
   - `test/helpers.ts`: `type RpcResponse<T> = { status: number; body: { result?: T; error?: string; error_description?: string } }`; `rpc<T = unknown>(app, creds: Credentials, method: string, body?: Record<string, unknown>): Promise<RpcResponse<T>>`.
 
-- [ ] **Step 1: Add the `rpc` helper to `test/helpers.ts`** (append)
+- [x] **Step 1: Add the `rpc` helper to `test/helpers.ts`** (append)
 
 ```ts
 export type RpcResponse<T> = {
@@ -1137,7 +1137,7 @@ export async function rpc<T = unknown>(
 }
 ```
 
-- [ ] **Step 2: Write the failing tests**
+- [x] **Step 2: Write the failing tests**
 
 Append to `test/integration/portal-registration.test.ts` (update imports: add `applications` from `../../src/schema.js` and `registerPortal`, `rpc` from `../helpers.js`), inside `describe('portal-registration')`:
 ```ts
@@ -1219,12 +1219,12 @@ describe('application-registry', () => {
 });
 ```
 
-- [ ] **Step 3: Run to verify they fail**
+- [x] **Step 3: Run to verify they fail**
 
 Run: `npx vitest run test/integration/portal-registration.test.ts test/integration/application-registry.test.ts`
 Expected: the 5 new tests FAIL (404 / no `error` field); the 2 Task 3 tests still PASS.
 
-- [ ] **Step 4: Add method types to `src/bitrix.ts`** (append; add imports `FastifyBaseLogger` from `fastify`, `type Config` from `./config.js`, `type Db` from `./db.js`, `type Portal` from `./schema.js`)
+- [x] **Step 4: Add method types to `src/bitrix.ts`** (append; add imports `FastifyBaseLogger` from `fastify`, `type Config` from `./config.js`, `type Db` from `./db.js`, `type Portal` from `./schema.js`)
 
 ```ts
 export type DeliveryState = { inFlight: number };
@@ -1251,7 +1251,7 @@ export function defineMethod<B>(
 }
 ```
 
-- [ ] **Step 5: Write `src/methods/applications.ts` and `src/routes/rpc.ts`**
+- [x] **Step 5: Write `src/methods/applications.ts` and `src/routes/rpc.ts`**
 
 `src/methods/applications.ts`:
 ```ts
@@ -1328,12 +1328,12 @@ export function rpcRoute(app: FastifyInstance, deps: AppDeps): void {
   rpcRoute(app, deps);
 ```
 
-- [ ] **Step 6: Run tests, typecheck, lint**
+- [x] **Step 6: Run tests, typecheck, lint**
 
 Run: `npm test && npm run typecheck && npm run lint`
 Expected: all PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src test
