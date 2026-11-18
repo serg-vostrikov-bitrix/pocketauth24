@@ -35,7 +35,7 @@ export function registerRoute(app: FastifyInstance, deps: AppDeps): void {
         .insert(portals)
         .values({ origin, clientId, secretHash })
         .onConflictDoUpdate({ target: portals.origin, set: { clientId, secretHash } });
-      return { client_id: clientId, client_secret: clientSecret };
+      return { client_id: clientId, client_secret: clientSecret, host: url.hostname };
     },
   );
 }

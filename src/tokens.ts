@@ -57,9 +57,10 @@ export type TokenResponse = {
   server_endpoint: string;
   client_endpoint: string;
   member_id: string;
-  user_id: number;
   status: 'L';
 };
+
+export type RefreshResponse = TokenResponse & { user_id: number };
 
 export type IssueInput = { scope: string; userId: number; params: Record<string, unknown> };
 
@@ -71,7 +72,6 @@ export function tokenResponse(
     refreshToken: string;
     accessExpiresAt: Date;
     scope: string;
-    userId: number;
   },
 ): TokenResponse {
   return {
@@ -84,7 +84,6 @@ export function tokenResponse(
     server_endpoint: `${config.baseUrl}/rest/`,
     client_endpoint: `${portal.origin}/rest/`,
     member_id: memberId(portal),
-    user_id: pair.userId,
     status: 'L',
   };
 }
@@ -116,18 +115,28 @@ export async function issuePair(
     refreshToken,
     accessExpiresAt,
     scope: input.scope,
-    userId: input.userId,
   });
 }
 
 export type CheckResult = {
-  client_id: string;
+  access_token: string;
+  expires_in: number;
   expires: number;
   scope: string;
-  member_id: string;
-  user_id: number;
+  client_id: string;
   parameters: Record<string, unknown>;
+  status: 'L';
 };
+
+// The cloud returns numeric PARAMS values (LOCAL_USER, TZ_OFFSET, ...) as numbers.
+function numericParams(params: Record<string, unknown>): Record<string, unknown> {
+  return Object.fromEntries(
+    Object.entries(params).map(([key, value]) => [
+      key,
+      typeof value === 'string' && /^(0|-?[1-9]\d{0,14})$/.test(value) ? Number(value) : value,
+    ]),
+  );
+}
 
 export async function check(db: Db, portal: Portal, token: string): Promise<CheckResult> {
   const [row] = await db
@@ -136,23 +145,29 @@ export async function check(db: Db, portal: Portal, token: string): Promise<Chec
     .innerJoin(applications, eq(tokenPairs.applicationId, applications.id))
     .where(and(eq(tokenPairs.accessHash, sha256(token)), eq(applications.portalId, portal.id)))
     .limit(1);
-  if (!row) fail('invalid_token', 'The access token provided is invalid', 401);
+  if (!row) fail('invalid_token', 'Unable to get application by token');
   if (row.pair.accessExpiresAt.getTime() <= Date.now()) {
     fail('expired_token', 'The access token provided has expired', 401);
   }
+  const expires = Math.floor(row.pair.accessExpiresAt.getTime() / 1000);
   return {
-    client_id: row.clientId,
-    expires: Math.floor(row.pair.accessExpiresAt.getTime() / 1000),
+    access_token: token,
+    expires_in: Math.max(0, expires - Math.floor(Date.now() / 1000)),
+    expires,
     scope: row.pair.scope,
-    member_id: memberId(portal),
-    user_id: row.pair.userId,
-    parameters: row.pair.params,
+    client_id: row.clientId,
+    parameters: numericParams(row.pair.params),
+    status: 'L',
   };
 }
 
 export type RefreshInput = { clientId: string; clientSecret: string; refreshToken: string };
 
-export async function refresh(db: Db, config: Config, input: RefreshInput): Promise<TokenResponse> {
+export async function refresh(
+  db: Db,
+  config: Config,
+  input: RefreshInput,
+): Promise<RefreshResponse> {
   const [row] = await db
     .select({ pair: tokenPairs, app: applications, portal: portals })
     .from(tokenPairs)
@@ -160,19 +175,27 @@ export async function refresh(db: Db, config: Config, input: RefreshInput): Prom
     .innerJoin(portals, eq(applications.portalId, portals.id))
     .where(eq(tokenPairs.refreshHash, sha256(input.refreshToken)))
     .limit(1);
-  if (!row) fail('invalid_grant', 'Invalid refresh token');
+  if (!row) fail('invalid_grant', '');
   if (row.app.clientId !== input.clientId || !hashMatches(row.app.secretHash, input.clientSecret)) {
-    fail('invalid_client', 'Invalid client credentials', 401);
+    fail('invalid_client', '');
   }
   if (row.pair.refreshExpiresAt.getTime() <= Date.now()) {
-    fail('invalid_grant', 'Refresh token has expired');
+    fail('invalid_grant', '');
   }
   // The old pair stays valid until its own expiry (reusable refresh tokens, spec D3).
-  return issuePair(db, config, row.app, row.portal, {
+  const issued = await issuePair(db, config, row.app, row.portal, {
     scope: row.pair.scope,
     userId: row.pair.userId,
     params: row.pair.params,
   });
+  // The cloud answers a refresh with the literal scope "app" and its own (OAuth server) host;
+  // the pair keeps the real scope internally.
+  return {
+    ...issued,
+    scope: 'app',
+    domain: new URL(config.baseUrl).host,
+    user_id: row.pair.userId,
+  };
 }
 
 export async function deleteExpiredPairs(db: Db, now: Date): Promise<void> {

@@ -30,7 +30,7 @@ describe('routing', () => {
     const res = await t.app.inject({ method: 'GET', url: '/oauth/token?grant_type=password' });
 
     expect(res.statusCode).toBe(400);
-    expect(res.json<{ error: string }>().error).toBe('unsupported_grant_type');
+    expect(res.json<{ error: string }>().error).toBe('invalid_request');
   });
 
   it('Registration with a trailing slash still works', async () => {

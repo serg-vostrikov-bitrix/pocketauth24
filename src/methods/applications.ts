@@ -27,15 +27,21 @@ function localClientId(): string {
 export const applicationAdd = defineMethod<AddBody>(addSchema, async (ctx, body) => {
   const clientId = localClientId();
   const clientSecret = randomHex(32);
+  const scope = normalizeScope(body.SCOPE);
   await ctx.db.insert(applications).values({
     portalId: ctx.portal.id,
     clientId,
     secretHash: sha256(clientSecret),
     title: body.TITLE,
     redirectUri: body.REDIRECT_URI,
-    scope: normalizeScope(body.SCOPE),
+    scope,
   });
-  return { client_id: clientId, client_secret: clientSecret };
+  return {
+    client_id: clientId,
+    client_secret: clientSecret,
+    redirect_uri: body.REDIRECT_URI,
+    scope,
+  };
 });
 
 export const applicationList = defineMethod<Record<string, unknown>>(

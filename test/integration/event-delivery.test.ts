@@ -33,8 +33,8 @@ describe('event-delivery', () => {
         QUERY: [eventItem(handler.url, { event: 'ONE' }), eventItem(handler.url, { event: 'TWO' })],
       });
 
-      // The handler holds both responses, so result: true proves we did not wait for delivery.
-      expect(res.body).toEqual({ result: true });
+      // The handler holds both responses, so result: null proves we did not wait for delivery.
+      expect(res.body).toEqual({ result: null });
       await vi.waitFor(() => {
         expect(handler.requests).toHaveLength(2);
       });
@@ -74,6 +74,8 @@ describe('event-delivery', () => {
           ts: '1763460000',
           auth: {
             domain: 'portal.test',
+            client_endpoint: 'https://portal.test/rest/',
+            server_endpoint: 'https://auth.test/rest/',
             member_id: md5(portal.client_id),
             application_token: 'apptoken123',
           },
@@ -130,7 +132,10 @@ describe('event-delivery', () => {
       const checked = await rpc(t.app, portal, 'rest.check', {
         TOKEN: String(install.access_token),
       });
-      expect(checked.body.result).toMatchObject({ client_id: app.client_id, user_id: 1 });
+      expect(checked.body.result).toMatchObject({
+        client_id: app.client_id,
+        parameters: { LOCAL_USER: 1 },
+      });
     } finally {
       await handler.close();
     }
@@ -189,7 +194,7 @@ describe('event-delivery', () => {
 
       const res = await rpc(t.app, portal, 'rest.event.call', { QUERY: items });
 
-      expect(res.body).toEqual({ result: true });
+      expect(res.body).toEqual({ result: null });
       await vi.waitFor(
         () => {
           expect(handler.requests).toHaveLength(200);

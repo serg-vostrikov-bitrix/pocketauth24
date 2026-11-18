@@ -42,6 +42,8 @@ async function buildAuth(ctx: MethodContext, item: EventItem): Promise<Record<st
   const applicationToken = item.auth?.application_token ?? '';
   const base = {
     domain: portalDomain(ctx.portal),
+    client_endpoint: `${ctx.portal.origin}/rest/`,
+    server_endpoint: `${ctx.config.baseUrl}/rest/`,
     member_id: memberId(ctx.portal),
     application_token: applicationToken,
   };
@@ -62,6 +64,7 @@ async function buildAuth(ctx: MethodContext, item: EventItem): Promise<Record<st
   });
   return {
     ...tokens,
+    user_id: localUser,
     ...(additional.sendRefreshToken === '1' ? { refresh_token } : {}),
     application_token: applicationToken,
   };
@@ -127,5 +130,5 @@ export async function deliver(ctx: MethodContext, item: EventItem): Promise<void
 
 export const restEventCall = defineMethod<EventCallBody>(eventCallSchema, async (ctx, body) => {
   for (const item of body.QUERY) void deliver(ctx, item);
-  return true;
+  return null; // the cloud answers {"result":null}
 });

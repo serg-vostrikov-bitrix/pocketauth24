@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { tokenPairs } from '../../src/schema.js';
-import { deleteExpiredPairs, type TokenResponse } from '../../src/tokens.js';
+import { deleteExpiredPairs, type RefreshResponse, type TokenResponse } from '../../src/tokens.js';
 import {
   addApp,
   authorize,
@@ -66,7 +66,6 @@ describe('token-service', () => {
         'scope',
         'server_endpoint',
         'status',
-        'user_id',
       ].sort(),
     );
     expect(token).toMatchObject({
@@ -76,7 +75,6 @@ describe('token-service', () => {
       server_endpoint: 'https://auth.test/rest/',
       client_endpoint: 'https://portal.test/rest/',
       member_id: md5(portal.client_id),
-      user_id: 5,
       status: 'L',
     });
     expect(token.access_token).toMatch(/^[0-9a-f]{64}$/);
@@ -94,9 +92,8 @@ describe('token-service', () => {
     const app = await addApp(t.app, portal);
     const params = { LOCAL_USER: '5', TZ_OFFSET: '10800', EVENT_SESSION: { id: 'abc' } };
 
-    const token = await authorize(t.app, portal, app.client_id, { PARAMS: params });
+    await authorize(t.app, portal, app.client_id, { PARAMS: params });
 
-    expect(token.user_id).toBe(5);
     const [pair] = await t.db.select().from(tokenPairs);
     expect(pair.userId).toBe(5);
     expect(pair.params).toEqual(params);
@@ -151,12 +148,13 @@ describe('token-service', () => {
 
     expect(res.body).toEqual({
       result: {
-        client_id: app.client_id,
+        access_token: token.access_token,
+        expires_in: 3600,
         expires: token.expires,
         scope: 'crm,user',
-        member_id: token.member_id,
-        user_id: 5,
-        parameters: { LOCAL_USER: '5', TZ_OFFSET: '10800' },
+        client_id: app.client_id,
+        parameters: { LOCAL_USER: 5, TZ_OFFSET: 10800 },
+        status: 'L',
       },
     });
   });
@@ -174,6 +172,7 @@ describe('token-service', () => {
 
     for (const tokenValue of ['0'.repeat(64), foreign.access_token]) {
       const res = await rpc(t.app, portal, 'rest.check', { TOKEN: tokenValue });
+      expect(res.status).toBe(400);
       expect(res.body.error).toBe('invalid_token');
       expect(res.body.result).toBeUndefined();
     }
@@ -197,14 +196,16 @@ describe('token-service', () => {
     const res = await tokenRequest(t.app, 'POST', refreshParams(app, token.refresh_token));
 
     expect(res.statusCode).toBe(200);
-    const renewed = res.json<TokenResponse>();
+    const renewed = res.json<RefreshResponse>();
     expect(renewed).not.toHaveProperty('result');
     expect(renewed.access_token).not.toBe(token.access_token);
     expect(renewed.refresh_token).not.toBe(token.refresh_token);
-    expect(renewed).toMatchObject({ user_id: 5, scope: 'crm,user', domain: 'portal.test' });
+    // The cloud answers a refresh with scope "app" and the OAuth server host as domain.
+    expect(renewed).toMatchObject({ user_id: 5, scope: 'app', domain: 'auth.test' });
     const checked = await rpc(t.app, portal, 'rest.check', { TOKEN: renewed.access_token });
     expect(checked.body.result).toMatchObject({
-      parameters: { LOCAL_USER: '5', TZ_OFFSET: '10800' },
+      scope: 'crm,user',
+      parameters: { LOCAL_USER: 5, TZ_OFFSET: 10800 },
     });
   });
 
@@ -216,10 +217,11 @@ describe('token-service', () => {
 
     expect(first.statusCode).toBe(200);
     expect(second.statusCode).toBe(200);
-    const a = first.json<TokenResponse>();
-    const b = second.json<TokenResponse>();
+    const a = first.json<RefreshResponse>();
+    const b = second.json<RefreshResponse>();
     expect(b.access_token).not.toBe(a.access_token);
     expect(b).toMatchObject({ user_id: a.user_id, scope: a.scope });
+    expect(a.user_id).toBe(5);
   });
 
   it('Refresh token expired or unknown', async () => {
@@ -244,11 +246,11 @@ describe('token-service', () => {
       client_secret: 'wrong',
     });
 
-    expect(res.statusCode).toBe(401);
+    expect(res.statusCode).toBe(400);
     expect(res.json<{ error: string }>().error).toBe('invalid_client');
   });
 
-  it('Unsupported grant type', async () => {
+  it('authorization_code grant', async () => {
     const res = await tokenRequest(t.app, 'POST', {
       grant_type: 'authorization_code',
       client_id: 'x',
@@ -257,7 +259,7 @@ describe('token-service', () => {
     });
 
     expect(res.statusCode).toBe(400);
-    expect(res.json<{ error: string }>().error).toBe('unsupported_grant_type');
+    expect(res.json<{ error: string }>().error).toBe('invalid_grant');
   });
 
   it('Query-string secrets stay out of the logs', async () => {
@@ -279,7 +281,7 @@ describe('token-service', () => {
 
     const res = await tokenRequest(t.app, 'POST', refreshParams(other, token.refresh_token));
 
-    expect(res.statusCode).toBe(401);
+    expect(res.statusCode).toBe(400);
     expect(res.json<{ error: string }>().error).toBe('invalid_client');
   });
 

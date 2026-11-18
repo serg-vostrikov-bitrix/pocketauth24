@@ -1,7 +1,7 @@
 import type { FastifyInstance } from 'fastify';
 import type { AppDeps } from '../app.js';
 import { fail } from '../bitrix.js';
-import { refresh, type TokenResponse } from '../tokens.js';
+import { refresh, type RefreshResponse } from '../tokens.js';
 
 type TokenParams = {
   grant_type?: string;
@@ -21,9 +21,10 @@ const tokenParamsSchema = {
 } as const;
 
 export function oauthTokenRoute(app: FastifyInstance, deps: AppDeps): void {
-  const handle = async (params: TokenParams): Promise<TokenResponse> => {
+  const handle = async (params: TokenParams): Promise<RefreshResponse> => {
+    if (params.grant_type === 'authorization_code') fail('invalid_grant', '');
     if (params.grant_type !== 'refresh_token') {
-      fail('unsupported_grant_type', 'Only the refresh_token grant is supported');
+      fail('invalid_request', 'Invalid grant_type parameter or parameter missing');
     }
     if (!params.client_id || !params.client_secret || !params.refresh_token) {
       fail('invalid_request', 'client_id, client_secret and refresh_token are required');

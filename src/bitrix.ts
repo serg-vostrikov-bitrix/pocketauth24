@@ -27,9 +27,14 @@ export function sendError(
   reply: FastifyReply,
 ): FastifyReply {
   if (error instanceof BitrixError) {
+    // The cloud's /oauth/token/ errors carry no description; an empty one is left out.
     return reply
       .status(error.status)
-      .send({ error: error.code, error_description: error.description });
+      .send(
+        error.description
+          ? { error: error.code, error_description: error.description }
+          : { error: error.code },
+      );
   }
   if (error.validation || (error.statusCode !== undefined && error.statusCode < 500)) {
     return reply
