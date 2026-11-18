@@ -1691,7 +1691,7 @@ git commit -m "build: build the web UI in Docker and CI, and watch web/ with Dep
 
 ### Task 8: Documentation
 
-- [ ] Task 8 complete: Documentation
+- [x] Task 8 complete: Documentation
 
 Checks off: **tasks.md 4.3**
 
@@ -1702,7 +1702,7 @@ Checks off: **tasks.md 4.3**
 **Interfaces:**
 - Consumes: final behavior of Tasks 1-7.
 
-- [ ] **Step 1: Update `docs/deployment.md` section 3**
+- [x] **Step 1: Update `docs/deployment.md` section 3**
 
 Replace the sentence `Check: \`curl https://auth.corp.local/health\` → \`{"status":"ok"}\`.` (line 41) with:
 
@@ -1713,7 +1713,7 @@ and `{"status":"error","database":"down"}`. Monitors and health checks that expe
 all cases must accept this change.
 ```
 
-- [ ] **Step 2: Update `docs/deployment.md` section 4**
+- [x] **Step 2: Update `docs/deployment.md` section 4**
 
 Replace the first bullet under "Restrict access at the proxy" with:
 
@@ -1745,7 +1745,7 @@ Replace the nginx example with:
 
 Keep the four-space indentation of the existing example (it is an indented code block, not a fenced one).
 
-- [ ] **Step 3: Update `docs/deployment.md` section 8**
+- [x] **Step 3: Update `docs/deployment.md` section 8**
 
 Add at the end of section 8:
 
@@ -1755,7 +1755,7 @@ The server counts delivered, failed and dropped deliveries per UTC day in the ta
 last 7 days. The counters store no event content, handler URL, portal or application.
 ```
 
-- [ ] **Step 4: Update `README.md`**
+- [x] **Step 4: Update `README.md`**
 
 1. In the features table, replace the cell text of the **Operations** row with:
 
@@ -1775,12 +1775,12 @@ last 7 days. The counters store no event content, handler URL, portal or applica
    The container starts, `/health` answers, the status page and `/api/status` answer, a portal registers, no error-level logs, the process does not run as root.
    ```
 
-- [ ] **Step 5: Format and check**
+- [x] **Step 5: Format and check**
 
 Run: `npx prettier --write README.md && npm run lint`
 Expected: PASS. (`docs/` is in `.prettierignore`.)
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add docs/deployment.md README.md
@@ -1791,6 +1791,6 @@ git commit -m "docs: describe the status page, proxy paths and the new /health b
 
 ## Final verification
 
-- [ ] Run: `npm run lint && npm run typecheck && npm test && npm run build && npm run web:typecheck && npm run web:build`
+- [x] Run: `npm run lint && npm run typecheck && npm test && npm run build && npm run web:typecheck && npm run web:build`
   Expected: all PASS.
-- [ ] Mark all items in `docs/openspec/changes/public-status-page/tasks.md` as done.
+- [x] Mark all items in `docs/openspec/changes/public-status-page/tasks.md` as done.

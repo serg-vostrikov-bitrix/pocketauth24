@@ -23,4 +23,4 @@
 
 - [x] 4.1 Dockerfile: build `web/` and copy the output into the runtime image
 - [x] 4.2 CI: build and lint `web/`; Dependabot entry for `web/`
-- [ ] 4.3 Update `docs/deployment.md` and `README.md` (proxy paths, `/health` behavior, status page)
+- [x] 4.3 Update `docs/deployment.md` and `README.md` (proxy paths, `/health` behavior, status page)
