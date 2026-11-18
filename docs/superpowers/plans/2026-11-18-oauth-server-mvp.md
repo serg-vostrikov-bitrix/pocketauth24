@@ -2212,7 +2212,7 @@ git commit -m "feat: renew tokens via /oauth/token/ with reusable refresh tokens
 
 ### Task 9: `application.update` and `application.delete`
 
-- [ ] Task 9 complete: `application.update` and `application.delete`
+- [x] Task 9 complete: `application.update` and `application.delete`
 
 tasks.md: **4.2**
 
@@ -2224,7 +2224,7 @@ tasks.md: **4.2**
 - Consumes: `normalizeScope`, `scopeSchema`, `fail`, `applications`.
 - Produces: `applicationUpdate: Method`, `applicationDelete: Method`; both return `true`; on a missing or foreign `CLIENT_ID` throw `ERROR_OAUTH` / `Application not found` (400).
 
-- [ ] **Step 1: Write the failing tests** (in `application-registry.test.ts`; import `OTHER_PORTAL`, `tokenRequest`)
+- [x] **Step 1: Write the failing tests** (in `application-registry.test.ts`; import `OTHER_PORTAL`, `tokenRequest`)
 
 ```ts
   it('Scope update applies to new tokens', async () => {
@@ -2287,12 +2287,12 @@ tasks.md: **4.2**
   });
 ```
 
-- [ ] **Step 2: Run to verify they fail**
+- [x] **Step 2: Run to verify they fail**
 
 Run: `npx vitest run test/integration/application-registry.test.ts`
 Expected: the 3 new tests FAIL with `ERROR_METHOD_NOT_FOUND`.
 
-- [ ] **Step 3: Implement** (append to `src/methods/applications.ts`; add `import { and, eq } from 'drizzle-orm';` and `fail` to the bitrix import)
+- [x] **Step 3: Implement** (append to `src/methods/applications.ts`; add `import { and, eq } from 'drizzle-orm';` and `fail` to the bitrix import)
 
 ```ts
 type UpdateBody = {
@@ -2350,12 +2350,12 @@ export const applicationDelete = defineMethod<DeleteBody>(deleteSchema, async (c
 
 `src/routes/rpc.ts` — import both and add `'application.update': applicationUpdate,` and `'application.delete': applicationDelete,`.
 
-- [ ] **Step 4: Run tests, typecheck, lint**
+- [x] **Step 4: Run tests, typecheck, lint**
 
 Run: `npm test && npm run typecheck && npm run lint`
 Expected: all PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src test
