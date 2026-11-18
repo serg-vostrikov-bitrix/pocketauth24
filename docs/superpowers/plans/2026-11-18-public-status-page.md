@@ -433,7 +433,7 @@ git commit -m "feat(health): return 503 when the database does not answer within
 
 ### Task 3: Status service and `GET /api/status`
 
-- [ ] Task 3 complete: Status service and `GET /api/status`
+- [x] Task 3 complete: Status service and `GET /api/status`
 
 Checks off: **tasks.md 2.2, 2.3, 2.4**
 
@@ -452,7 +452,7 @@ Checks off: **tasks.md 2.2, 2.3, 2.4**
   - `export function createStatusService(deps: { db: Db; version: string; log: FastifyBaseLogger }): { get: () => Promise<Status> }`
 - Produces: the JSON shape of `/api/status`. Task 5 copies this type by hand into `web/src/api.ts`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `test/integration/status.test.ts`:
 
@@ -571,12 +571,12 @@ it('GET /api/status reports a failed database with null statistics', async () =>
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npm test -- test/integration/status.test.ts`
 Expected: FAIL in all four tests: `/api/status` returns the JSON 404.
 
-- [ ] **Step 3: Add the cache constant**
+- [x] **Step 3: Add the cache constant**
 
 In `src/config.ts`, after `CLEANUP_INTERVAL_MS`:
 
@@ -584,7 +584,7 @@ In `src/config.ts`, after `CLEANUP_INTERVAL_MS`:
 export const STATUS_CACHE_MS = 10_000;
 ```
 
-- [ ] **Step 4: Write the status service**
+- [x] **Step 4: Write the status service**
 
 Replace the imports at the top of `src/status.ts` and add the code below `probeDatabase`:
 
@@ -692,7 +692,7 @@ export function createStatusService(deps: {
 }
 ```
 
-- [ ] **Step 5: Add the route**
+- [x] **Step 5: Add the route**
 
 In `src/app.ts`, change the status import:
 
@@ -710,17 +710,17 @@ Add after the `/health` route:
   });
 ```
 
-- [ ] **Step 6: Run the tests to verify they pass**
+- [x] **Step 6: Run the tests to verify they pass**
 
 Run: `npm test -- test/integration/status.test.ts`
 Expected: PASS (4 tests).
 
-- [ ] **Step 7: Run the full checks**
+- [x] **Step 7: Run the full checks**
 
 Run: `npm test && npm run lint && npm run typecheck && npm run build`
 Expected: all PASS.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/config.ts src/status.ts src/app.ts test/integration/status.test.ts

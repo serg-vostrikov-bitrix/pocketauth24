@@ -7,9 +7,9 @@
 ## 2. Health and status API
 
 - [x] 2.1 `/health` with a `SELECT 1` probe and a 2-second timeout; HTTP 503 on failure
-- [ ] 2.2 `src/status.ts`: statistics queries, 10-second cache, version
-- [ ] 2.3 `GET /api/status` route
-- [ ] 2.4 Integration tests: healthy, database down, cache, no sensitive fields
+- [x] 2.2 `src/status.ts`: statistics queries, 10-second cache, version
+- [x] 2.3 `GET /api/status` route
+- [x] 2.4 Integration tests: healthy, database down, cache, no sensitive fields
 
 ## 3. Frontend skeleton
 
