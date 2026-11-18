@@ -8,10 +8,8 @@ portals.
 
 ## 2. Move the image into the closed network
 
-On a machine with internet access. The base images come from the DHI registry, so log in
-first (`docker login dhi.io`) with your DHI credentials:
+On a machine with internet access (base images: official `node:24-alpine` from Docker Hub):
 
-    docker login dhi.io
     docker build -t b24auth-server:<version> .
     docker pull postgres:17
     docker save b24auth-server:<version> postgres:17 -o b24auth-server-<version>.tar

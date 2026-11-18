@@ -2,7 +2,7 @@
 
 Date: 2026-11-18
 Source analysed: Bitrix24 on-premise, `rest` module 26.0.0 (2026-01-28),
-`D:\Work\projects\ntc\on-premise\on-premise-src\bitrix\modules\rest`.
+`bitrix/modules/rest` of a local on-premise source tree.
 
 ## 1. Goal
 

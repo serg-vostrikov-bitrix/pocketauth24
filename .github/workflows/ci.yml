@@ -4,6 +4,13 @@ on:
     branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -29,12 +36,35 @@ jobs:
       - run: npm run lint
       - run: npm run typecheck
       - run: npm test
-      - uses: docker/login-action@v3
-        with:
-          registry: dhi.io
-          username: ${{ secrets.DHI_USERNAME }}
-          password: ${{ secrets.DHI_TOKEN }}
-      - run: docker build -t b24auth-server:ci .
+      - run: npm run build
 
-  security:
-    uses: NTC24/workflows/.github/workflows/ci-security.yml@main
+  container:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Start the stack
+        run: |
+          cp .env.example .env
+          sed -i 's#^BASE_URL=.*#BASE_URL=http://localhost:3000#; s#^PORTAL_ALLOWLIST=.*#PORTAL_ALLOWLIST=portal.test#' .env
+          docker compose up -d --build
+      - name: Smoke test
+        run: |
+          for i in $(seq 1 30); do curl -fs http://localhost:3000/health && break; sleep 2; done
+          curl -fs http://localhost:3000/health | grep -q '"status":"ok"'
+          curl -fs -X POST -d 'redirect_uri=https://portal.test/&type=B' http://localhost:3000/oauth/register/ | grep -q client_secret
+          test "$(docker compose logs app | grep -c '"level":50')" = 0
+          test "$(docker compose exec -T app id -u)" != 0
+      - name: Logs on failure
+        if: failure()
+        run: docker compose logs
+      - run: docker compose down -v
+        if: always()
+
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: npm audit --omit=dev --audit-level=high
