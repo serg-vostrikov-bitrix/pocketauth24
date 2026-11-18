@@ -75,13 +75,33 @@ Delete the `*.raw.har` files afterwards (they are git-ignored but contain live s
 
 ## 6. Results (fill in after the capture)
 
+Captured 2026-11-18 against `oauth.bitrix.info` (portal region `en`, rest 26.1100). Fixtures:
+`test/fixtures/cloud-capture.har` (20 entries), `test/fixtures/event-handler.har` (1 entry).
+
 | Question | Observed |
 |---|---|
-| Second refresh with the same refresh token | _new pair / error code_ |
-| HTTP status of `invalid_client`, `invalid_grant`, `unsupported_grant_type` | |
-| HTTP status of `rest.check` errors, `ERROR_OAUTH` | |
-| Exact RPC path form (`/rest/rest.check` or with `.json`) | |
-| Fields in `rest.authorize` result not in our response | |
+| Second refresh with the same refresh token | **New pair.** The same refresh token was accepted three times, each time with a new pair (reuse allowed, matches spec D3). |
+| HTTP status of `invalid_client`, `invalid_grant`, unsupported grant | All `400`. Bodies: `{"error":"invalid_client"}`, `{"error":"invalid_grant"}` (no description). `grant_type=authorization_code` with a bad code gives `invalid_grant`; an unknown grant (`password`) gives `invalid_request` / "Invalid grant_type parameter or parameter missing". |
+| HTTP status of `rest.check` errors, `ERROR_OAUTH` | `rest.check` with an unknown token: `400`, `invalid_token` / "Unable to get application by token". The portal turns it into `401` for the app. |
+| Exact RPC path form (`/rest/rest.check` or with `.json`) | `POST /rest/<method>` without `.json`; token renewal is `GET /oauth/token/?…`. |
+| Fields in `rest.authorize` result not in our response | Cloud: `access_token, expires, expires_in, scope, domain, server_endpoint, status, client_endpoint, member_id, refresh_token`. No `user_id` (the portal adds it). |
+
+Other observations:
+
+- `/oauth/register/` responds `{"client_id","client_secret","host"}`; `host` is the portal host without port.
+- The first `application.add` is sent without licence fields and gets `403`
+  `verification_needed` / "License check failed."; the portal retries with `BX_TYPE`, `BX_LICENCE`,
+  `BX_HASH`. Our server ignores licence fields, so it answers the first call directly.
+- `rest.check` result: `access_token, expires_in, expires, scope, client_id, parameters, status`
+  (no `member_id`, no `user_id`; the portal reads the user from `parameters.LOCAL_USER`).
+- Refresh result: `scope` is the literal `"app"`, `domain` is the OAuth server host, plus
+  `user_id`; no `client_id`.
+- `rest.event.call` responds `{"result":null}`.
+- The `ONAPPINSTALL` body sent to the handler carries `auth[domain]` (portal host without port),
+  `auth[client_endpoint]`, `auth[server_endpoint]`, `auth[member_id]`, `auth[application_token]`
+  and no access or refresh token.
+- In CLI runs the portal must get `HTTP_HOST`, otherwise it registers with `redirect_uri=http://`
+  and the cloud answers `Wrong redirect_uri`.
 
 If reuse is **rejected** by the cloud, stop and reopen the token-service spec in Comet
 (Design Doc §10 risk) before release.
