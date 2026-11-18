@@ -1,6 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { tokenPairs } from '../../src/schema.js';
+import type { TokenResponse } from '../../src/tokens.js';
 import {
   addApp,
   authorize,
@@ -9,7 +10,9 @@ import {
   registerPortal,
   rpc,
   startApp,
+  tokenRequest,
   truncateAll,
+  type Credentials,
   type TestApp,
 } from '../helpers.js';
 
@@ -26,6 +29,22 @@ beforeEach(async () => {
 afterEach(() => {
   vi.useRealTimers();
 });
+
+async function issued(): Promise<{ portal: Credentials; app: Credentials; token: TokenResponse }> {
+  const portal = await registerPortal(t.app);
+  const app = await addApp(t.app, portal);
+  const token = await authorize(t.app, portal, app.client_id);
+  return { portal, app, token };
+}
+
+function refreshParams(app: Credentials, refreshToken: string): Record<string, string> {
+  return {
+    grant_type: 'refresh_token',
+    client_id: app.client_id,
+    client_secret: app.client_secret,
+    refresh_token: refreshToken,
+  };
+}
 
 describe('token-service', () => {
   it('Fields present', async () => {
@@ -160,5 +179,74 @@ describe('token-service', () => {
     const res = await rpc(t.app, portal, 'rest.check', { TOKEN: token.access_token });
 
     expect(res.body.error).toBe('expired_token');
+  });
+
+  it('Successful renewal', async () => {
+    const { portal, app, token } = await issued();
+
+    const res = await tokenRequest(t.app, 'POST', refreshParams(app, token.refresh_token));
+
+    expect(res.statusCode).toBe(200);
+    const renewed = res.json<TokenResponse>();
+    expect(renewed).not.toHaveProperty('result');
+    expect(renewed.access_token).not.toBe(token.access_token);
+    expect(renewed.refresh_token).not.toBe(token.refresh_token);
+    expect(renewed).toMatchObject({ user_id: 5, scope: 'crm,user', domain: 'portal.test' });
+    const checked = await rpc(t.app, portal, 'rest.check', { TOKEN: renewed.access_token });
+    expect(checked.body.result).toMatchObject({
+      parameters: { LOCAL_USER: '5', TZ_OFFSET: '10800' },
+    });
+  });
+
+  it('Refresh token reused', async () => {
+    const { app, token } = await issued();
+
+    const first = await tokenRequest(t.app, 'GET', refreshParams(app, token.refresh_token));
+    const second = await tokenRequest(t.app, 'GET', refreshParams(app, token.refresh_token));
+
+    expect(first.statusCode).toBe(200);
+    expect(second.statusCode).toBe(200);
+    const a = first.json<TokenResponse>();
+    const b = second.json<TokenResponse>();
+    expect(b.access_token).not.toBe(a.access_token);
+    expect(b).toMatchObject({ user_id: a.user_id, scope: a.scope });
+  });
+
+  it('Refresh token expired or unknown', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    const { app, token } = await issued();
+
+    const unknown = await tokenRequest(t.app, 'POST', refreshParams(app, '0'.repeat(64)));
+    vi.setSystemTime(Date.now() + 180 * 24 * 3600 * 1000);
+    const expired = await tokenRequest(t.app, 'POST', refreshParams(app, token.refresh_token));
+
+    for (const res of [unknown, expired]) {
+      expect(res.statusCode).toBe(400);
+      expect(res.json<{ error: string }>().error).toBe('invalid_grant');
+    }
+  });
+
+  it('Wrong application secret', async () => {
+    const { app, token } = await issued();
+
+    const res = await tokenRequest(t.app, 'POST', {
+      ...refreshParams(app, token.refresh_token),
+      client_secret: 'wrong',
+    });
+
+    expect(res.statusCode).toBe(401);
+    expect(res.json<{ error: string }>().error).toBe('invalid_client');
+  });
+
+  it('Unsupported grant type', async () => {
+    const res = await tokenRequest(t.app, 'POST', {
+      grant_type: 'authorization_code',
+      client_id: 'x',
+      client_secret: 'y',
+      code: 'z',
+    });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.json<{ error: string }>().error).toBe('unsupported_grant_type');
   });
 });

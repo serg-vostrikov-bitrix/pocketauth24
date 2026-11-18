@@ -5,6 +5,7 @@ import qs from 'qs';
 import { sendError } from './bitrix.js';
 import { BODY_LIMIT_BYTES, LOG_LEVEL, QS_OPTIONS, type Config } from './config.js';
 import type { Db } from './db.js';
+import { oauthTokenRoute } from './routes/oauthToken.js';
 import { registerRoute } from './routes/register.js';
 import { rpcRoute } from './routes/rpc.js';
 
@@ -20,5 +21,6 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   app.get('/health', async () => ({ status: 'ok' }));
   registerRoute(app, deps);
   rpcRoute(app, deps);
+  oauthTokenRoute(app, deps);
   return app;
 }

@@ -132,3 +132,13 @@ export async function authorize(
   if (!res.body.result) throw new Error(`rest.authorize failed: ${JSON.stringify(res.body)}`);
   return res.body.result;
 }
+
+export async function tokenRequest(
+  app: FastifyInstance,
+  method: 'GET' | 'POST',
+  params: Record<string, string>,
+): Promise<Awaited<ReturnType<FastifyInstance['inject']>>> {
+  return method === 'GET'
+    ? app.inject({ method: 'GET', url: `/oauth/token/?${qs.stringify(params)}` })
+    : app.inject({ method: 'POST', url: '/oauth/token/', ...form(params) });
+}

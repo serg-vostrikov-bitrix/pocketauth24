@@ -3,7 +3,7 @@ import { and, eq } from 'drizzle-orm';
 import { fail } from './bitrix.js';
 import { ACCESS_TTL_SECONDS, REFRESH_TTL_SECONDS, type Config } from './config.js';
 import type { Db } from './db.js';
-import { applications, tokenPairs, type Application, type Portal } from './schema.js';
+import { applications, portals, tokenPairs, type Application, type Portal } from './schema.js';
 
 export function sha256(value: string): string {
   return createHash('sha256').update(value).digest('hex');
@@ -148,4 +148,29 @@ export async function check(db: Db, portal: Portal, token: string): Promise<Chec
     user_id: row.pair.userId,
     parameters: row.pair.params,
   };
+}
+
+export type RefreshInput = { clientId: string; clientSecret: string; refreshToken: string };
+
+export async function refresh(db: Db, config: Config, input: RefreshInput): Promise<TokenResponse> {
+  const [row] = await db
+    .select({ pair: tokenPairs, app: applications, portal: portals })
+    .from(tokenPairs)
+    .innerJoin(applications, eq(tokenPairs.applicationId, applications.id))
+    .innerJoin(portals, eq(applications.portalId, portals.id))
+    .where(eq(tokenPairs.refreshHash, sha256(input.refreshToken)))
+    .limit(1);
+  if (!row) fail('invalid_grant', 'Invalid refresh token');
+  if (row.app.clientId !== input.clientId || !hashMatches(row.app.secretHash, input.clientSecret)) {
+    fail('invalid_client', 'Invalid client credentials', 401);
+  }
+  if (row.pair.refreshExpiresAt.getTime() <= Date.now()) {
+    fail('invalid_grant', 'Refresh token has expired');
+  }
+  // The old pair stays valid until its own expiry (reusable refresh tokens, spec D3).
+  return issuePair(db, config, row.app, row.portal, {
+    scope: row.pair.scope,
+    userId: row.pair.userId,
+    params: row.pair.params,
+  });
 }
