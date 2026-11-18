@@ -2,6 +2,7 @@
 
 - review_mode: standard
 - tdd_mode: tdd
-- Tasks 1-4: done (ee85fca, 4dd4bad, be1a538, 7cd1914)
-- Current task: "Task 5 complete: Frontend skeleton and status page" (OpenSpec 3.1, 3.2, 3.4)
+- Tasks 1-5: done (ee85fca, 4dd4bad, be1a538, 7cd1914, 6902749)
+- Pending: combined manual browser check after Task 6
+- Current task: "Task 6 complete: Gyroscope" (OpenSpec 3.3 Gyroscope component)
 - Stage: implementing

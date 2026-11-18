@@ -899,7 +899,7 @@ git commit -m "feat(web): serve the built UI with @fastify/static and keep the J
 
 ### Task 5: Frontend skeleton and status page
 
-- [ ] Task 5 complete: Frontend skeleton and status page
+- [x] Task 5 complete: Frontend skeleton and status page
 
 Checks off: **tasks.md 3.1, 3.2, 3.4**
 
@@ -918,7 +918,7 @@ The Design Doc gives the frontend no automated tests. The verification for this 
 - Produces: root scripts `web:install`, `web:build`, `web:typecheck` (used by Task 7).
 - Produces: CSS tokens `--bg`, `--surface`, `--border`, `--text`, `--text-muted`, `--accent`, `--color-ok`, `--color-error`, `--radius`, `--dur-fast`, `--dur-base` (used by Task 6 and later by `admin-panel`).
 
-- [ ] **Step 1: Create the package**
+- [x] **Step 1: Create the package**
 
 Create `web/package.json`:
 
@@ -944,7 +944,7 @@ npm install --prefix web -D vite @vitejs/plugin-react typescript @types/react@19
 
 Expected: `web/package-lock.json` exists; `web/node_modules` exists and git ignores it (root `.gitignore` has `node_modules` and `dist`).
 
-- [ ] **Step 2: Add the configuration files**
+- [x] **Step 2: Add the configuration files**
 
 `web/tsconfig.json`:
 
@@ -997,7 +997,7 @@ export default defineConfig({
 </html>
 ```
 
-- [ ] **Step 3: Add the root scripts and the ESLint ignore**
+- [x] **Step 3: Add the root scripts and the ESLint ignore**
 
 In root `package.json` `scripts`, add:
 
@@ -1009,7 +1009,7 @@ In root `package.json` `scripts`, add:
 
 In `eslint.config.js`, add `'web',` to the `ignores` array (after `'node_modules',`).
 
-- [ ] **Step 4: Write `web/src/theme.css`**
+- [x] **Step 4: Write `web/src/theme.css`**
 
 ```css
 :root {
@@ -1068,7 +1068,7 @@ body {
 }
 ```
 
-- [ ] **Step 5: Write `web/src/api.ts`**
+- [x] **Step 5: Write `web/src/api.ts`**
 
 ```ts
 // Declared by hand; test/integration/status.test.ts checks the server side of these names.
@@ -1091,7 +1091,7 @@ export async function fetchStatus(): Promise<Status> {
 }
 ```
 
-- [ ] **Step 6: Write `web/src/StatusPill.tsx` and `web/src/StatCard.tsx`**
+- [x] **Step 6: Write `web/src/StatusPill.tsx` and `web/src/StatCard.tsx`**
 
 `web/src/StatusPill.tsx`:
 
@@ -1145,7 +1145,7 @@ export function StatCard(props: {
 }
 ```
 
-- [ ] **Step 7: Write `web/src/StatusPage.tsx`**
+- [x] **Step 7: Write `web/src/StatusPage.tsx`**
 
 ```tsx
 import { useEffect, useState } from 'react';
@@ -1222,7 +1222,7 @@ export function StatusPage() {
 }
 ```
 
-- [ ] **Step 8: Write `web/src/status.css` and `web/src/main.tsx`**
+- [x] **Step 8: Write `web/src/status.css` and `web/src/main.tsx`**
 
 `web/src/status.css` (page styles; `theme.css` keeps only shared tokens and base rules):
 
@@ -1348,22 +1348,22 @@ createRoot(root).render(
 );
 ```
 
-- [ ] **Step 9: Typecheck, format and build**
+- [x] **Step 9: Typecheck, format and build**
 
 Run: `npx prettier --write web && npm run web:typecheck && npm run web:build`
 Expected: no type errors; `web/dist/index.html` and `web/dist/assets/*.js`, `*.css` exist.
 
-- [ ] **Step 10: Check that the build loads nothing from outside**
+- [x] **Step 10: Check that the build loads nothing from outside**
 
 Run: `grep -rEo "(src|href)=\"https?://[^\"]*\"|url\(https?://[^)]*\)|@import" web/dist`
 Expected: no output.
 
-- [ ] **Step 11: Run the root checks**
+- [x] **Step 11: Run the root checks**
 
 Run: `npm run lint && npm run typecheck && npm test`
 Expected: all PASS. ESLint does not read `web/`; Prettier passes on `web/` sources.
 
-- [ ] **Step 12: Manual check in a browser**
+- [x] **Step 12: Manual check in a browser**
 
 1. Start the database: `docker compose up -d db`.
 2. In one terminal: `BASE_URL=http://localhost:3000 DATABASE_URL=postgres://b24auth:b24auth@localhost:5432/b24auth PORTAL_ALLOWLIST=portal.test npm run dev`.
@@ -1371,7 +1371,7 @@ Expected: all PASS. ESLint does not read `web/`; Prettier passes on `web/` sourc
 4. Make sure that: the background is dark; the pills show `Service: ok` and `Database: ok`; five cards show numbers; the cards fade in one after another.
 5. Stop the server (first terminal). Wait 30 seconds. Make sure that the numbers stay and the service pill shows `unreachable`.
 
-- [ ] **Step 13: Commit**
+- [x] **Step 13: Commit**
 
 ```bash
 git add web package.json eslint.config.js

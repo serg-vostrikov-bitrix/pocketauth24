@@ -13,10 +13,10 @@
 
 ## 3. Frontend skeleton
 
-- [ ] 3.1 Create `web/` with React, Vite and TypeScript; lint and typecheck scripts
-- [ ] 3.2 `theme.css`: dark palette, accent and error colors, transition tokens, reduced-motion block
+- [x] 3.1 Create `web/` with React, Vite and TypeScript; lint and typecheck scripts
+- [x] 3.2 `theme.css`: dark palette, accent and error colors, transition tokens, reduced-motion block
 - [ ] 3.3 Gyroscope component: nested rings with 3D rotation, glow, error color state
-- [ ] 3.4 Status page: health cards, statistics, subtle transitions, refresh every 30 seconds, no external resources
+- [x] 3.4 Status page: health cards, statistics, subtle transitions, refresh every 30 seconds, no external resources
 - [x] 3.3 Serve `web/dist` with `@fastify/static` at `/`; keep the JSON 404
 
 ## 4. Build and docs
