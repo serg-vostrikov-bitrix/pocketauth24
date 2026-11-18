@@ -1,6 +1,6 @@
 import qs from 'qs';
 import { defineMethod, type MethodContext } from '../bitrix.js';
-import { EVENT_TIMEOUT_MS } from '../config.js';
+import { EVENT_IN_FLIGHT_CAP, EVENT_TIMEOUT_MS } from '../config.js';
 import { memberId, portalDomain } from '../tokens.js';
 
 export type EventItem = {
@@ -58,6 +58,11 @@ export async function deliver(ctx: MethodContext, item: EventItem): Promise<void
     event: data.event ?? null,
     url: item.query.QUERY_URL,
   };
+  if (ctx.delivery.inFlight >= EVENT_IN_FLIGHT_CAP) {
+    // ponytail: in-memory cap, persistent queue in stage 3
+    ctx.log.warn(fields, 'event_dropped_overload');
+    return;
+  }
   ctx.delivery.inFlight++;
   try {
     const auth = buildAuth(ctx, item);

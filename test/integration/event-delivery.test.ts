@@ -126,4 +126,29 @@ describe('event-delivery', () => {
       await handler.close();
     }
   });
+
+  it('Overload', async () => {
+    const portal = await registerPortal(t.app);
+    const handler = await startHandler({ hold: true });
+    try {
+      const items = Array.from({ length: 201 }, (_, i) =>
+        eventItem(handler.url, { event: `E${i}` }),
+      );
+
+      const res = await rpc(t.app, portal, 'rest.event.call', { QUERY: items });
+
+      expect(res.body).toEqual({ result: true });
+      await vi.waitFor(
+        () => {
+          expect(handler.requests).toHaveLength(200);
+        },
+        { timeout: 5000 },
+      );
+      const dropped = t.logs.filter((l) => l.msg === 'event_dropped_overload');
+      expect(dropped).toHaveLength(1);
+      expect(dropped[0]).toMatchObject({ event: 'E200', url: handler.url });
+    } finally {
+      await handler.close();
+    }
+  });
 });
