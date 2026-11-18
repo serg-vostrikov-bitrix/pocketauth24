@@ -10,8 +10,8 @@
 
 ## 3. Auth API
 
-- [ ] 3.1 Register `@fastify/cookie`; session create, lookup, 12-hour expiry, revoke
-- [ ] 3.2 `POST /api/admin/login`, `POST /api/admin/logout`, `GET /api/admin/me`; HTTP 503 without a superuser
+- [x] 3.1 Register `@fastify/cookie`; session create, lookup, 12-hour expiry, revoke
+- [x] 3.2 `POST /api/admin/login`, `POST /api/admin/logout`, `GET /api/admin/me`; HTTP 503 without a superuser
 - [ ] 3.3 Rate limit, JSON-only guard for writes, login logging, `TRUST_PROXY` config
 - [ ] 3.4 Add expired session cleanup to the hourly job; integration tests
 

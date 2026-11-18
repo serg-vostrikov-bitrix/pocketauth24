@@ -752,7 +752,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ### Task 4: Sessions, login, logout and the JSON guard
 
-- [ ] Task 4 complete: Sessions, login, logout and the JSON guard
+- [x] Task 4 complete: Sessions, login, logout and the JSON guard
 
 **Covers tasks.md:** 3.1, 3.2, 3.3 (JSON guard, login logging)
 
@@ -772,12 +772,12 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   - `src/admin/index.ts`: `registerAdmin(app: FastifyInstance, deps: { db: Db }): Promise<void>`.
   - `test/helpers.ts`: `SUPERUSER = { login: 'admin', password: 'superuser-pass-123' }`; `createSuperuser(db: Db): Promise<void>`; `loginAs(app: FastifyInstance, login: string, password: string): Promise<string>` (returns the `cookie` header value `b24a_session=<value>`).
 
-- [ ] **Step 1: Install the cookie plugin**
+- [x] **Step 1: Install the cookie plugin**
 
 Run: `npm install @fastify/cookie@^11`
 Expected: `@fastify/cookie` appears in `dependencies`.
 
-- [ ] **Step 2: Add the test helpers** to `test/helpers.ts`
+- [x] **Step 2: Add the test helpers** to `test/helpers.ts`
 
 Add imports `import { hashPassword } from '../src/admin/password.js';` and `import { adminUsers } from '../src/schema.js';`. Append:
 
@@ -803,7 +803,7 @@ export async function loginAs(app: FastifyInstance, login: string, password: str
 }
 ```
 
-- [ ] **Step 3: Write the failing test** `test/integration/admin-auth.test.ts`
+- [x] **Step 3: Write the failing test** `test/integration/admin-auth.test.ts`
 
 ```ts
 import { afterEach, beforeEach, expect, it } from 'vitest';
@@ -924,12 +924,12 @@ it('Login events log the login and the IP, and no password or session ID', async
 });
 ```
 
-- [ ] **Step 4: Run the test to make sure it fails**
+- [x] **Step 4: Run the test to make sure it fails**
 
 Run: `npm test -- test/integration/admin-auth.test.ts`
 Expected: FAIL, `/api/admin/login` returns 404.
 
-- [ ] **Step 5: Complete `src/admin/sessions.ts`**
+- [x] **Step 5: Complete `src/admin/sessions.ts`**
 
 Replace the imports and add the functions:
 
@@ -976,7 +976,7 @@ export async function deleteExpiredSessions(db: Db, now: Date): Promise<void> {
 
 Keep `DbOrTx` and `deleteSessionsOfUser` from Task 3.
 
-- [ ] **Step 6: Add lookups to `src/admin/users.ts`**
+- [x] **Step 6: Add lookups to `src/admin/users.ts`**
 
 Add `import type { AdminUser } from './sessions.js';` and:
 
@@ -1003,7 +1003,7 @@ export async function findUserByLogin(
 }
 ```
 
-- [ ] **Step 7: Write `src/admin/auth.ts`**
+- [x] **Step 7: Write `src/admin/auth.ts`**
 
 ```ts
 import '@fastify/cookie';
@@ -1112,7 +1112,7 @@ export function sessionRoutes(app: FastifyInstance, db: Db): void {
 }
 ```
 
-- [ ] **Step 8: Write `src/admin/index.ts`**
+- [x] **Step 8: Write `src/admin/index.ts`**
 
 ```ts
 import cookie from '@fastify/cookie';
@@ -1142,7 +1142,7 @@ export async function registerAdmin(app: FastifyInstance, deps: { db: Db }): Pro
 }
 ```
 
-- [ ] **Step 9: Register the plugin** in `src/app.ts`
+- [x] **Step 9: Register the plugin** in `src/app.ts`
 
 Add `import { registerAdmin } from './admin/index.js';` and, before the `registerWeb` line:
 
@@ -1150,17 +1150,17 @@ Add `import { registerAdmin } from './admin/index.js';` and, before the `registe
   await registerAdmin(app, deps);
 ```
 
-- [ ] **Step 10: Run the test to make sure it passes**
+- [x] **Step 10: Run the test to make sure it passes**
 
 Run: `npm test -- test/integration/admin-auth.test.ts`
 Expected: PASS (8 tests).
 
-- [ ] **Step 11: Full suite, types, lint**
+- [x] **Step 11: Full suite, types, lint**
 
 Run: `npm test && npm run typecheck && npm run lint`
 Expected: all pass.
 
-- [ ] **Step 12: Commit**
+- [x] **Step 12: Commit**
 
 ```bash
 git add package.json package-lock.json src/admin src/app.ts test/helpers.ts test/integration/admin-auth.test.ts
