@@ -25,7 +25,7 @@
 - [x] 5.1 Implement secure token generation, hashing and the token response builder (including `member_id`)
 - [x] 5.2 Implement `rest.authorize` with scope intersection and stored `PARAMS`
 - [x] 5.3 Implement `rest.check` with `invalid_token` / `expired_token` errors
-- [ ] 5.4 Implement `/oauth/token/` (GET and POST) for `refresh_token` with reusable refresh tokens and `invalid_grant` / `invalid_client` / `unsupported_grant_type` errors
+- [x] 5.4 Implement `/oauth/token/` (GET and POST) for `refresh_token` with reusable refresh tokens and `invalid_grant` / `invalid_client` / `unsupported_grant_type` errors
 
 ## 6. Event delivery
 

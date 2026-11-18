@@ -1985,7 +1985,7 @@ git commit -m "feat: validate access tokens via rest.check"
 
 ### Task 8: `/oauth/token/` refresh grant
 
-- [ ] Task 8 complete: `/oauth/token/` refresh grant
+- [x] Task 8 complete: `/oauth/token/` refresh grant
 
 tasks.md: **5.4**
 
@@ -2001,7 +2001,7 @@ tasks.md: **5.4**
 
 Order of checks (follows the spec scenarios; refines Design Doc §5.3, which checked the app first): find the pair by `sha256(refresh_token)` → none (including tokens cascaded away with a deleted app) → 400 `invalid_grant`; pair's application has a different `client_id` or the secret does not match → 401 `invalid_client`; refresh expired → 400 `invalid_grant`; else `issuePair` with the old pair's user, scope and params. The old pair is not touched.
 
-- [ ] **Step 1: Add the helper** (append to `test/helpers.ts`)
+- [x] **Step 1: Add the helper** (append to `test/helpers.ts`)
 
 ```ts
 export async function tokenRequest(
@@ -2015,7 +2015,7 @@ export async function tokenRequest(
 }
 ```
 
-- [ ] **Step 2: Write the failing tests** (in `token-service.test.ts`; import `tokenRequest`, `type Credentials`, and `type TokenResponse` from `../../src/tokens.js`). Add a local setup function at file level:
+- [x] **Step 2: Write the failing tests** (in `token-service.test.ts`; import `tokenRequest`, `type Credentials`, and `type TokenResponse` from `../../src/tokens.js`). Add a local setup function at file level:
 
 ```ts
 async function issued(): Promise<{ portal: Credentials; app: Credentials; token: TokenResponse }> {
@@ -2107,12 +2107,12 @@ Tests inside `describe('token-service')`:
   });
 ```
 
-- [ ] **Step 3: Run to verify they fail**
+- [x] **Step 3: Run to verify they fail**
 
 Run: `npx vitest run test/integration/token-service.test.ts`
 Expected: the 5 new tests FAIL (404 from Fastify).
 
-- [ ] **Step 4: Implement `refresh` in `src/tokens.ts`** (append; add `portals` to the schema import)
+- [x] **Step 4: Implement `refresh` in `src/tokens.ts`** (append; add `portals` to the schema import)
 
 ```ts
 export type RefreshInput = { clientId: string; clientSecret: string; refreshToken: string };
@@ -2141,7 +2141,7 @@ export async function refresh(db: Db, config: Config, input: RefreshInput): Prom
 }
 ```
 
-- [ ] **Step 5: Write `src/routes/oauthToken.ts` and register it**
+- [x] **Step 5: Write `src/routes/oauthToken.ts` and register it**
 
 ```ts
 import type { FastifyInstance } from 'fastify';
@@ -2196,12 +2196,12 @@ export function oauthTokenRoute(app: FastifyInstance, deps: AppDeps): void {
 
 `src/app.ts` — import `oauthTokenRoute` from `./routes/oauthToken.js`; add `oauthTokenRoute(app, deps);` after `rpcRoute(app, deps);`.
 
-- [ ] **Step 6: Run tests, typecheck, lint**
+- [x] **Step 6: Run tests, typecheck, lint**
 
 Run: `npm test && npm run typecheck && npm run lint`
 Expected: all PASS.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src test
