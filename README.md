@@ -9,11 +9,10 @@ issue, check and renewal, and event delivery to application handlers.
 NTC defaults new projects to .NET. The project owner chose Node.js + TypeScript (Fastify,
 Drizzle, PostgreSQL) for this service.
 
-- Status: **pending CTO approval**
-- Approved by / date: _to be filled in when the approval is recorded_
-- NTC portal task: _link to be added when the approval is recorded_
+- Status: **approved**
+- Approved by / date: the CTO (also the project owner), 2026-11-18
 
-If the exception is not approved, the design ports to .NET with the same layout
+If the exception is withdrawn, the design ports to .NET with the same layout
 (`docs/superpowers/specs/2026-11-18-oauth-server-mvp-design.md`).
 
 ## Development
