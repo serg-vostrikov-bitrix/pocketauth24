@@ -37,6 +37,7 @@ describe('application-registry', () => {
     const res = await rpc<Credentials>(t.app, portal, 'application.add', APP_FIELDS);
     expect(res.status).toBe(200);
     const created = res.body.result;
+    expect(created).toMatchObject({ redirect_uri: 'https://app.test/handler', scope: 'crm,user' });
     expect(created?.client_id).toMatch(/^local\.[0-9a-f]{14}\.\d{8}$/);
     expect(created?.client_secret).toMatch(/^[0-9a-f]{64}$/);
     const rows = await t.db.select().from(applications);

@@ -140,6 +140,7 @@ describe('token-service', () => {
   });
 
   it('Valid token', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
     const portal = await registerPortal(t.app);
     const app = await addApp(t.app, portal);
     const token = await authorize(t.app, portal, app.client_id);
@@ -250,16 +251,22 @@ describe('token-service', () => {
     expect(res.json<{ error: string }>().error).toBe('invalid_client');
   });
 
-  it('authorization_code grant', async () => {
-    const res = await tokenRequest(t.app, 'POST', {
+  it('Unsupported grant type', async () => {
+    const base = { client_id: 'x', client_secret: 'y' };
+    const other = await tokenRequest(t.app, 'POST', { ...base, grant_type: 'password' });
+    const code = await tokenRequest(t.app, 'POST', {
+      ...base,
       grant_type: 'authorization_code',
-      client_id: 'x',
-      client_secret: 'y',
       code: 'z',
     });
 
-    expect(res.statusCode).toBe(400);
-    expect(res.json<{ error: string }>().error).toBe('invalid_grant');
+    expect(other.statusCode).toBe(400);
+    expect(other.json()).toEqual({
+      error: 'invalid_request',
+      error_description: 'Invalid grant_type parameter or parameter missing',
+    });
+    expect(code.statusCode).toBe(400);
+    expect(code.json()).toEqual({ error: 'invalid_grant' });
   });
 
   it('Query-string secrets stay out of the logs', async () => {

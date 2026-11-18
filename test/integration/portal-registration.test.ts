@@ -29,7 +29,8 @@ describe('portal-registration', () => {
       ...form({ redirect_uri: `${PORTAL}/`, type: 'B', member_id: 'abc', BX_TYPE: 'x' }),
     });
     expect(res.statusCode).toBe(200);
-    const body = res.json<{ client_id: string; client_secret: string }>();
+    const body = res.json<{ client_id: string; client_secret: string; host: string }>();
+    expect(body.host).toBe('portal.test');
     expect(body.client_id).toMatch(/^[0-9a-f]{32}$/);
     expect(body.client_secret).toMatch(/^[0-9a-f]{64}$/);
     const rows = await t.db.select().from(portals);

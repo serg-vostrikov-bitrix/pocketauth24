@@ -1,16 +1,16 @@
 ## ADDED Requirements
 
 ### Requirement: Token response format
-Every successful token issue SHALL return these fields: `access_token`,
+Every successful `rest.authorize` token issue SHALL return these fields: `access_token`,
 `refresh_token`, `expires` (Unix time), `expires_in` (seconds), `scope`
 (comma-separated), `domain` (portal host), `server_endpoint` (`<server>/rest/`),
 `client_endpoint` (`<portal>/rest/`), `member_id`, `status` (`L` for local
 apps). `member_id` SHALL equal `md5` of the portal's current service `client_id`, the value
 the portal computes in `OAuthService::getMemberId()`. The access token lifetime SHALL be
-3600 seconds and the refresh token lifetime 180 days (6 months), as in the cloud.
+3600 seconds and the refresh token lifetime 180 days (6 months), as in the cloud. Renewal through `/oauth/token/` differs as specified below.
 
 #### Scenario: Fields present
-- **WHEN** any token is issued
+- **WHEN** a portal calls `rest.authorize`
 - **THEN** the response contains every listed field with the portal's own host in `domain` and `client_endpoint`, and `member_id` equal to `md5` of the portal's service `client_id`
 
 ### Requirement: Issue tokens for the portal
@@ -54,8 +54,8 @@ literal `app` and `domain` set to the OAuth server host, as the cloud does. The 
 and stored parameters of the old one. A refresh token SHALL stay valid until its own
 expiry and MAY be presented again, matching observed cloud behaviour (confirmed against
 captured traffic before release). An expired or unknown refresh token SHALL be rejected
-with `invalid_grant`. `/oauth/token/` errors are HTTP 400 and carry no `error_description`,
-except `invalid_request` for an unknown `grant_type`.
+with `invalid_grant`. `/oauth/token/` errors are HTTP 400; `invalid_grant` and `invalid_client` carry no
+`error_description`.
 
 #### Scenario: Successful renewal
 - **WHEN** an application posts a valid unused refresh token with its own `client_id` and `client_secret`
