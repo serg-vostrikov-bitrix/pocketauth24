@@ -1,8 +1,8 @@
 ## 1. Event counters
 
-- [ ] 1.1 Add the `event_counters` table to `src/schema.ts` and generate the Drizzle migration
-- [ ] 1.2 Increment `delivered`, `failed` or `dropped` in `deliver()`; log a failed write
-- [ ] 1.3 Integration tests for the three outcomes
+- [x] 1.1 Add the `event_counters` table to `src/schema.ts` and generate the Drizzle migration
+- [x] 1.2 Increment `delivered`, `failed` or `dropped` in `deliver()`; log a failed write
+- [x] 1.3 Integration tests for the three outcomes
 
 ## 2. Health and status API
 

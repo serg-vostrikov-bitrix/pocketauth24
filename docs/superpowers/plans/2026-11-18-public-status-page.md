@@ -71,6 +71,8 @@ Note: `tasks.md` has two items numbered 3.3. This plan calls the second one (ser
 
 ### Task 1: Event counters
 
+- [x] Task 1 complete: Event counters
+
 Checks off: **tasks.md 1.1, 1.2, 1.3**
 
 **Files:**
@@ -86,7 +88,7 @@ Checks off: **tasks.md 1.1, 1.2, 1.3**
 - Produces: `export function utcDay(now: Date): string` and `export async function recordOutcome(db: Db, outcome: Outcome, now: Date): Promise<void>` in `src/eventCounters.ts`.
 - Produces: `startHandler(options: { hold?: boolean; status?: number })` in `test/helpers.ts`.
 
-- [ ] **Step 1: Extend the test helpers**
+- [x] **Step 1: Extend the test helpers**
 
 In `test/helpers.ts`, change `truncateAll`:
 
@@ -114,7 +116,7 @@ export async function startHandler(
       }
 ```
 
-- [ ] **Step 2: Write the failing counter tests**
+- [x] **Step 2: Write the failing counter tests**
 
 In `test/integration/event-delivery.test.ts`, add the import and a helper below `beforeEach`:
 
@@ -157,12 +159,12 @@ In the existing `it('Overload', ...)`, after the `dropped` log assertions (line 
       });
 ```
 
-- [ ] **Step 3: Run the tests to verify they fail**
+- [x] **Step 3: Run the tests to verify they fail**
 
 Run: `npm test -- test/integration/event-delivery.test.ts`
 Expected: FAIL. The imports of `eventCounters` and `utcDay` do not resolve.
 
-- [ ] **Step 4: Add the table to the schema**
+- [x] **Step 4: Add the table to the schema**
 
 In `src/schema.ts`, add `check`, `date` and `primaryKey` to the `drizzle-orm/pg-core` import, add `import { sql } from 'drizzle-orm';`, and add at the end of the tables:
 
@@ -186,12 +188,12 @@ export const eventCounters = pgTable(
 );
 ```
 
-- [ ] **Step 5: Generate the migration**
+- [x] **Step 5: Generate the migration**
 
 Run: `npm run db:generate -- --name event_counters`
 Expected: a new file `drizzle/0001_event_counters.sql` with `CREATE TABLE "event_counters"`, the primary key on `("day","outcome")` and the check constraint. Read the file and confirm these three parts.
 
-- [ ] **Step 6: Write `src/eventCounters.ts`**
+- [x] **Step 6: Write `src/eventCounters.ts`**
 
 ```ts
 import { sql } from 'drizzle-orm';
@@ -213,7 +215,7 @@ export async function recordOutcome(db: Db, outcome: Outcome, now: Date): Promis
 }
 ```
 
-- [ ] **Step 7: Count outcomes in `deliver()`**
+- [x] **Step 7: Count outcomes in `deliver()`**
 
 In `src/methods/events.ts`, add imports:
 
@@ -265,17 +267,17 @@ Change three places in `deliver`:
   } finally {
 ```
 
-- [ ] **Step 8: Run the tests to verify they pass**
+- [x] **Step 8: Run the tests to verify they pass**
 
 Run: `npm test -- test/integration/event-delivery.test.ts`
 Expected: PASS (all tests, including the two new cases and the extended `Overload` test).
 
-- [ ] **Step 9: Run the full checks**
+- [x] **Step 9: Run the full checks**
 
 Run: `npm test && npm run lint && npm run typecheck`
 Expected: all PASS.
 
-- [ ] **Step 10: Commit**
+- [x] **Step 10: Commit**
 
 ```bash
 git add src/schema.ts src/eventCounters.ts src/methods/events.ts drizzle test/helpers.ts test/integration/event-delivery.test.ts
@@ -285,6 +287,8 @@ git commit -m "feat(events): count delivery outcomes per UTC day"
 ---
 
 ### Task 2: Health probe
+
+- [ ] Task 2 complete: Health probe
 
 Checks off: **tasks.md 2.1** and the `/health` part of **2.4**
 
@@ -428,6 +432,8 @@ git commit -m "feat(health): return 503 when the database does not answer within
 ---
 
 ### Task 3: Status service and `GET /api/status`
+
+- [ ] Task 3 complete: Status service and `GET /api/status`
 
 Checks off: **tasks.md 2.2, 2.3, 2.4**
 
@@ -725,6 +731,8 @@ git commit -m "feat(status): add GET /api/status with aggregate statistics and a
 
 ### Task 4: Serve the built UI
 
+- [ ] Task 4 complete: Serve the built UI
+
 Checks off: **tasks.md 3.3 (serve)**
 
 **Files:**
@@ -890,6 +898,8 @@ git commit -m "feat(web): serve the built UI with @fastify/static and keep the J
 ---
 
 ### Task 5: Frontend skeleton and status page
+
+- [ ] Task 5 complete: Frontend skeleton and status page
 
 Checks off: **tasks.md 3.1, 3.2, 3.4**
 
@@ -1372,6 +1382,8 @@ git commit -m "feat(web): add the React status page with theme tokens and a 30-s
 
 ### Task 6: Gyroscope
 
+- [ ] Task 6 complete: Gyroscope
+
 Checks off: **tasks.md 3.3**
 
 **Files:**
@@ -1553,6 +1565,8 @@ git commit -m "feat(web): add the gyroscope animation with an error color state"
 
 ### Task 7: Docker, CI and Dependabot
 
+- [ ] Task 7 complete: Docker, CI and Dependabot
+
 Checks off: **tasks.md 4.1, 4.2**
 
 **Files:**
@@ -1676,6 +1690,8 @@ git commit -m "build: build the web UI in Docker and CI, and watch web/ with Dep
 ---
 
 ### Task 8: Documentation
+
+- [ ] Task 8 complete: Documentation
 
 Checks off: **tasks.md 4.3**
 
