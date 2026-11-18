@@ -35,6 +35,6 @@
 
 ## 7. Verification and documentation
 
-- [ ] 7.1 Contract tests comparing responses with the captured fixtures from 1.1
+- [x] 7.1 Contract tests comparing responses with the captured fixtures from 1.1
 - [ ] 7.2 End-to-end check on the test portal with no internet: local app with UI runs its `URL_INSTALL` page with tokens, finishes installation via `BX24.installFinish`, then opens and calls REST; server-side local app receives `ONAPPINSTALL` with tokens; both renew tokens via `/oauth/token/`
 - [x] 7.3 Write the deployment guide: server setup, portal `oauth_server` switch and re-registration, re-creating local apps, app renewal URL (config change or DNS plus internal-CA certificate), rollback

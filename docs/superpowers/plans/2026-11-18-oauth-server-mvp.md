@@ -3083,7 +3083,7 @@ git commit -m "build: add container image, compose app service, token cleanup an
 
 ### Task 14: Contract tests against captured cloud traffic
 
-- [ ] Task 14 complete: Contract tests against captured cloud traffic
+- [x] Task 14 complete: Contract tests against captured cloud traffic
 
 tasks.md: **7.1** — **blocked until Task 2 fixtures (`test/fixtures/cloud-capture.har`, `test/fixtures/event-handler.har`) are committed.** The suite skips itself while the fixtures are absent.
 
@@ -3097,7 +3097,7 @@ tasks.md: **7.1** — **blocked until Task 2 fixtures (`test/fixtures/cloud-capt
 
 Expected shapes come only from the HAR files, never from our serializer. A difference means: fix our response, or — when the cloud field cannot exist here (e.g. a marketplace-only field) — add its path to `CLOUD_ONLY` with a one-line reason.
 
-- [ ] **Step 1: Write the contract test**
+- [x] **Step 1: Write the contract test**
 
 `test/contract/cloud-shapes.test.ts`:
 ```ts
@@ -3273,12 +3273,12 @@ describe.skipIf(!existsSync(CLOUD_HAR))('contract: cloud response shapes', () =>
 });
 ```
 
-- [ ] **Step 2: Run against the fixtures**
+- [x] **Step 2: Run against the fixtures**
 
 Run: `npx vitest run test/contract`
 Expected: either PASS, or FAIL with a concrete shape diff. Before fixtures exist: suite reported as skipped.
 
-- [ ] **Step 3: Resolve every diff**
+- [x] **Step 3: Resolve every diff**
 
 For each failing comparison, one of:
 - Path form differs (e.g. cloud RPC path is `/rest/rest.check.json`): add the alias route in `src/routes/rpc.ts` (register `/rest/${name}.json` in the same loop) and match it in `cloudJson`.
@@ -3290,7 +3290,7 @@ For each failing comparison, one of:
 Run after each fix: `npm test`
 Expected: all PASS.
 
-- [ ] **Step 4: Typecheck, lint, commit**
+- [x] **Step 4: Typecheck, lint, commit**
 
 ```bash
 npm run typecheck && npm run lint
