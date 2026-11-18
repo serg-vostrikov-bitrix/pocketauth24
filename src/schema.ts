@@ -1,10 +1,14 @@
+import { sql } from 'drizzle-orm';
 import {
   bigint,
   bigserial,
+  check,
+  date,
   index,
   integer,
   jsonb,
   pgTable,
+  primaryKey,
   text,
   timestamp,
 } from 'drizzle-orm/pg-core';
@@ -52,3 +56,21 @@ export const tokenPairs = pgTable(
 export type Portal = typeof portals.$inferSelect;
 export type Application = typeof applications.$inferSelect;
 export type TokenPair = typeof tokenPairs.$inferSelect;
+
+export type Outcome = 'delivered' | 'failed' | 'dropped';
+
+export const eventCounters = pgTable(
+  'event_counters',
+  {
+    day: date('day').notNull(),
+    outcome: text('outcome').$type<Outcome>().notNull(),
+    count: bigint('count', { mode: 'number' }).notNull().default(0),
+  },
+  (table) => [
+    primaryKey({ columns: [table.day, table.outcome] }),
+    check(
+      'event_counters_outcome_check',
+      sql`${table.outcome} in ('delivered', 'failed', 'dropped')`,
+    ),
+  ],
+);

@@ -13,6 +13,8 @@ import type { TokenResponse } from '../src/tokens.js';
 // Tests TRUNCATE this database; never point it at real data.
 export const TEST_DATABASE_URL =
   process.env.TEST_DATABASE_URL ?? 'postgres://b24auth:b24auth@localhost:5432/b24auth_test';
+// Nothing listens on port 1, so every connection fails at once.
+export const DEAD_DATABASE_URL = 'postgres://b24auth:b24auth@127.0.0.1:1/b24auth_test';
 export const PORTAL = 'https://portal.test';
 export const OTHER_PORTAL = 'https://other.test';
 export const TEST_CONFIG: Config = {
@@ -29,8 +31,10 @@ export type TestApp = {
   close: () => Promise<void>;
 };
 
-export async function startApp(): Promise<TestApp> {
-  const { db, pool } = createDb(TEST_DATABASE_URL);
+export async function startApp(
+  options: { databaseUrl?: string; webRoot?: string } = {},
+): Promise<TestApp> {
+  const { db, pool } = createDb(options.databaseUrl ?? TEST_DATABASE_URL);
   const logs: LogLine[] = [];
   const logStream = new Writable({
     write(chunk: Buffer, _encoding, callback) {
@@ -40,7 +44,7 @@ export async function startApp(): Promise<TestApp> {
       callback();
     },
   });
-  const app = await buildApp({ config: TEST_CONFIG, db, logStream });
+  const app = await buildApp({ config: TEST_CONFIG, db, logStream, webRoot: options.webRoot });
   return {
     app,
     db,
@@ -53,7 +57,9 @@ export async function startApp(): Promise<TestApp> {
 }
 
 export async function truncateAll(db: Db): Promise<void> {
-  await db.execute(sql`TRUNCATE portals, applications, token_pairs RESTART IDENTITY CASCADE`);
+  await db.execute(
+    sql`TRUNCATE portals, applications, token_pairs, event_counters RESTART IDENTITY CASCADE`,
+  );
 }
 
 export function form(body: Record<string, unknown>): {
@@ -154,7 +160,9 @@ export type HandlerServer = {
 
 // Local event handler. With hold: true it records each request but never answers
 // until release() or close().
-export async function startHandler(options: { hold?: boolean } = {}): Promise<HandlerServer> {
+export async function startHandler(
+  options: { hold?: boolean; status?: number } = {},
+): Promise<HandlerServer> {
   const requests: Record<string, unknown>[] = [];
   const held: ServerResponse[] = [];
   const server = createServer((req, res) => {
@@ -165,7 +173,10 @@ export async function startHandler(options: { hold?: boolean } = {}): Promise<Ha
     req.on('end', () => {
       requests.push(qs.parse(raw, { depth: 20, parameterLimit: 10_000, arrayLimit: 1000 }));
       if (options.hold) held.push(res);
-      else res.end('ok');
+      else {
+        res.statusCode = options.status ?? 200;
+        res.end('ok');
+      }
     });
   });
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));

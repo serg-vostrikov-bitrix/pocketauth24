@@ -12,6 +12,8 @@ import {
   truncateAll,
   type TestApp,
 } from '../helpers.js';
+import { eventCounters } from '../../src/schema.js';
+import { utcDay } from '../../src/eventCounters.js';
 
 let t: TestApp;
 beforeAll(async () => {
@@ -25,7 +27,29 @@ beforeEach(async () => {
   t.logs.length = 0;
 });
 
+async function counterRows(): Promise<{ day: string; outcome: string; count: number }[]> {
+  return t.db
+    .select({ day: eventCounters.day, outcome: eventCounters.outcome, count: eventCounters.count })
+    .from(eventCounters);
+}
+
 describe('event-delivery', () => {
+  it.each([
+    { status: 200, outcome: 'delivered' },
+    { status: 500, outcome: 'failed' },
+  ] as const)('Handler responds $status: $outcome counter +1', async ({ status, outcome }) => {
+    const portal = await registerPortal(t.app);
+    const handler = await startHandler({ status });
+    try {
+      await rpc(t.app, portal, 'rest.event.call', { QUERY: [eventItem(handler.url)] });
+      await vi.waitFor(async () => {
+        expect(await counterRows()).toEqual([{ day: utcDay(new Date()), outcome, count: 1 }]);
+      });
+    } finally {
+      await handler.close();
+    }
+  });
+
   it('Portal hands over events', async () => {
     const portal = await registerPortal(t.app);
     const handler = await startHandler({ hold: true });
@@ -214,6 +238,9 @@ describe('event-delivery', () => {
         url: handlers.at(-1)?.url,
         limit: 'global',
       });
+      await vi.waitFor(async () => {
+        expect((await counterRows()).find((r) => r.outcome === 'dropped')?.count).toBe(1);
+      });
     } finally {
       await Promise.all(handlers.map((h) => h.close()));
     }
@@ -257,6 +284,69 @@ describe('event-delivery', () => {
       });
     } finally {
       await Promise.all([slow.close(), other.close()]);
+    }
+  });
+
+  it('Overload drops of one batch are counted with one write', async () => {
+    const portal = await registerPortal(t.app);
+    // Spread the load so that no host reaches its own cap before the global cap.
+    const perHost = 40;
+    const handlers = await Promise.all(
+      Array.from({ length: EVENT_IN_FLIGHT_CAP / perHost + 1 }, () => startHandler({ hold: true })),
+    );
+    const insert = vi.spyOn(t.db, 'insert');
+    try {
+      const items = Array.from({ length: EVENT_IN_FLIGHT_CAP + 5 }, (_, i) =>
+        eventItem(handlers[Math.floor(i / perHost)].url),
+      );
+
+      await rpc(t.app, portal, 'rest.event.call', { QUERY: items });
+
+      const received = (): number => handlers.reduce((n, h) => n + h.requests.length, 0);
+      await vi.waitFor(
+        () => {
+          expect(received()).toBe(EVENT_IN_FLIGHT_CAP);
+        },
+        { timeout: 5000 },
+      );
+      await vi.waitFor(async () => {
+        expect((await counterRows()).find((r) => r.outcome === 'dropped')?.count).toBe(5);
+      });
+      expect(insert.mock.calls.filter(([table]) => table === eventCounters)).toHaveLength(1);
+      expect(t.logs.filter((l) => l.msg === 'event_dropped_overload')).toHaveLength(5);
+    } finally {
+      insert.mockRestore();
+      await Promise.all(handlers.map((h) => h.close()));
+    }
+  });
+
+  it('Host-cap drops of one batch are counted as dropped with one write', async () => {
+    const portal = await registerPortal(t.app);
+    const handler = await startHandler({ hold: true });
+    const insert = vi.spyOn(t.db, 'insert');
+    try {
+      const items = Array.from({ length: EVENT_HOST_IN_FLIGHT_CAP + 5 }, () =>
+        eventItem(handler.url),
+      );
+
+      await rpc(t.app, portal, 'rest.event.call', { QUERY: items });
+
+      await vi.waitFor(
+        () => {
+          expect(handler.requests).toHaveLength(EVENT_HOST_IN_FLIGHT_CAP);
+        },
+        { timeout: 5000 },
+      );
+      await vi.waitFor(async () => {
+        expect((await counterRows()).find((r) => r.outcome === 'dropped')?.count).toBe(5);
+      });
+      expect(insert.mock.calls.filter(([table]) => table === eventCounters)).toHaveLength(1);
+      const dropped = t.logs.filter((l) => l.msg === 'event_dropped_overload');
+      expect(dropped).toHaveLength(5);
+      expect(dropped.every((l) => l.limit === 'host')).toBe(true);
+    } finally {
+      insert.mockRestore();
+      await handler.close();
     }
   });
 
