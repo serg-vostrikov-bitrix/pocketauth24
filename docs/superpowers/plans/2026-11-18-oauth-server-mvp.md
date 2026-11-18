@@ -3379,14 +3379,14 @@ git commit -m "docs: add end-to-end checklist for an offline test portal"
 
 ### Task 16: Deployment guide
 
-- [ ] Task 16 complete: Deployment guide
+- [x] Task 16 complete: Deployment guide
 
 tasks.md: **7.3**
 
 **Files:**
 - Create: `docs/deployment.md`
 
-- [ ] **Step 1: Write `docs/deployment.md`** with these sections and content:
+- [x] **Step 1: Write `docs/deployment.md`** with these sections and content:
 
 ```markdown
 # Deploying b24auth-server in a closed network
@@ -3477,7 +3477,7 @@ Pending deliveries are lost on restart.
 4. Stop the service: `docker compose down` (keep the volume until you are sure).
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add docs/deployment.md
