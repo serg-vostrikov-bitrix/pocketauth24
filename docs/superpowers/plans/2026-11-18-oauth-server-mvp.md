@@ -3309,7 +3309,7 @@ tasks.md: **7.2** — also the real proof of the "Install URL of a local app sti
 **Files:**
 - Create: `docs/e2e-checklist.md`
 
-- [ ] **Step 1: Write `docs/e2e-checklist.md`**
+- [x] **Step 1: Write `docs/e2e-checklist.md`**
 
 ```markdown
 # End-to-end check on a test portal without internet
@@ -3366,7 +3366,7 @@ every step in the table at the end.
 | 1–10 | | |
 ```
 
-- [ ] **Step 2: Commit**
+- [x] **Step 2: Commit**
 
 ```bash
 git add docs/e2e-checklist.md
