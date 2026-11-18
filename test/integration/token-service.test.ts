@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { tokenPairs } from '../../src/schema.js';
 import {
   addApp,
@@ -22,6 +22,9 @@ afterAll(async () => {
 });
 beforeEach(async () => {
   await truncateAll(t.db);
+});
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 describe('token-service', () => {
@@ -108,5 +111,54 @@ describe('token-service', () => {
     expect(dump.rows).toHaveLength(1);
     expect(text).not.toContain(token.access_token);
     expect(text).not.toContain(token.refresh_token);
+  });
+
+  it('Valid token', async () => {
+    const portal = await registerPortal(t.app);
+    const app = await addApp(t.app, portal);
+    const token = await authorize(t.app, portal, app.client_id);
+
+    const res = await rpc(t.app, portal, 'rest.check', { TOKEN: token.access_token });
+
+    expect(res.body).toEqual({
+      result: {
+        client_id: app.client_id,
+        expires: token.expires,
+        scope: 'crm,user',
+        member_id: token.member_id,
+        user_id: 5,
+        parameters: { LOCAL_USER: '5', TZ_OFFSET: '10800' },
+      },
+    });
+  });
+
+  it('Unknown or foreign token', async () => {
+    const portal = await registerPortal(t.app);
+    const other = await registerPortal(t.app, `${OTHER_PORTAL}/`);
+    const otherApp = await addApp(t.app, other);
+    const foreign = await authorize(t.app, other, otherApp.client_id);
+    // Negative control: the token is valid on its own portal, so the denial below is
+    // caused by portal scoping, not by a broken token.
+    expect(
+      (await rpc(t.app, other, 'rest.check', { TOKEN: foreign.access_token })).body.result,
+    ).toBeDefined();
+
+    for (const tokenValue of ['0'.repeat(64), foreign.access_token]) {
+      const res = await rpc(t.app, portal, 'rest.check', { TOKEN: tokenValue });
+      expect(res.body.error).toBe('invalid_token');
+      expect(res.body.result).toBeUndefined();
+    }
+  });
+
+  it('Expired token', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    const portal = await registerPortal(t.app);
+    const app = await addApp(t.app, portal);
+    const token = await authorize(t.app, portal, app.client_id);
+
+    vi.setSystemTime(Date.now() + 3600 * 1000);
+    const res = await rpc(t.app, portal, 'rest.check', { TOKEN: token.access_token });
+
+    expect(res.body.error).toBe('expired_token');
   });
 });

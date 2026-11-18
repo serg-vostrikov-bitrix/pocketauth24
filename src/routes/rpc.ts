@@ -3,7 +3,7 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { AppDeps } from '../app.js';
 import { fail, ok, type DeliveryState, type Method } from '../bitrix.js';
 import { applicationAdd, applicationList } from '../methods/applications.js';
-import { restAuthorize } from '../methods/tokens.js';
+import { restAuthorize, restCheck } from '../methods/tokens.js';
 import { portals, type Portal } from '../schema.js';
 import { hashMatches } from '../tokens.js';
 
@@ -17,6 +17,7 @@ export const methods: Record<string, Method> = {
   'application.add': applicationAdd,
   'application.list': applicationList,
   'rest.authorize': restAuthorize,
+  'rest.check': restCheck,
 };
 
 export function rpcRoute(app: FastifyInstance, deps: AppDeps): void {

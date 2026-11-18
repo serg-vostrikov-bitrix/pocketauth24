@@ -1,7 +1,7 @@
 import { and, eq } from 'drizzle-orm';
 import { defineMethod, fail } from '../bitrix.js';
 import { applications } from '../schema.js';
-import { intersectScope, issuePair, normalizeScope } from '../tokens.js';
+import { check, intersectScope, issuePair, normalizeScope } from '../tokens.js';
 import { scopeSchema } from './applications.js';
 
 type AuthorizeBody = {
@@ -34,3 +34,15 @@ export const restAuthorize = defineMethod<AuthorizeBody>(authorizeSchema, async 
     params: body.PARAMS,
   });
 });
+
+type CheckBody = { TOKEN: string };
+
+const checkSchema = {
+  type: 'object',
+  required: ['TOKEN'],
+  properties: { TOKEN: { type: 'string' } },
+} as const;
+
+export const restCheck = defineMethod<CheckBody>(checkSchema, async (ctx, body) =>
+  check(ctx.db, ctx.portal, body.TOKEN),
+);

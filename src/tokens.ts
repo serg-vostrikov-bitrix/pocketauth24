@@ -1,7 +1,9 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
+import { and, eq } from 'drizzle-orm';
+import { fail } from './bitrix.js';
 import { ACCESS_TTL_SECONDS, REFRESH_TTL_SECONDS, type Config } from './config.js';
 import type { Db } from './db.js';
-import { tokenPairs, type Application, type Portal } from './schema.js';
+import { applications, tokenPairs, type Application, type Portal } from './schema.js';
 
 export function sha256(value: string): string {
   return createHash('sha256').update(value).digest('hex');
@@ -116,4 +118,34 @@ export async function issuePair(
     scope: input.scope,
     userId: input.userId,
   });
+}
+
+export type CheckResult = {
+  client_id: string;
+  expires: number;
+  scope: string;
+  member_id: string;
+  user_id: number;
+  parameters: Record<string, unknown>;
+};
+
+export async function check(db: Db, portal: Portal, token: string): Promise<CheckResult> {
+  const [row] = await db
+    .select({ pair: tokenPairs, clientId: applications.clientId })
+    .from(tokenPairs)
+    .innerJoin(applications, eq(tokenPairs.applicationId, applications.id))
+    .where(and(eq(tokenPairs.accessHash, sha256(token)), eq(applications.portalId, portal.id)))
+    .limit(1);
+  if (!row) fail('invalid_token', 'The access token provided is invalid', 401);
+  if (row.pair.accessExpiresAt.getTime() <= Date.now()) {
+    fail('expired_token', 'The access token provided has expired', 401);
+  }
+  return {
+    client_id: row.clientId,
+    expires: Math.floor(row.pair.accessExpiresAt.getTime() / 1000),
+    scope: row.pair.scope,
+    member_id: memberId(portal),
+    user_id: row.pair.userId,
+    parameters: row.pair.params,
+  };
 }
