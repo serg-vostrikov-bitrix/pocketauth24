@@ -8,7 +8,7 @@ import type { Db } from './db.js';
 import { oauthTokenRoute } from './routes/oauthToken.js';
 import { registerRoute } from './routes/register.js';
 import { rpcRoute } from './routes/rpc.js';
-import { probeDatabase } from './status.js';
+import { createStatusService, probeDatabase, VERSION } from './status.js';
 
 export type AppDeps = { config: Config; db: Db; logStream?: Writable; webRoot?: string };
 
@@ -41,6 +41,12 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
       ? { status: 'ok' }
       : reply.status(503).send({ status: 'error', database: 'down' }),
   );
+
+  const statusService = createStatusService({ db: deps.db, version: VERSION, log: app.log });
+  app.get('/api/status', async (_request, reply) => {
+    reply.header('cache-control', 'no-store');
+    return statusService.get();
+  });
   registerRoute(app, deps);
   rpcRoute(app, deps);
   oauthTokenRoute(app, deps);

@@ -5,6 +5,7 @@ export const EVENT_IN_FLIGHT_CAP = 200;
 export const LOG_LEVEL = 'info';
 export const PORT = 3000;
 export const CLEANUP_INTERVAL_MS = 60 * 60 * 1000;
+export const STATUS_CACHE_MS = 10_000;
 export const BODY_LIMIT_BYTES = 10 * 1024 * 1024;
 export const QS_OPTIONS = { depth: 20, parameterLimit: 10_000, arrayLimit: 1000 } as const;
 
