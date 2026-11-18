@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import type { Db } from '../db.js';
 import { adminUsers } from '../schema.js';
-import { deleteSessionsOfUser } from './sessions.js';
+import { deleteSessionsOfUser, type AdminUser } from './sessions.js';
 
 export const LOGIN_PATTERN = /^[A-Za-z0-9._-]{3,64}$/;
 const DEFAULT_SUPERUSER_LOGIN = 'admin';
@@ -36,4 +36,25 @@ export async function setSuperuser(
     }
     return { saved: true, login: target };
   });
+}
+
+export async function hasSuperuser(db: Db): Promise<boolean> {
+  return (await db.$count(adminUsers, eq(adminUsers.role, 'superuser'))) > 0;
+}
+
+export async function findUserByLogin(
+  db: Db,
+  login: string,
+): Promise<(AdminUser & { passwordHash: string }) | null> {
+  const [row] = await db
+    .select({
+      id: adminUsers.id,
+      login: adminUsers.login,
+      role: adminUsers.role,
+      passwordHash: adminUsers.passwordHash,
+    })
+    .from(adminUsers)
+    .where(eq(adminUsers.login, login))
+    .limit(1);
+  return row ?? null;
 }

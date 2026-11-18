@@ -5,9 +5,11 @@ import { Writable } from 'node:stream';
 import { sql } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
 import qs from 'qs';
+import { hashPassword } from '../src/admin/password.js';
 import { buildApp } from '../src/app.js';
 import type { Config } from '../src/config.js';
 import { createDb, type Db } from '../src/db.js';
+import { adminUsers } from '../src/schema.js';
 import type { TokenResponse } from '../src/tokens.js';
 
 // Tests TRUNCATE this database; never point it at real data.
@@ -220,4 +222,32 @@ export function eventItem(
     },
     additional: overrides.additional ?? { sendAuth: '0', sendRefreshToken: '0' },
   };
+}
+
+export const SUPERUSER = { login: 'admin', password: 'superuser-pass-123' } as const;
+
+export async function createSuperuser(db: Db): Promise<void> {
+  await db.insert(adminUsers).values({
+    login: SUPERUSER.login,
+    passwordHash: await hashPassword(SUPERUSER.password),
+    role: 'superuser',
+  });
+}
+
+// Returns the value for a `cookie` request header.
+export async function loginAs(
+  app: FastifyInstance,
+  login: string,
+  password: string,
+): Promise<string> {
+  const res = await app.inject({
+    method: 'POST',
+    url: '/api/admin/login',
+    payload: { login, password },
+  });
+  const session = res.cookies.find((c) => c.name === 'b24a_session');
+  if (res.statusCode !== 200 || !session) {
+    throw new Error(`login failed: ${res.statusCode} ${res.body}`);
+  }
+  return `b24a_session=${session.value}`;
 }
