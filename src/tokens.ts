@@ -1,5 +1,5 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, lt } from 'drizzle-orm';
 import { fail } from './bitrix.js';
 import { ACCESS_TTL_SECONDS, REFRESH_TTL_SECONDS, type Config } from './config.js';
 import type { Db } from './db.js';
@@ -173,4 +173,8 @@ export async function refresh(db: Db, config: Config, input: RefreshInput): Prom
     userId: row.pair.userId,
     params: row.pair.params,
   });
+}
+
+export async function deleteExpiredPairs(db: Db, now: Date): Promise<void> {
+  await db.delete(tokenPairs).where(lt(tokenPairs.refreshExpiresAt, now));
 }

@@ -1,7 +1,7 @@
 import { sql } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { tokenPairs } from '../../src/schema.js';
-import type { TokenResponse } from '../../src/tokens.js';
+import { deleteExpiredPairs, type TokenResponse } from '../../src/tokens.js';
 import {
   addApp,
   authorize,
@@ -271,5 +271,15 @@ describe('token-service', () => {
 
     expect(res.statusCode).toBe(401);
     expect(res.json<{ error: string }>().error).toBe('invalid_client');
+  });
+
+  it('Cleanup removes only pairs whose refresh token has expired', async () => {
+    await issued();
+
+    await deleteExpiredPairs(t.db, new Date());
+    expect(await t.db.select().from(tokenPairs)).toHaveLength(1);
+
+    await deleteExpiredPairs(t.db, new Date(Date.now() + 365 * 24 * 3600 * 1000));
+    expect(await t.db.select().from(tokenPairs)).toHaveLength(0);
   });
 });

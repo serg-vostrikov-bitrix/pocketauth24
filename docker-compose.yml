@@ -14,5 +14,16 @@ services:
       interval: 5s
       retries: 10
 
+  app:
+    build: .
+    image: b24auth-server:local
+    env_file: .env
+    ports:
+      - '3000:3000'
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
 volumes:
   pgdata: {}
