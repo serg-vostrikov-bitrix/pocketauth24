@@ -1,4 +1,6 @@
 import { createHash } from 'node:crypto';
+import { createServer, type ServerResponse } from 'node:http';
+import type { AddressInfo } from 'node:net';
 import { Writable } from 'node:stream';
 import { sql } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
@@ -141,4 +143,70 @@ export async function tokenRequest(
   return method === 'GET'
     ? app.inject({ method: 'GET', url: `/oauth/token/?${qs.stringify(params)}` })
     : app.inject({ method: 'POST', url: '/oauth/token/', ...form(params) });
+}
+
+export type HandlerServer = {
+  url: string;
+  requests: Record<string, unknown>[];
+  release: () => void;
+  close: () => Promise<void>;
+};
+
+// Local event handler. With hold: true it records each request but never answers
+// until release() or close().
+export async function startHandler(options: { hold?: boolean } = {}): Promise<HandlerServer> {
+  const requests: Record<string, unknown>[] = [];
+  const held: ServerResponse[] = [];
+  const server = createServer((req, res) => {
+    let raw = '';
+    req.on('data', (chunk: Buffer) => {
+      raw += chunk.toString();
+    });
+    req.on('end', () => {
+      requests.push(qs.parse(raw, { depth: 20, parameterLimit: 10_000, arrayLimit: 1000 }));
+      if (options.hold) held.push(res);
+      else res.end('ok');
+    });
+  });
+  await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));
+  const { port } = server.address() as AddressInfo;
+  const release = (): void => {
+    for (const res of held.splice(0)) res.end('ok');
+  };
+  return {
+    url: `http://127.0.0.1:${port}/handler`,
+    requests,
+    release,
+    close: async () => {
+      release();
+      server.closeAllConnections();
+      await new Promise<void>((resolve) => server.close(() => resolve()));
+    },
+  };
+}
+
+export function eventItem(
+  url: string,
+  overrides: {
+    client_id?: string;
+    event?: string;
+    auth?: Record<string, unknown>;
+    additional?: Record<string, unknown>;
+    data?: unknown;
+  } = {},
+): Record<string, unknown> {
+  return {
+    client_id: overrides.client_id, // undefined is dropped by qs.stringify
+    auth: overrides.auth ?? { LOCAL_USER: '0', application_token: 'apptoken123' },
+    query: {
+      QUERY_URL: url,
+      QUERY_DATA: {
+        event: overrides.event ?? 'ONCRMDEALADD',
+        event_handler_id: '7',
+        data: overrides.data ?? { FIELDS: { ID: '42' } },
+        ts: '1763460000',
+      },
+    },
+    additional: overrides.additional ?? { sendAuth: '0', sendRefreshToken: '0' },
+  };
 }

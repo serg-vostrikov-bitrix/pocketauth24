@@ -8,6 +8,7 @@ import {
   applicationList,
   applicationUpdate,
 } from '../methods/applications.js';
+import { restEventCall } from '../methods/events.js';
 import { restAuthorize, restCheck } from '../methods/tokens.js';
 import { portals, type Portal } from '../schema.js';
 import { hashMatches } from '../tokens.js';
@@ -25,6 +26,7 @@ export const methods: Record<string, Method> = {
   'application.delete': applicationDelete,
   'rest.authorize': restAuthorize,
   'rest.check': restCheck,
+  'rest.event.call': restEventCall,
 };
 
 export function rpcRoute(app: FastifyInstance, deps: AppDeps): void {
