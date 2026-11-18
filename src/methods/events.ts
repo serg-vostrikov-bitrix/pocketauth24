@@ -1,7 +1,7 @@
 import { and, eq } from 'drizzle-orm';
 import qs from 'qs';
 import { defineMethod, type MethodContext } from '../bitrix.js';
-import { EVENT_IN_FLIGHT_CAP, EVENT_TIMEOUT_MS } from '../config.js';
+import { EVENT_HOST_IN_FLIGHT_CAP, EVENT_IN_FLIGHT_CAP, EVENT_TIMEOUT_MS } from '../config.js';
 import { recordOutcome } from '../eventCounters.js';
 import { applications, type Outcome } from '../schema.js';
 import { issuePair, localUserId, memberId, portalDomain } from '../tokens.js';
@@ -93,6 +93,14 @@ function countOutcome(ctx: MethodContext, outcome: Outcome, n = 1): void {
   });
 }
 
+function hostOf(raw: string): string {
+  try {
+    return new URL(raw).host;
+  } catch {
+    return '<invalid url>';
+  }
+}
+
 function logFields(ctx: MethodContext, item: EventItem) {
   return {
     portal: ctx.portal.origin,
@@ -103,11 +111,15 @@ function logFields(ctx: MethodContext, item: EventItem) {
 }
 
 // One attempt, no retries; nothing survives a restart (stage 3 adds a persistent queue).
-// The caller checks the in-flight cap first.
+// The caller checks the in-flight caps first.
 async function deliver(ctx: MethodContext, item: EventItem): Promise<void> {
   const data = item.query.QUERY_DATA ?? {};
   const fields = logFields(ctx, item);
-  ctx.delivery.inFlight++;
+  const { delivery } = ctx;
+  const host = hostOf(item.query.QUERY_URL);
+  // Count before the first await, so the next item of the batch sees this slot as taken.
+  delivery.inFlight++;
+  delivery.byHost.set(host, (delivery.byHost.get(host) ?? 0) + 1);
   try {
     const auth = await buildAuth(ctx, item);
     const body = qs.stringify({
@@ -138,16 +150,25 @@ async function deliver(ctx: MethodContext, item: EventItem): Promise<void> {
     );
     countOutcome(ctx, 'failed');
   } finally {
-    ctx.delivery.inFlight--;
+    delivery.inFlight--;
+    const left = (delivery.byHost.get(host) ?? 1) - 1;
+    if (left > 0) delivery.byHost.set(host, left);
+    else delivery.byHost.delete(host);
   }
 }
 
 export const restEventCall = defineMethod<EventCallBody>(eventCallSchema, async (ctx, body) => {
+  const { delivery } = ctx;
   let dropped = 0;
   for (const item of body.QUERY) {
-    if (ctx.delivery.inFlight >= EVENT_IN_FLIGHT_CAP) {
-      // ponytail: in-memory cap, persistent queue in stage 3
-      ctx.log.warn(logFields(ctx, item), 'event_dropped_overload');
+    // ponytail: in-memory caps, persistent queue in stage 3.
+    // The host cap keeps one slow handler from taking every slot of the global cap.
+    let limit: 'global' | 'host' | null = null;
+    if (delivery.inFlight >= EVENT_IN_FLIGHT_CAP) limit = 'global';
+    else if ((delivery.byHost.get(hostOf(item.query.QUERY_URL)) ?? 0) >= EVENT_HOST_IN_FLIGHT_CAP)
+      limit = 'host';
+    if (limit) {
+      ctx.log.warn({ ...logFields(ctx, item), limit }, 'event_dropped_overload');
       dropped++;
     } else {
       void deliver(ctx, item);
