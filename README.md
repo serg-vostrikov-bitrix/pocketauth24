@@ -115,7 +115,7 @@ docker compose up -d                       # migrations run on start
 curl https://auth.corp.local/health        # {"status":"ok"}
 ```
 
-**Reverse proxy (required).** Proxy `https://<BASE_URL host>/` to `http://<app host>:3000/` with a certificate from your internal CA. Deny by default; allow every path only from portal server IPs, except `/oauth/token` and `/health`. Match paths with and without the trailing slash.
+**Reverse proxy (required).** Proxy `https://<BASE_URL host>/` to `http://<app host>:3000/` with a certificate from your internal CA. Deny by default; allow every path only from portal server IPs, except `/oauth/token`, `/health` and, if you want it, the status page (`/`, `/assets/*`, `/api/status`). Match paths with and without the trailing slash.
 
 **Point the portal at the server.** In the admin panel, "PHP command line":
 

@@ -2,7 +2,7 @@ type Tone = 'ok' | 'error' | 'muted';
 
 function toneOf(value: string): Tone {
   if (value === 'ok') return 'ok';
-  if (value === 'loading') return 'muted';
+  if (value === 'loading' || value === 'unknown') return 'muted';
   return 'error';
 }
 

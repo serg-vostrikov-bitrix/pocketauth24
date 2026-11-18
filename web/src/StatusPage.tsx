@@ -23,7 +23,7 @@ export function StatusPage() {
           setStatus(next);
           setReachable(true);
         },
-        // Keep the last data; only the service pill changes.
+        // Keep the last counts; the service and database pills change.
         () => {
           if (active) setReachable(false);
         },
@@ -38,7 +38,7 @@ export function StatusPage() {
   }, []);
 
   const service = reachable ? (status?.status ?? 'loading') : 'unreachable';
-  const database = status?.database ?? 'loading';
+  const database = reachable ? (status?.database ?? 'loading') : 'unknown';
   const events = status?.events ?? null;
 
   const gyroState = !reachable || status?.status === 'degraded' ? 'error' : 'ok';
