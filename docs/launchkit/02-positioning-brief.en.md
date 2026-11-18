@@ -58,7 +58,7 @@ b24auth-server is an independent, self-hosted server that answers the OAuth call
 - Local applications created while the portal used the cloud must be re-created, and their new `client_id` / `client_secret` put into each application's configuration.
 - Applications that hard-code `https://oauth.bitrix.info/oauth/token/` (most SDKs, including CRest) need a configuration change, or internal DNS plus an internal-CA certificate for the cloud host names.
 - Registration has no shared secret, because the portal sends none. The reverse proxy must restrict all paths to portal server IPs, except `/oauth/token` and `/health`. Without that restriction, anyone who can reach `/oauth/register/` with an allowlisted portal address can rotate that portal's credentials and lock it out.
-- Events are delivered once with a 10-second timeout; they are not stored or retried, are lost on restart, and are dropped above 200 concurrent deliveries.
+- Events are delivered once with a 10-second timeout; they are not stored or retried, are lost on restart, and are dropped above 200 concurrent deliveries in total or 100 concurrent deliveries to one handler host.
 - Run a single instance only: migrations run on start without a lock.
 - No licence check: licence fields from the portal are ignored.
 - No CD pipeline and no published image: you build the image yourself and move it into the closed network as a tar file.
