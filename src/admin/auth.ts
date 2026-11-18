@@ -21,21 +21,18 @@ export const SESSION_COOKIE = 'b24a_session';
 const NO_SUPERUSER_HINT = 'docker compose exec app node dist/cli.js superuser set-password';
 const WRITE_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE']);
 
-function cookieOptions() {
-  return {
-    httpOnly: true,
-    sameSite: 'strict',
-    path: '/',
-    maxAge: SESSION_TTL_SECONDS,
-    secure: true,
-  } as const;
-}
+const COOKIE_ATTRIBUTES = {
+  httpOnly: true,
+  sameSite: 'strict',
+  path: '/',
+  secure: true,
+} as const;
 
 // A browser cannot send a cross-site JSON request without a CORS preflight, and the server
 // enables no CORS. Together with SameSite=Strict this blocks CSRF.
 export async function jsonGuard(request: FastifyRequest, reply: FastifyReply) {
   const type = request.headers['content-type'] ?? '';
-  if (WRITE_METHODS.has(request.method) && !type.startsWith('application/json')) {
+  if (WRITE_METHODS.has(request.method) && !type.toLowerCase().startsWith('application/json')) {
     return reply.status(415).send({ error: 'unsupported_media_type' });
   }
 }
@@ -82,7 +79,10 @@ export function loginRoute(app: FastifyInstance, db: Db): void {
         return reply.status(401).send({ error: 'invalid_credentials' });
       }
       const sessionId = await createSession(db, user.id);
-      reply.setCookie(SESSION_COOKIE, sessionId, cookieOptions());
+      reply.setCookie(SESSION_COOKIE, sessionId, {
+        ...COOKIE_ATTRIBUTES,
+        maxAge: SESSION_TTL_SECONDS,
+      });
       request.log.info({ login: user.login, ip }, 'admin_login_succeeded');
       return { login: user.login, role: user.role };
     },
@@ -93,7 +93,7 @@ export function sessionRoutes(app: FastifyInstance, db: Db): void {
   app.post('/logout', async (request, reply) => {
     const user = currentUser(request);
     await deleteSession(db, request.cookies[SESSION_COOKIE] ?? '');
-    reply.clearCookie(SESSION_COOKIE, { path: '/' });
+    reply.clearCookie(SESSION_COOKIE, COOKIE_ATTRIBUTES);
     request.log.info({ login: user.login, ip: request.ip }, 'admin_logout');
     return reply.status(204).send();
   });

@@ -114,3 +114,62 @@ it('Login events log the login and the IP, and no password or session ID', async
   expect(text).not.toContain(SUPERUSER.password);
   expect(text).not.toContain(cookie.split('=')[1]);
 });
+
+it('A write without a session gets 401 before the body is parsed', async () => {
+  await createSuperuser(t.db);
+  const res = await t.app.inject({
+    method: 'POST',
+    url: '/api/admin/logout',
+    headers: { 'content-type': 'application/json' },
+    payload: '{not json',
+  });
+  expect(res.statusCode).toBe(401);
+  expect(res.json()).toEqual({ error: 'unauthorized' });
+});
+
+it('An unknown admin path returns 404 and no-store', async () => {
+  const res = await t.app.inject({ method: 'GET', url: '/api/admin/nope' });
+  expect(res.statusCode).toBe(404);
+  expect(res.json()).toEqual({ error: 'not_found' });
+  expect(res.headers['cache-control']).toBe('no-store');
+});
+
+it('The JSON guard ignores the case of the content type', async () => {
+  await createSuperuser(t.db);
+  const cookie = await loginAs(t.app, SUPERUSER.login, SUPERUSER.password);
+  const res = await t.app.inject({
+    method: 'POST',
+    url: '/api/admin/logout',
+    headers: { cookie, 'content-type': 'Application/JSON' },
+    payload: '{}',
+  });
+  expect(res.statusCode).toBe(204);
+});
+
+it('A write with no content type or text/plain gets 415', async () => {
+  await createSuperuser(t.db);
+  const cookie = await loginAs(t.app, SUPERUSER.login, SUPERUSER.password);
+  const none = await t.app.inject({
+    method: 'POST',
+    url: '/api/admin/logout',
+    headers: { cookie },
+  });
+  const text = await t.app.inject({
+    method: 'POST',
+    url: '/api/admin/logout',
+    headers: { cookie, 'content-type': 'text/plain' },
+    payload: '{}',
+  });
+  expect(none.statusCode).toBe(415);
+  expect(text.statusCode).toBe(415);
+  expect((await me(cookie)).statusCode).toBe(200);
+});
+
+it('Logout clears the cookie with the same attributes', async () => {
+  await createSuperuser(t.db);
+  const cookie = await loginAs(t.app, SUPERUSER.login, SUPERUSER.password);
+  const header = String((await logout(cookie)).headers['set-cookie']);
+  for (const flag of ['Path=/', 'HttpOnly', 'SameSite=Strict', 'Secure']) {
+    expect(header).toContain(flag);
+  }
+});

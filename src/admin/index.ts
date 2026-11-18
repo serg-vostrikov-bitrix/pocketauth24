@@ -13,10 +13,14 @@ export async function registerAdmin(app: FastifyInstance, deps: { db: Db }): Pro
         reply.header('cache-control', 'no-store');
         return payload;
       });
+      admin.setNotFoundHandler(async (_request, reply) =>
+        reply.status(404).send({ error: 'not_found' }),
+      );
       loginRoute(admin, deps.db);
-      // Every route in this scope needs a valid session.
+      // Every route in this scope needs a valid session. The check runs at onRequest, before
+      // body parsing and validation; the cookie plugin's own onRequest hook runs first.
       await admin.register(async (authed) => {
-        authed.addHook('preHandler', sessionGuard(deps.db));
+        authed.addHook('onRequest', sessionGuard(deps.db));
         sessionRoutes(authed, deps.db);
       });
     },
