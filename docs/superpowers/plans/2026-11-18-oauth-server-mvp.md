@@ -2704,7 +2704,7 @@ git commit -m "feat: accept rest.event.call and deliver events once without retr
 
 ### Task 11: In-flight cap for event deliveries
 
-- [ ] Task 11 complete: In-flight cap for event deliveries
+- [x] Task 11 complete: In-flight cap for event deliveries
 
 tasks.md: **6.1** (cap)
 
@@ -2716,7 +2716,7 @@ tasks.md: **6.1** (cap)
 - Consumes: `EVENT_IN_FLIGHT_CAP` (200), `ctx.delivery.inFlight`.
 - Produces: log message `event_dropped_overload` with the same `fields` as `event_delivery_failed`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
   it('Overload', async () => {
@@ -2743,12 +2743,12 @@ tasks.md: **6.1** (cap)
   });
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `npx vitest run test/integration/event-delivery.test.ts -t "Overload"`
 Expected: FAIL — no `event_dropped_overload` log line (all 201 are sent).
 
-- [ ] **Step 3: Implement** — in `deliver()`, directly after `const fields = {...};` and before `ctx.delivery.inFlight++;` (import `EVENT_IN_FLIGHT_CAP` from `../config.js`):
+- [x] **Step 3: Implement** — in `deliver()`, directly after `const fields = {...};` and before `ctx.delivery.inFlight++;` (import `EVENT_IN_FLIGHT_CAP` from `../config.js`):
 
 ```ts
   if (ctx.delivery.inFlight >= EVENT_IN_FLIGHT_CAP) {
@@ -2760,12 +2760,12 @@ Expected: FAIL — no `event_dropped_overload` log line (all 201 are sent).
 
 The check and the increment run synchronously before the first `await`, so items 0–199 take the slots in order and item 200 is dropped deterministically.
 
-- [ ] **Step 4: Run tests, typecheck, lint**
+- [x] **Step 4: Run tests, typecheck, lint**
 
 Run: `npm test && npm run typecheck && npm run lint`
 Expected: all PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src test
