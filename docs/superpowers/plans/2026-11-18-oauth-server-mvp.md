@@ -2896,7 +2896,7 @@ git commit -m "feat: include a fresh user token in event auth when requested"
 
 ### Task 13: Server boot, token cleanup, container image, compose app service and CI
 
-- [ ] Task 13 complete: Server boot, token cleanup, container image, compose app service and CI
+- [x] Task 13 complete: Server boot, token cleanup, container image, compose app service and CI
 
 tasks.md: **1.3**, **1.4** (CI)
 
@@ -3007,7 +3007,7 @@ PORTAL_ALLOWLIST=portal.example.internal
     restart: unless-stopped
 ```
 
-- [ ] **Step 4: Smoke-run the container**
+- [x] **Step 4: Smoke-run the container**
 
 ```bash
 cp .env.example .env
