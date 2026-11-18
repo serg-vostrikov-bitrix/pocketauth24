@@ -603,7 +603,7 @@ git commit -m "test: add sanitized cloud protocol capture fixtures"
 
 ### Task 3: Storage schema, migrations and portal registration
 
-- [ ] Task 3 complete: Storage schema, migrations and portal registration
+- [x] Task 3 complete: Storage schema, migrations and portal registration
 
 tasks.md: **2.1**, **3.1**, part of **1.3** (database service) and **1.4** (DB test setup)
 
@@ -623,7 +623,7 @@ tasks.md: **2.1**, **3.1**, part of **1.3** (database service) and **1.4** (DB t
   - `routes/register.ts`: `registerRoute(app: FastifyInstance, deps: AppDeps): void`.
   - `test/helpers.ts`: `TEST_DATABASE_URL`, `PORTAL = 'https://portal.test'`, `OTHER_PORTAL = 'https://other.test'`, `TEST_CONFIG`, `type LogLine`, `type TestApp = { app; db; logs: LogLine[]; close(): Promise<void> }`, `startApp(): Promise<TestApp>`, `truncateAll(db: Db): Promise<void>`, `form(body)`, `type Credentials = { client_id: string; client_secret: string }`, `registerPortal(app, redirectUri?): Promise<Credentials>`.
 
-- [ ] **Step 1: Add the database service and start it**
+- [x] **Step 1: Add the database service and start it**
 
 `docker-compose.yml`:
 ```yaml
@@ -650,7 +650,7 @@ volumes:
 Run: `docker compose up -d db`
 Expected: container `db` healthy (`docker compose ps`).
 
-- [ ] **Step 2: Write `src/schema.ts`, `src/db.ts`, `drizzle.config.ts` and generate the migration**
+- [x] **Step 2: Write `src/schema.ts`, `src/db.ts`, `drizzle.config.ts` and generate the migration**
 
 `src/schema.ts`:
 ```ts
@@ -738,7 +738,7 @@ export default defineConfig({
 Run: `npx drizzle-kit generate --name init`
 Expected: `drizzle/0000_init.sql` with three `CREATE TABLE`, two `ON DELETE cascade` foreign keys, unique constraints and `token_pairs_refresh_expires_at_idx`; plus `drizzle/meta/`.
 
-- [ ] **Step 3: Write test infrastructure**
+- [x] **Step 3: Write test infrastructure**
 
 `test/global-setup.ts`:
 ```ts
@@ -858,7 +858,7 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 4: Write the failing registration tests**
+- [x] **Step 4: Write the failing registration tests**
 
 `test/integration/portal-registration.test.ts`:
 ```ts
@@ -907,12 +907,12 @@ describe('portal-registration', () => {
 });
 ```
 
-- [ ] **Step 5: Run to verify they fail**
+- [x] **Step 5: Run to verify they fail**
 
 Run: `npx vitest run test/integration/portal-registration.test.ts`
 Expected: FAIL — `buildApp` does not accept `db` / route `/oauth/register/` returns 404.
 
-- [ ] **Step 6: Write `src/bitrix.ts`, `src/tokens.ts`, `src/routes/register.ts`**
+- [x] **Step 6: Write `src/bitrix.ts`, `src/tokens.ts`, `src/routes/register.ts`**
 
 `src/bitrix.ts`:
 ```ts
@@ -1020,7 +1020,7 @@ export function registerRoute(app: FastifyInstance, deps: AppDeps): void {
 }
 ```
 
-- [ ] **Step 7: Wire `db`, the error handler and the route into `src/app.ts`; migrate in `src/server.ts`**
+- [x] **Step 7: Wire `db`, the error handler and the route into `src/app.ts`; migrate in `src/server.ts`**
 
 `src/app.ts`:
 ```ts
@@ -1079,12 +1079,12 @@ it('GET /health returns ok', async () => {
 });
 ```
 
-- [ ] **Step 8: Run all tests, typecheck, lint**
+- [x] **Step 8: Run all tests, typecheck, lint**
 
 Run: `npm test && npm run typecheck && npm run lint`
 Expected: 3 tests PASS; no errors.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add docker-compose.yml drizzle drizzle.config.ts src test vitest.config.ts

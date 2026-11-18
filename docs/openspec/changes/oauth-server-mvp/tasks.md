@@ -7,7 +7,7 @@
 
 ## 2. Storage
 
-- [ ] 2.1 Define schema and migrations for portals, applications and token pairs (hashed values, metadata, expiry); every query filters by the calling portal
+- [x] 2.1 Define schema and migrations for portals, applications and token pairs (hashed values, metadata, expiry); every query filters by the calling portal
 
 ## 3. Portal registration and authentication
 
