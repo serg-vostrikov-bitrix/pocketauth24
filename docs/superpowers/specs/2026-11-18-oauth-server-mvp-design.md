@@ -233,3 +233,31 @@ real proof is the end-to-end check.
 | Portal caches `rest.check` 3600 s, including errors | Documented behaviour |
 | Apps hard-code `oauth.bitrix.info` | Deployment guide: app config or DNS + internal CA |
 | Unauthenticated `/oauth/register/` and `/rest/` let a peer who reaches the server take over an allowlisted portal's identity | App port bound to loopback; proxy allows both paths only from portal server IPs (deployment guide section 4). Residual: a host inside the portal's IP range |
+
+## 11. Implementation Divergence
+
+Recorded during verify (2026-11-18). The protocol capture against `oauth.bitrix.info`
+(`docs/protocol-capture.md` section 6, fixtures `test/fixtures/*.har`) showed response details
+that sections 5 and 6 inferred differently from the box sources. Build Task 14 aligned the code
+and the delta specs with the cloud; the delta specs are canonical. Where this list and sections
+5–6 disagree, this list wins.
+
+| # | Area | Sections 5–6 say | Implemented (cloud behaviour) |
+|---|---|---|---|
+| 1 | `/oauth/register/` response | `{client_id, client_secret}` | adds `host` = portal hostname without port |
+| 2 | `application.add` result | `{client_id, client_secret}` | adds `redirect_uri`, `scope` |
+| 3 | `rest.authorize` token response | includes `user_id` | no `user_id` (the portal adds it) |
+| 4 | `rest.check` result | `client_id, expires, scope, member_id, user_id, parameters` | `access_token, expires_in, expires, scope, client_id, parameters, status`; the portal reads the user from `parameters.LOCAL_USER` |
+| 5 | `rest.check` `parameters` | stored values as given | integer-like strings returned as numbers (stored values unchanged) |
+| 6 | `rest.check` unknown token | status "best guess" | HTTP 400 `invalid_token` / "Unable to get application by token"; `expired_token` stays 401 (not captured) |
+| 7 | Refresh with wrong client | 401 `invalid_client` | 400 `invalid_client` |
+| 8 | Error body | always `{error, error_description}` | `invalid_grant` and `invalid_client` on `/oauth/token/` have no `error_description` |
+| 9 | Refresh response | same as the issue response | `scope` is the literal `"app"`, `domain` is the OAuth server host, includes `user_id`, no `client_id`; the stored pair scope is unchanged |
+| 10 | Refresh check order | client first | pair lookup first: an unknown refresh token gives `invalid_grant` before the client is checked |
+| 11 | Unsupported grant | `unsupported_grant_type` | unknown `grant_type` → 400 `invalid_request` "Invalid grant_type parameter or parameter missing"; `authorization_code` → 400 `invalid_grant` |
+| 12 | `rest.event.call` result | `{"result": true}` | `{"result": null}` |
+| 13 | Event `auth` without a user | `domain, member_id, application_token` | adds `client_endpoint`, `server_endpoint` |
+| 14 | Event `auth` with a user | token response + `application_token` | also carries `user_id` |
+
+Not captured and still inferred: the RPC statuses for `invalid_client` (401) and
+`ERROR_METHOD_NOT_FOUND` (400), and the cloud shape of a token-bearing event `auth`.
