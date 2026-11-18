@@ -249,4 +249,27 @@ describe('token-service', () => {
     expect(res.statusCode).toBe(400);
     expect(res.json<{ error: string }>().error).toBe('unsupported_grant_type');
   });
+
+  it('Query-string secrets stay out of the logs', async () => {
+    const { app, token } = await issued();
+    t.logs.length = 0;
+
+    const res = await tokenRequest(t.app, 'GET', refreshParams(app, token.refresh_token));
+
+    expect(res.statusCode).toBe(200);
+    expect(t.logs.length).toBeGreaterThan(0);
+    const logged = JSON.stringify(t.logs);
+    expect(logged).not.toContain(app.client_secret);
+    expect(logged).not.toContain(token.refresh_token);
+  });
+
+  it('Refresh token of another application', async () => {
+    const { portal, token } = await issued();
+    const other = await addApp(t.app, portal);
+
+    const res = await tokenRequest(t.app, 'POST', refreshParams(other, token.refresh_token));
+
+    expect(res.statusCode).toBe(401);
+    expect(res.json<{ error: string }>().error).toBe('invalid_client');
+  });
 });
