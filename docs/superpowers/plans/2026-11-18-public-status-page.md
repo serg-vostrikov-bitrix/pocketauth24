@@ -731,7 +731,7 @@ git commit -m "feat(status): add GET /api/status with aggregate statistics and a
 
 ### Task 4: Serve the built UI
 
-- [ ] Task 4 complete: Serve the built UI
+- [x] Task 4 complete: Serve the built UI
 
 Checks off: **tasks.md 3.3 (serve)**
 
@@ -747,7 +747,7 @@ Checks off: **tasks.md 3.3 (serve)**
 - Produces: `export async function registerWeb(app: FastifyInstance, webRoot: string): Promise<void>` in `src/static.ts`.
 - Produces: the server serves the content of `/app/public` (`web/dist` in the image) at `/` and `/assets/*`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Create `test/integration/static.test.ts`:
 
@@ -813,17 +813,17 @@ it('Without index.html in webRoot, / returns the JSON 404', async () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npm test -- test/integration/static.test.ts`
 Expected: FAIL in the first two tests (404). The last two tests pass.
 
-- [ ] **Step 3: Install `@fastify/static`**
+- [x] **Step 3: Install `@fastify/static`**
 
 Run: `npm install @fastify/static`
 Expected: `package.json` `dependencies` gets `@fastify/static` (the latest major that supports Fastify 5).
 
-- [ ] **Step 4: Write `src/static.ts`**
+- [x] **Step 4: Write `src/static.ts`**
 
 ```ts
 import { existsSync } from 'node:fs';
@@ -860,7 +860,7 @@ export async function registerWeb(app: FastifyInstance, webRoot: string): Promis
 
 `cacheControl: false` turns off the default `Cache-Control` of the plugin, so `setHeaders` sets the only value.
 
-- [ ] **Step 5: Register it in `buildApp`**
+- [x] **Step 5: Register it in `buildApp`**
 
 In `src/app.ts`, add `import { registerWeb } from './static.js';` and add before `return app;`:
 
@@ -868,7 +868,7 @@ In `src/app.ts`, add `import { registerWeb } from './static.js';` and add before
   if (deps.webRoot) await registerWeb(app, deps.webRoot);
 ```
 
-- [ ] **Step 6: Pass `webRoot` from the server**
+- [x] **Step 6: Pass `webRoot` from the server**
 
 In `src/server.ts`, add `import { fileURLToPath } from 'node:url';` and change line 11:
 
@@ -878,17 +878,17 @@ const webRoot = fileURLToPath(new URL('../public', import.meta.url));
 const app = await buildApp({ config, db, webRoot });
 ```
 
-- [ ] **Step 7: Run the tests to verify they pass**
+- [x] **Step 7: Run the tests to verify they pass**
 
 Run: `npm test -- test/integration/static.test.ts`
 Expected: PASS (4 tests).
 
-- [ ] **Step 8: Run the full checks**
+- [x] **Step 8: Run the full checks**
 
 Run: `npm test && npm run lint && npm run typecheck && npm run build`
 Expected: all PASS. The routing tests still pass, so the JSON 404 is unchanged.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add package.json package-lock.json src/static.ts src/app.ts src/server.ts test/integration/static.test.ts
