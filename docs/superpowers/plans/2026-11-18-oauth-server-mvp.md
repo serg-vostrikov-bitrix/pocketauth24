@@ -2366,7 +2366,7 @@ git commit -m "feat: update and delete local applications with ownership check"
 
 ### Task 10: `rest.event.call` intake, fire-and-forget delivery, failure logging
 
-- [ ] Task 10 complete: `rest.event.call` intake, fire-and-forget delivery, failure logging
+- [x] Task 10 complete: `rest.event.call` intake, fire-and-forget delivery, failure logging
 
 tasks.md: **6.1** (intake, timeout), **6.2** (no-user `auth` block), **6.3**
 
@@ -2381,7 +2381,7 @@ tasks.md: **6.1** (intake, timeout), **6.2** (no-user `auth` block), **6.3**
 - Produces: `type EventItem = { client_id?: string; auth?: Record<string, unknown>; query: { QUERY_URL: string; QUERY_DATA?: Record<string, unknown> }; additional?: Record<string, unknown> }`; `deliver(ctx: MethodContext, item: EventItem): Promise<void>` (never rejects); `restEventCall: Method`. Log messages: `event_delivery_failed` with fields `portal`, `client_id`, `event`, `url`, and `status` or `error`.
 - Produces (helpers): `type HandlerServer = { url: string; requests: Record<string, unknown>[]; release(): void; close(): Promise<void> }`; `startHandler(options?: { hold?: boolean }): Promise<HandlerServer>`; `eventItem(url: string, overrides?: { client_id?: string; event?: string; auth?: Record<string, unknown>; additional?: Record<string, unknown>; data?: unknown }): Record<string, unknown>`.
 
-- [ ] **Step 1: Add helpers** (append to `test/helpers.ts`; add `import { createServer, type ServerResponse } from 'node:http';` and `import type { AddressInfo } from 'node:net';`)
+- [x] **Step 1: Add helpers** (append to `test/helpers.ts`; add `import { createServer, type ServerResponse } from 'node:http';` and `import type { AddressInfo } from 'node:net';`)
 
 ```ts
 export type HandlerServer = {
@@ -2451,7 +2451,7 @@ export function eventItem(
 }
 ```
 
-- [ ] **Step 2: Write the failing tests**
+- [x] **Step 2: Write the failing tests**
 
 `test/integration/event-delivery.test.ts`:
 ```ts
@@ -2586,12 +2586,12 @@ describe('event-delivery', () => {
 });
 ```
 
-- [ ] **Step 3: Run to verify they fail**
+- [x] **Step 3: Run to verify they fail**
 
 Run: `npx vitest run test/integration/event-delivery.test.ts`
 Expected: all 4 FAIL (`ERROR_METHOD_NOT_FOUND`; handler receives nothing).
 
-- [ ] **Step 4: Write `src/methods/events.ts`**
+- [x] **Step 4: Write `src/methods/events.ts`**
 
 ```ts
 import qs from 'qs';
@@ -2688,12 +2688,12 @@ export const restEventCall = defineMethod<EventCallBody>(eventCallSchema, async 
 
 `src/routes/rpc.ts` — import `restEventCall` from `../methods/events.js`; add `'rest.event.call': restEventCall,`.
 
-- [ ] **Step 5: Run tests, typecheck, lint**
+- [x] **Step 5: Run tests, typecheck, lint**
 
 Run: `npm test && npm run typecheck && npm run lint`
 Expected: all PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src test
