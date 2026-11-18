@@ -3302,7 +3302,7 @@ git commit -m "test: compare response shapes with captured cloud traffic"
 
 ### Task 15: End-to-end checklist on the test portal (manual)
 
-- [ ] Task 15 complete: End-to-end checklist on the test portal (manual)
+- [x] Task 15 complete: End-to-end checklist on the test portal (manual)
 
 tasks.md: **7.2** — also the real proof of the "Install URL of a local app still runs" scenario.
 
@@ -3373,7 +3373,7 @@ git add docs/e2e-checklist.md
 git commit -m "docs: add end-to-end checklist for an offline test portal"
 ```
 
-- [ ] **Step 3 (user): Run the checklist on the test portal and record results** — failures go back to Build as new tasks.
+- [x] **Step 3 (user): Run the checklist on the test portal and record results** — failures go back to Build as new tasks.
 
 ---
 
