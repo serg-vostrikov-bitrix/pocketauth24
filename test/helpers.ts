@@ -53,7 +53,9 @@ export async function startApp(): Promise<TestApp> {
 }
 
 export async function truncateAll(db: Db): Promise<void> {
-  await db.execute(sql`TRUNCATE portals, applications, token_pairs RESTART IDENTITY CASCADE`);
+  await db.execute(
+    sql`TRUNCATE portals, applications, token_pairs, event_counters RESTART IDENTITY CASCADE`,
+  );
 }
 
 export function form(body: Record<string, unknown>): {
@@ -154,7 +156,9 @@ export type HandlerServer = {
 
 // Local event handler. With hold: true it records each request but never answers
 // until release() or close().
-export async function startHandler(options: { hold?: boolean } = {}): Promise<HandlerServer> {
+export async function startHandler(
+  options: { hold?: boolean; status?: number } = {},
+): Promise<HandlerServer> {
   const requests: Record<string, unknown>[] = [];
   const held: ServerResponse[] = [];
   const server = createServer((req, res) => {
@@ -165,7 +169,10 @@ export async function startHandler(options: { hold?: boolean } = {}): Promise<Ha
     req.on('end', () => {
       requests.push(qs.parse(raw, { depth: 20, parameterLimit: 10_000, arrayLimit: 1000 }));
       if (options.hold) held.push(res);
-      else res.end('ok');
+      else {
+        res.statusCode = options.status ?? 200;
+        res.end('ok');
+      }
     });
   });
   await new Promise<void>((resolve) => server.listen(0, '127.0.0.1', resolve));

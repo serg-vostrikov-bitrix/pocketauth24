@@ -11,6 +11,8 @@ import {
   truncateAll,
   type TestApp,
 } from '../helpers.js';
+import { eventCounters } from '../../src/schema.js';
+import { utcDay } from '../../src/eventCounters.js';
 
 let t: TestApp;
 beforeAll(async () => {
@@ -24,7 +26,29 @@ beforeEach(async () => {
   t.logs.length = 0;
 });
 
+async function counterRows(): Promise<{ day: string; outcome: string; count: number }[]> {
+  return t.db
+    .select({ day: eventCounters.day, outcome: eventCounters.outcome, count: eventCounters.count })
+    .from(eventCounters);
+}
+
 describe('event-delivery', () => {
+  it.each([
+    { status: 200, outcome: 'delivered' },
+    { status: 500, outcome: 'failed' },
+  ] as const)('Handler responds $status: $outcome counter +1', async ({ status, outcome }) => {
+    const portal = await registerPortal(t.app);
+    const handler = await startHandler({ status });
+    try {
+      await rpc(t.app, portal, 'rest.event.call', { QUERY: [eventItem(handler.url)] });
+      await vi.waitFor(async () => {
+        expect(await counterRows()).toEqual([{ day: utcDay(new Date()), outcome, count: 1 }]);
+      });
+    } finally {
+      await handler.close();
+    }
+  });
+
   it('Portal hands over events', async () => {
     const portal = await registerPortal(t.app);
     const handler = await startHandler({ hold: true });
@@ -204,6 +228,9 @@ describe('event-delivery', () => {
       const dropped = t.logs.filter((l) => l.msg === 'event_dropped_overload');
       expect(dropped).toHaveLength(1);
       expect(dropped[0]).toMatchObject({ event: 'E200', url: handler.url });
+      await vi.waitFor(async () => {
+        expect((await counterRows()).find((r) => r.outcome === 'dropped')?.count).toBe(1);
+      });
     } finally {
       await handler.close();
     }

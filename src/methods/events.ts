@@ -2,7 +2,8 @@ import { and, eq } from 'drizzle-orm';
 import qs from 'qs';
 import { defineMethod, type MethodContext } from '../bitrix.js';
 import { EVENT_IN_FLIGHT_CAP, EVENT_TIMEOUT_MS } from '../config.js';
-import { applications } from '../schema.js';
+import { recordOutcome } from '../eventCounters.js';
+import { applications, type Outcome } from '../schema.js';
 import { issuePair, localUserId, memberId, portalDomain } from '../tokens.js';
 
 export type EventItem = {
@@ -85,6 +86,13 @@ function safeUrl(raw: string): string {
   }
 }
 
+// A counter write never blocks or changes the delivery.
+function countOutcome(ctx: MethodContext, outcome: Outcome): void {
+  void recordOutcome(ctx.db, outcome, new Date()).catch((err: unknown) => {
+    ctx.log.warn({ err }, 'event_counter_failed');
+  });
+}
+
 // One attempt, no retries; nothing survives a restart (stage 3 adds a persistent queue).
 export async function deliver(ctx: MethodContext, item: EventItem): Promise<void> {
   const data = item.query.QUERY_DATA ?? {};
@@ -97,6 +105,7 @@ export async function deliver(ctx: MethodContext, item: EventItem): Promise<void
   if (ctx.delivery.inFlight >= EVENT_IN_FLIGHT_CAP) {
     // ponytail: in-memory cap, persistent queue in stage 3
     ctx.log.warn(fields, 'event_dropped_overload');
+    countOutcome(ctx, 'dropped');
     return;
   }
   ctx.delivery.inFlight++;
@@ -117,12 +126,18 @@ export async function deliver(ctx: MethodContext, item: EventItem): Promise<void
       signal: AbortSignal.timeout(EVENT_TIMEOUT_MS),
     });
     await response.body?.cancel();
-    if (!response.ok) ctx.log.warn({ ...fields, status: response.status }, 'event_delivery_failed');
+    if (response.ok) {
+      countOutcome(ctx, 'delivered');
+    } else {
+      ctx.log.warn({ ...fields, status: response.status }, 'event_delivery_failed');
+      countOutcome(ctx, 'failed');
+    }
   } catch (error) {
     ctx.log.warn(
       { ...fields, error: errorText(error).replaceAll(item.query.QUERY_URL, fields.url) },
       'event_delivery_failed',
     );
+    countOutcome(ctx, 'failed');
   } finally {
     ctx.delivery.inFlight--;
   }
