@@ -1492,7 +1492,7 @@ git commit -m "feat: add local applications with cloud client_id format"
 
 ### Task 6: Token pair issue, response builder, scope intersection and `rest.authorize`
 
-- [ ] Task 6 complete: Token pair issue, response builder, scope intersection and `rest.authorize`
+- [x] Task 6 complete: Token pair issue, response builder, scope intersection and `rest.authorize`
 
 tasks.md: **5.1**, **5.2**
 
@@ -1517,7 +1517,7 @@ tasks.md: **5.1**, **5.2**
 - Produces (`src/methods/tokens.ts`): `restAuthorize: Method`.
 - Produces (helpers): `md5(value: string): string`; `authorize(app, portal: Credentials, appClientId: string, extra?: Record<string, unknown>): Promise<TokenResponse>` — default body `{ CLIENT_ID, SCOPE: 'crm,user', PARAMS: { LOCAL_USER: '5', TZ_OFFSET: '10800' } }`.
 
-- [ ] **Step 1: Write the failing unit test**
+- [x] **Step 1: Write the failing unit test**
 
 `test/unit/scope.test.ts`:
 ```ts
@@ -1540,7 +1540,7 @@ describe('intersectScope', () => {
 Run: `npx vitest run test/unit/scope.test.ts`
 Expected: FAIL — `intersectScope` is not exported.
 
-- [ ] **Step 2: Add helpers to `test/helpers.ts`** (append; add `import { createHash } from 'node:crypto';` and `import type { TokenResponse } from '../src/tokens.js';` at the top)
+- [x] **Step 2: Add helpers to `test/helpers.ts`** (append; add `import { createHash } from 'node:crypto';` and `import type { TokenResponse } from '../src/tokens.js';` at the top)
 
 ```ts
 export function md5(value: string): string {
@@ -1564,7 +1564,7 @@ export async function authorize(
 }
 ```
 
-- [ ] **Step 3: Write the failing integration tests**
+- [x] **Step 3: Write the failing integration tests**
 
 `test/integration/token-service.test.ts`:
 ```ts
@@ -1692,12 +1692,12 @@ Append to `application-registry.test.ts` (import `authorize`, `addApp`):
   });
 ```
 
-- [ ] **Step 4: Run to verify they fail**
+- [x] **Step 4: Run to verify they fail**
 
 Run: `npm test`
 Expected: unit test and the 5 new integration tests FAIL (`ERROR_METHOD_NOT_FOUND` / missing export).
 
-- [ ] **Step 5: Implement token issue in `src/tokens.ts`** (append; add imports at top: `import { ACCESS_TTL_SECONDS, REFRESH_TTL_SECONDS, type Config } from './config.js';`, `import type { Db } from './db.js';`, `import { tokenPairs, type Application, type Portal } from './schema.js';`)
+- [x] **Step 5: Implement token issue in `src/tokens.ts`** (append; add imports at top: `import { ACCESS_TTL_SECONDS, REFRESH_TTL_SECONDS, type Config } from './config.js';`, `import type { Db } from './db.js';`, `import { tokenPairs, type Application, type Portal } from './schema.js';`)
 
 ```ts
 export function intersectScope(requested: string, appScope: string): string {
@@ -1789,7 +1789,7 @@ export async function issuePair(
 }
 ```
 
-- [ ] **Step 6: Write `src/methods/tokens.ts` and register it**
+- [x] **Step 6: Write `src/methods/tokens.ts` and register it**
 
 `src/methods/tokens.ts`:
 ```ts
@@ -1833,12 +1833,12 @@ export const restAuthorize = defineMethod<AuthorizeBody>(authorizeSchema, async 
 
 `src/routes/rpc.ts` — import `restAuthorize` from `../methods/tokens.js`; add `'rest.authorize': restAuthorize,` to `methods`.
 
-- [ ] **Step 7: Run tests, typecheck, lint**
+- [x] **Step 7: Run tests, typecheck, lint**
 
 Run: `npm test && npm run typecheck && npm run lint`
 Expected: all PASS.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src test
