@@ -33,6 +33,7 @@
   },
   "dependencies": {
     "@fastify/formbody": "^9.0.2",
+    "@fastify/static": "^10.1.11",
     "drizzle-orm": "^0.45.4",
     "fastify": "^5.12.8",
     "pg": "^8.23.1",

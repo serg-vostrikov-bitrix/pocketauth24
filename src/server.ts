@@ -1,3 +1,4 @@
+import { fileURLToPath } from 'node:url';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
 import { buildApp } from './app.js';
 import { CLEANUP_INTERVAL_MS, loadConfig, PORT } from './config.js';
@@ -8,7 +9,9 @@ const config = loadConfig();
 const { db, pool } = createDb(config.databaseUrl);
 // ponytail: safe for one instance; add an advisory lock or a separate migrate command for several
 await migrate(db, { migrationsFolder: 'drizzle' });
-const app = await buildApp({ config, db });
+// dist/server.js → /app/public in the image; the Dockerfile copies web/dist there.
+const webRoot = fileURLToPath(new URL('../public', import.meta.url));
+const app = await buildApp({ config, db, webRoot });
 
 const cleanup = setInterval(() => {
   deleteExpiredPairs(db, new Date()).catch((err: unknown) => {

@@ -9,6 +9,7 @@ import { oauthTokenRoute } from './routes/oauthToken.js';
 import { registerRoute } from './routes/register.js';
 import { rpcRoute } from './routes/rpc.js';
 import { createStatusService, probeDatabase, VERSION } from './status.js';
+import { registerWeb } from './static.js';
 
 export type AppDeps = { config: Config; db: Db; logStream?: Writable; webRoot?: string };
 
@@ -50,5 +51,6 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   registerRoute(app, deps);
   rpcRoute(app, deps);
   oauthTokenRoute(app, deps);
+  if (deps.webRoot) await registerWeb(app, deps.webRoot);
   return app;
 }
