@@ -406,7 +406,7 @@ The agent writes the procedure and the sanitize script; **the user** performs th
 **Interfaces:**
 - Produces: two sanitized HAR 1.2 files consumed by Task 14. `cloud-capture.har` holds portal/app ↔ cloud entries; `event-handler.har` holds the cloud → handler event POST. Secret values are `"<redacted>"`; the portal host is `portal.example`.
 
-- [ ] **Step 1: Write `scripts/sanitize-har.ts`**
+- [x] **Step 1: Write `scripts/sanitize-har.ts`**
 
 ```ts
 // Usage: npx tsx scripts/sanitize-har.ts <input.raw.har> <output.har> <portal-host>
@@ -488,7 +488,7 @@ for (const entry of har.log.entries) {
 writeFileSync(output, JSON.stringify(har, null, 2));
 ```
 
-- [ ] **Step 2: Write `docs/protocol-capture.md`**
+- [x] **Step 2: Write `docs/protocol-capture.md`**
 
 ```markdown
 # Protocol capture against the cloud OAuth server
@@ -580,12 +580,12 @@ If reuse is **rejected** by the cloud, stop and reopen the token-service spec in
 (Design Doc §10 risk) before release.
 ```
 
-- [ ] **Step 3: Typecheck and lint the script**
+- [x] **Step 3: Typecheck and lint the script**
 
 Run: `npm run typecheck && npm run lint`
 Expected: no errors.
 
-- [ ] **Step 4: Commit the procedure and script**
+- [x] **Step 4: Commit the procedure and script**
 
 ```bash
 git add docs/protocol-capture.md scripts/sanitize-har.ts
