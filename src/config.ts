@@ -11,6 +11,8 @@ export const CLEANUP_INTERVAL_MS = 60 * 60 * 1000;
 export const STATUS_CACHE_MS = 10_000;
 export const BODY_LIMIT_BYTES = 10 * 1024 * 1024;
 export const QS_OPTIONS = { depth: 20, parameterLimit: 10_000, arrayLimit: 1000 } as const;
+// CLI only; generated viewer passwords have 20 characters.
+export const MIN_PASSWORD_LENGTH = 12;
 
 export type Config = {
   baseUrl: string;
@@ -18,19 +20,19 @@ export type Config = {
   portalAllowlist: string[];
 };
 
-function required(env: NodeJS.ProcessEnv, name: string): string {
+export function requiredEnv(env: NodeJS.ProcessEnv, name: string): string {
   const value = env[name]?.trim();
   if (!value) throw new Error(`Missing required environment variable ${name}`);
   return value;
 }
 
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
-  const baseUrl = required(env, 'BASE_URL').replace(/\/+$/, '');
+  const baseUrl = requiredEnv(env, 'BASE_URL').replace(/\/+$/, '');
   new URL(baseUrl); // throws on an invalid URL at boot
   return {
     baseUrl,
-    databaseUrl: required(env, 'DATABASE_URL'),
-    portalAllowlist: required(env, 'PORTAL_ALLOWLIST')
+    databaseUrl: requiredEnv(env, 'DATABASE_URL'),
+    portalAllowlist: requiredEnv(env, 'PORTAL_ALLOWLIST')
       .split(',')
       .map((host) => host.trim().toLowerCase())
       .filter((host) => host.length > 0),
