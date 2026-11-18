@@ -8,8 +8,9 @@ import type { Db } from './db.js';
 import { oauthTokenRoute } from './routes/oauthToken.js';
 import { registerRoute } from './routes/register.js';
 import { rpcRoute } from './routes/rpc.js';
+import { probeDatabase } from './status.js';
 
-export type AppDeps = { config: Config; db: Db; logStream?: Writable };
+export type AppDeps = { config: Config; db: Db; logStream?: Writable; webRoot?: string };
 
 // Query strings carry secrets (client_secret, refresh_token, auth); never log them.
 const logOptions = {
@@ -35,7 +36,11 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   app.setNotFoundHandler(async (_request, reply) =>
     reply.status(404).send({ error: 'not_found', error_description: 'Not found' }),
   );
-  app.get('/health', async () => ({ status: 'ok' }));
+  app.get('/health', async (_request, reply) =>
+    (await probeDatabase(deps.db))
+      ? { status: 'ok' }
+      : reply.status(503).send({ status: 'error', database: 'down' }),
+  );
   registerRoute(app, deps);
   rpcRoute(app, deps);
   oauthTokenRoute(app, deps);
