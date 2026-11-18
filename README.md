@@ -19,6 +19,10 @@ b24auth-server is an independent, self-hosted server that answers the OAuth call
 
 > Independent open-source project. Not a Bitrix24 product. See the [disclaimer](#disclaimer).
 
+![The public status page of b24auth-server: service and database state, portals, local applications, active token pairs and event deliveries](docs/images/status-page.png)
+
+_The status page at `/`. It shows aggregate counts only._
+
 ## 🔒 Why
 
 A Bitrix24 on-premise portal depends on the cloud OAuth server for its local applications. Once the portal cannot reach the internet, local applications cannot open, cannot call REST with tokens, cannot renew tokens and do not receive online events.
