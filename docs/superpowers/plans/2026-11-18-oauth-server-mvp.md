@@ -2,6 +2,7 @@
 change: oauth-server-mvp
 design-doc: docs/superpowers/specs/2026-11-18-oauth-server-mvp-design.md
 base-ref: 9911496054be6fd9846513a20145e8c841f16192
+archived-with: 2026-11-18-oauth-server-mvp
 ---
 
 # b24auth-server MVP Implementation Plan

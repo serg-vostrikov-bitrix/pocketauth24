@@ -2,6 +2,8 @@
 comet_change: oauth-server-mvp
 role: technical-design
 canonical_spec: openspec
+archived-with: 2026-11-18-oauth-server-mvp
+status: final
 ---
 
 # b24auth-server MVP — technical design
