@@ -392,7 +392,7 @@ git commit -m "chore: add Fastify TypeScript service skeleton with health endpoi
 
 ### Task 2: Protocol capture procedure and fixture sanitization (manual capture by the user)
 
-- [ ] Task 2 complete: Protocol capture procedure and fixture sanitization (manual capture by the user)
+- [x] Task 2 complete: Protocol capture procedure and fixture sanitization (manual capture by the user)
 
 tasks.md: **1.1**
 
@@ -592,7 +592,7 @@ git add docs/protocol-capture.md scripts/sanitize-har.ts
 git commit -m "docs: add cloud protocol capture procedure and HAR sanitizer"
 ```
 
-- [ ] **Step 5 (user, any time later): Capture, sanitize, fill the results table, commit fixtures**
+- [x] **Step 5 (user, any time later): Capture, sanitize, fill the results table, commit fixtures**
 
 ```bash
 git add test/fixtures/cloud-capture.har test/fixtures/event-handler.har docs/protocol-capture.md
