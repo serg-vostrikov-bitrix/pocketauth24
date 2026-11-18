@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm';
 import type { FastifyInstance, FastifyRequest } from 'fastify';
 import type { AppDeps } from '../app.js';
 import { fail, ok, type DeliveryState, type Method } from '../bitrix.js';
-import { applicationList } from '../methods/applications.js';
+import { applicationAdd, applicationList } from '../methods/applications.js';
 import { portals, type Portal } from '../schema.js';
 import { hashMatches } from '../tokens.js';
 
@@ -13,6 +13,7 @@ declare module 'fastify' {
 }
 
 export const methods: Record<string, Method> = {
+  'application.add': applicationAdd,
   'application.list': applicationList,
 };
 

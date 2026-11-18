@@ -1,5 +1,14 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { registerPortal, rpc, startApp, truncateAll, type TestApp } from '../helpers.js';
+import { applications } from '../../src/schema.js';
+import {
+  APP_FIELDS,
+  registerPortal,
+  rpc,
+  startApp,
+  truncateAll,
+  type Credentials,
+  type TestApp,
+} from '../helpers.js';
 
 let t: TestApp;
 beforeAll(async () => {
@@ -17,5 +26,23 @@ describe('application-registry', () => {
     const portal = await registerPortal(t.app);
     const res = await rpc(t.app, portal, 'application.list');
     expect(res.body).toEqual({ result: [] });
+  });
+
+  it('Portal creates a local app', async () => {
+    const portal = await registerPortal(t.app);
+    const res = await rpc<Credentials>(t.app, portal, 'application.add', APP_FIELDS);
+    expect(res.status).toBe(200);
+    const created = res.body.result;
+    expect(created?.client_id).toMatch(/^local\.[0-9a-f]{14}\.\d{8}$/);
+    expect(created?.client_secret).toMatch(/^[0-9a-f]{64}$/);
+    const rows = await t.db.select().from(applications);
+    expect(rows).toHaveLength(1);
+    expect(rows[0]).toMatchObject({
+      clientId: created?.client_id,
+      title: 'Demo app',
+      redirectUri: 'https://app.test/handler',
+      scope: 'crm,user',
+    });
+    expect(rows[0].secretHash).not.toBe(created?.client_secret);
   });
 });

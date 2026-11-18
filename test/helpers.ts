@@ -94,3 +94,19 @@ export async function rpc<T = unknown>(
   });
   return { status: res.statusCode, body: res.json<RpcResponse<T>['body']>() };
 }
+
+export const APP_FIELDS = {
+  TITLE: 'Demo app',
+  REDIRECT_URI: 'https://app.test/handler',
+  SCOPE: 'crm,user',
+};
+
+export async function addApp(
+  app: FastifyInstance,
+  portal: Credentials,
+  fields: Record<string, unknown> = APP_FIELDS,
+): Promise<Credentials> {
+  const res = await rpc<Credentials>(app, portal, 'application.add', fields);
+  if (!res.body.result) throw new Error(`application.add failed: ${JSON.stringify(res.body)}`);
+  return res.body.result;
+}
