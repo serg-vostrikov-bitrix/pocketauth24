@@ -93,3 +93,28 @@ STE (about 80%):
 
 > Refresh the access token before it expires. Use the refresh token for this.
 > If the access token expires, the Bitrix24 REST API returns HTTP 401.
+
+## 3. Translations of the README
+
+The English `README.md` is the source. Keep these translations in the repository root:
+
+| Language   | File           |
+| ---------- | -------------- |
+| German     | `README.de.md` |
+| Italian    | `README.it.md` |
+| Spanish    | `README.es.md` |
+| Portuguese | `README.pt.md` |
+| Russian    | `README.ru.md` |
+
+- When you change `README.md`, make the same change in all five translations in the same commit
+  or pull request. A change is any edit to text, tables, links, badges or sections.
+- Keep the structure identical: the same sections in the same order, the same badges, the same
+  code blocks. Translate prose, table text and link text only.
+  Do not translate code, commands, file names, configuration keys, log events or product names.
+- Keep the language switcher directly under the title of each file. It must link to all six
+  files, and the current language must not be a link. Update the switcher in every file when you
+  add or remove a language.
+- Fix the in-page anchors in each translation to match the translated headings.
+- The linked documents in `docs/` are English only. Link to them as they are.
+- Rule 1 allows these translated files. They are user-facing copies of the English source.
+  English stays the source of truth if a translation differs.
