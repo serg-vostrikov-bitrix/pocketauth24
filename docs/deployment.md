@@ -51,8 +51,23 @@ internal CA that the portal servers and application servers trust.
 Restrict access at the proxy. `/oauth/register/` has no shared secret, so anyone who can reach it
 can rotate an allowlisted portal's credentials and lock the portal out:
 
-- Allow `/oauth/register/` and `/rest/` only from the portal servers' IP addresses.
-- Leave `/oauth/token/` reachable by the application servers, which refresh their tokens there.
+- Deny by default. Allow every path only from the portal servers' IP addresses, except
+  `/oauth/token` and `/health`, which application servers and monitoring may reach.
+- Match paths with and without the trailing slash: the server accepts `/oauth/register` as well
+  as `/oauth/register/` (and the same for `/rest/<method>` and `/oauth/token`). A rule written
+  only for `/oauth/register/` is bypassed by `/oauth/register`.
+
+Example for nginx:
+
+    location ~ ^/(oauth/token|health)/?$ {
+        proxy_pass http://127.0.0.1:3000;
+    }
+    location / {
+        allow 10.0.0.10;   # portal server(s)
+        deny  all;
+        proxy_pass http://127.0.0.1:3000;
+    }
+
 - Keep the app port on the loopback interface (`127.0.0.1:3000`, as in `docker-compose.yml`) so
   that nothing bypasses the proxy. If the proxy runs on another host, publish the port only on
   the private interface that the proxy uses.

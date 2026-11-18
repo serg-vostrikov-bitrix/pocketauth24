@@ -39,6 +39,18 @@ describe('routing', () => {
     expect(creds.client_id).toBeTruthy();
   });
 
+  // Both spellings reach the handler, so proxy rules must cover both (docs/deployment.md section 4).
+  it('Registration without a trailing slash reaches the same handler', async () => {
+    const res = await t.app.inject({
+      method: 'POST',
+      url: '/oauth/register',
+      ...form({ redirect_uri: 'https://portal.test/', type: 'B' }),
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(res.json<{ client_id: string }>().client_id).toBeTruthy();
+  });
+
   it('Unknown path answers in the Bitrix error shape', async () => {
     const res = await t.app.inject({ method: 'GET', url: '/nope' });
 
