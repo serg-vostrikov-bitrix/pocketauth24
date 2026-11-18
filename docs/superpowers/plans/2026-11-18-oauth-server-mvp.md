@@ -2776,7 +2776,7 @@ git commit -m "feat: drop event deliveries above the in-flight cap"
 
 ### Task 12: User token in the event `auth` block
 
-- [ ] Task 12 complete: User token in the event `auth` block
+- [x] Task 12 complete: User token in the event `auth` block
 
 tasks.md: **6.2** (`sendAuth`, `sendRefreshToken`)
 
@@ -2788,7 +2788,7 @@ tasks.md: **6.2** (`sendAuth`, `sendRefreshToken`)
 - Consumes: `issuePair`, `applications`, `TokenResponse`.
 - Produces: `buildAuth(ctx, item): Promise<Record<string, unknown>>`. Rule: `withUser = client_id set && Number(auth.LOCAL_USER) > 0 && additional.sendAuth === '1'` and the app belongs to the portal → token response of a new pair (`scope` = app scope, `userId` = `LOCAL_USER`, `params` = `item.auth`) minus `refresh_token` unless `additional.sendRefreshToken === '1'`, plus `application_token`; otherwise `{ domain, member_id, application_token }`.
 
-- [ ] **Step 1: Write the failing test**
+- [x] **Step 1: Write the failing test**
 
 ```ts
   it('Install event reaches a server-side app', async () => {
@@ -2842,12 +2842,12 @@ tasks.md: **6.2** (`sendAuth`, `sendRefreshToken`)
   });
 ```
 
-- [ ] **Step 2: Run to verify it fails**
+- [x] **Step 2: Run to verify it fails**
 
 Run: `npx vitest run test/integration/event-delivery.test.ts -t "Install event"`
 Expected: FAIL — `auth` has no `access_token`.
 
-- [ ] **Step 3: Implement** — replace `buildAuth` in `src/methods/events.ts` (add imports `and`, `eq` from `drizzle-orm`, `applications` from `../schema.js`, `issuePair` from `../tokens.js`) and change its call in `deliver()` to `const auth = await buildAuth(ctx, item);`
+- [x] **Step 3: Implement** — replace `buildAuth` in `src/methods/events.ts` (add imports `and`, `eq` from `drizzle-orm`, `applications` from `../schema.js`, `issuePair` from `../tokens.js`) and change its call in `deliver()` to `const auth = await buildAuth(ctx, item);`
 
 ```ts
 async function buildAuth(ctx: MethodContext, item: EventItem): Promise<Record<string, unknown>> {
@@ -2880,12 +2880,12 @@ async function buildAuth(ctx: MethodContext, item: EventItem): Promise<Record<st
 }
 ```
 
-- [ ] **Step 4: Run tests, typecheck, lint**
+- [x] **Step 4: Run tests, typecheck, lint**
 
 Run: `npm test && npm run typecheck && npm run lint`
 Expected: all PASS (27 integration + 1 unit + health).
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src test

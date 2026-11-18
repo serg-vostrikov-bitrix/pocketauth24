@@ -30,7 +30,7 @@
 ## 6. Event delivery
 
 - [x] 6.1 Implement `rest.event.call` intake and fire-and-forget delivery with timeout and in-flight cap
-- [ ] 6.2 Implement the handler POST with the `auth` block rules (`sendAuth`, `sendRefreshToken`, no-user events)
+- [x] 6.2 Implement the handler POST with the `auth` block rules (`sendAuth`, `sendRefreshToken`, no-user events)
 - [x] 6.3 Log delivery failures without retries
 
 ## 7. Verification and documentation
