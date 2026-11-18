@@ -38,7 +38,10 @@ including any port (`host[:port]`), case-insensitively. A portal on a non-defaul
 be listed with that port; a portal on the default port is listed without one.
 
 Set `POSTGRES_PASSWORD` in `.env` to the same password. Start: `docker compose up -d`.
-Migrations run on start. Check: `curl https://auth.corp.local/health` → `{"status":"ok"}`.
+Migrations run on start. Check: `curl https://auth.corp.local/health` → `{"status":"ok"}`. `/health` runs `SELECT 1`
+against PostgreSQL. If the database does not answer within 2 seconds, `/health` returns HTTP 503
+and `{"status":"error","database":"down"}`. Monitors and health checks that expect HTTP 200 in
+all cases must accept this change.
 Run one app instance only (migrations on boot are not locked).
 
 ## 4. Reverse proxy and TLS
@@ -50,14 +53,22 @@ Restrict access at the proxy. `/oauth/register/` has no shared secret, so anyone
 can rotate an allowlisted portal's credentials and lock the portal out:
 
 - Deny by default. Allow every path only from the portal servers' IP addresses, except
-  `/oauth/token` and `/health`, which application servers and monitoring may reach.
+  `/oauth/token` and `/health`, which application servers and monitoring may reach, and the
+  public status page: `/`, `/assets/*` and `/api/status`. The status page shows aggregate counts
+  only. If the counts must stay internal, restrict these paths like the others.
 - Match paths with and without the trailing slash: the server accepts `/oauth/register` as well
   as `/oauth/register/` (and the same for `/rest/<method>` and `/oauth/token`). A rule written
   only for `/oauth/register/` is bypassed by `/oauth/register`.
 
 Example for nginx:
 
-    location ~ ^/(oauth/token|health)/?$ {
+    location ~ ^/(oauth/token|health|api/status)/?$ {
+        proxy_pass http://127.0.0.1:3000;
+    }
+    location = / {
+        proxy_pass http://127.0.0.1:3000;
+    }
+    location /assets/ {
         proxy_pass http://127.0.0.1:3000;
     }
     location / {
@@ -115,6 +126,10 @@ Applications renew tokens at `/oauth/token/`. Most SDKs (CRest, official SDKs) h
 Event handlers receive one POST per event with a 10 s timeout; no retries. Failed and dropped
 deliveries appear in the container log as `event_delivery_failed` / `event_dropped_overload`.
 Pending deliveries are lost on restart.
+
+The server counts delivered, failed and dropped deliveries per UTC day in the table
+`event_counters`. The status page and `GET /api/status` show the counts for today and for the
+last 7 days. The counters store no event content, handler URL, portal or application.
 
 ## 9. Operations
 
