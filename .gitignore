@@ -1,0 +1,8 @@
+# Comet workspace-local selection
+.comet/current-change.json
+.superpowers/
+node_modules
+dist
+coverage
+.env
+*.raw.har

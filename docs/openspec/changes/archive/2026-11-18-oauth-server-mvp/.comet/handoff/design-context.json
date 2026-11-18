@@ -1,0 +1,17 @@
+{
+  "change": "oauth-server-mvp",
+  "phase": "design",
+  "mode": "compact",
+  "canonical_spec": "openspec",
+  "generated_by": "comet-handoff.sh",
+  "context_hash": "551fc88453d350cda3fe904651f576c14e2d1e99133e1903ba1ee21a776b3c51",
+  "files": [
+    { "path": "docs/openspec/changes/oauth-server-mvp/proposal.md", "sha256": "26872a0f1863ec4a897012fb00e133cc5d7880cf7f70260af853e0cb6a2ac52a" },
+    { "path": "docs/openspec/changes/oauth-server-mvp/design.md", "sha256": "343d2bbcfb6d963c03d1e8e54120246e5af9ac8cb07ecab84c53bcc073ee5e16" },
+    { "path": "docs/openspec/changes/oauth-server-mvp/tasks.md", "sha256": "4f029f5fcc82d03e1a6578e53d2486c4b9de7c8b80c3c9a63c9bde654c0ddb7f" },
+    { "path": "docs/openspec/changes/oauth-server-mvp/specs/application-registry/spec.md", "sha256": "66f39ee8f56256894bcbea2650cae2bcfd973cb442f93cf4f46b7119102c7038" },
+    { "path": "docs/openspec/changes/oauth-server-mvp/specs/event-delivery/spec.md", "sha256": "419ff1d49cec58598c11ff11595401dd001b817039f58be356cd5c84c9fec5df" },
+    { "path": "docs/openspec/changes/oauth-server-mvp/specs/portal-registration/spec.md", "sha256": "77480bf5ef0dc0aa4f4b3008588f81fbe1bf174916fbd9038361b88c77ef06ab" },
+    { "path": "docs/openspec/changes/oauth-server-mvp/specs/token-service/spec.md", "sha256": "d2e6a6808102815636527e5c6572e0ebde21a1e4fdc4f18b28a3353a83a14ac5" }
+  ]
+}
