@@ -2,6 +2,7 @@
 change: public-status-page
 design-doc: docs/superpowers/specs/2026-11-18-public-status-page-design.md
 base-ref: 12f6c48f1950ad6f4ff99ce9ea40eb9186451bb5
+archived-with: 2026-11-18-public-status-page
 ---
 
 # Public Status Page Implementation Plan

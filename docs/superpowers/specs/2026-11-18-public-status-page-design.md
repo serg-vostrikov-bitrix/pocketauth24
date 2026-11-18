@@ -2,6 +2,8 @@
 comet_change: public-status-page
 role: technical-design
 canonical_spec: openspec
+archived-with: 2026-11-18-public-status-page
+status: final
 ---
 
 # Public status page: technical design
