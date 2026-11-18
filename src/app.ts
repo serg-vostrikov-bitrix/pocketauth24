@@ -2,9 +2,12 @@ import type { Writable } from 'node:stream';
 import formbody from '@fastify/formbody';
 import Fastify, { type FastifyInstance } from 'fastify';
 import qs from 'qs';
+import { sendError } from './bitrix.js';
 import { BODY_LIMIT_BYTES, LOG_LEVEL, QS_OPTIONS, type Config } from './config.js';
+import type { Db } from './db.js';
+import { registerRoute } from './routes/register.js';
 
-export type AppDeps = { config: Config; logStream?: Writable };
+export type AppDeps = { config: Config; db: Db; logStream?: Writable };
 
 export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   const app = Fastify({
@@ -12,6 +15,8 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
     logger: deps.logStream ? { level: LOG_LEVEL, stream: deps.logStream } : { level: LOG_LEVEL },
   });
   await app.register(formbody, { parser: (body) => qs.parse(body, QS_OPTIONS) });
+  app.setErrorHandler(sendError);
   app.get('/health', async () => ({ status: 'ok' }));
+  registerRoute(app, deps);
   return app;
 }

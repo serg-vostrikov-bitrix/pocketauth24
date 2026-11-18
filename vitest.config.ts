@@ -5,5 +5,6 @@ export default defineConfig({
     include: ['test/**/*.test.ts'],
     fileParallelism: false,
     hookTimeout: 30_000,
+    globalSetup: ['test/global-setup.ts'],
   },
 });
