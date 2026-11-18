@@ -3,7 +3,7 @@
 - [ ] 1.1 Capture real request/response pairs from a test on-premise portal against the cloud server with `mitmdump` in reverse mode (HAR export) for `/oauth/register/`, `rest.authorize`, `rest.check`, `application.add`, `rest.event.call`, `/oauth/token/` and an event POST to a handler; refresh twice with the same refresh token to confirm reuse behaviour; store sanitized fixtures in the repo
 - [x] 1.2 Create the Node.js + TypeScript Fastify service skeleton (CTO exception recorded): config loading (base URL, portal allowlist, DB connection, event timeout and in-flight cap), structured logging, health endpoint
 - [ ] 1.3 Add container image and docker-compose for offline deployment with the database
-- [ ] 1.4 Set up test runner and CI checks
+- [x] 1.4 Set up test runner and CI checks
 
 ## 2. Storage
 

@@ -2910,7 +2910,7 @@ Infrastructure task: no spec scenario, so no new automated test. Verification is
 - Consumes: `buildApp`, `createDb`, `loadConfig`, `PORT`, `CLEANUP_INTERVAL_MS`.
 - Produces: `deleteExpiredPairs(db: Db, now: Date): Promise<void>`.
 
-- [ ] **Step 1: Add cleanup and finish `src/server.ts`**
+- [x] **Step 1: Add cleanup and finish `src/server.ts`**
 
 `src/tokens.ts` — append (add `lt` to the `drizzle-orm` import):
 ```ts
@@ -2950,7 +2950,7 @@ process.once('SIGINT', () => void shutdown());
 await app.listen({ host: '0.0.0.0', port: PORT });
 ```
 
-- [ ] **Step 2: Write `Dockerfile`, `.dockerignore`, `.env.example`**
+- [x] **Step 2: Write `Dockerfile`, `.dockerignore`, `.env.example`**
 
 `Dockerfile` (DHI Node images; confirm the exact tags against the NTC Docker standard before the first build):
 ```dockerfile
@@ -2992,7 +2992,7 @@ DATABASE_URL=postgres://b24auth:b24auth@db:5432/b24auth
 PORTAL_ALLOWLIST=portal.example.internal
 ```
 
-- [ ] **Step 3: Add the `app` service to `docker-compose.yml`** (under `services:`, next to `db`)
+- [x] **Step 3: Add the `app` service to `docker-compose.yml`** (under `services:`, next to `db`)
 
 ```yaml
   app:
@@ -3020,7 +3020,7 @@ docker compose down
 ```
 Expected: `{"status":"ok"}`; a JSON object with `client_id` and `client_secret`; error log count `0`. (`docker login dhi.io` may be needed first.)
 
-- [ ] **Step 5: Write `.github/workflows/ci.yml`**
+- [x] **Step 5: Write `.github/workflows/ci.yml`**
 
 ```yaml
 name: ci
@@ -3067,12 +3067,12 @@ jobs:
 
 Check the `ci-security.yml` inputs and pinned ref against the `ntc-versioning` skill and adjust before pushing. The `DHI_USERNAME` / `DHI_TOKEN` repository secrets are created by the user.
 
-- [ ] **Step 6: Run the suite, typecheck, lint**
+- [x] **Step 6: Run the suite, typecheck, lint**
 
 Run: `npm test && npm run typecheck && npm run lint && npm run build`
 Expected: all PASS; `dist/server.js` exists.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src Dockerfile .dockerignore .env.example docker-compose.yml .github
