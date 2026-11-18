@@ -273,7 +273,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ### Task 2: Admin tables and migration
 
-- [ ] Task 2 complete: Admin tables and migration
+- [x] Task 2 complete: Admin tables and migration
 
 **Covers tasks.md:** 1.1
 
@@ -286,7 +286,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 **Interfaces:**
 - Produces: `AdminRole = 'superuser' | 'viewer'`, tables `adminUsers` (`id`, `login`, `passwordHash`, `role`, `createdAt`) and `adminSessions` (`idHash`, `userId`, `expiresAt`) in `src/schema.ts`. `truncateAll` also clears `admin_users` and `admin_sessions`.
 
-- [ ] **Step 1: Write the failing test** `test/integration/admin-users.test.ts`
+- [x] **Step 1: Write the failing test** `test/integration/admin-users.test.ts`
 
 ```ts
 import { afterEach, beforeEach, expect, it } from 'vitest';
@@ -327,12 +327,12 @@ it('Deleting an admin user deletes its sessions', async () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to make sure it fails**
+- [x] **Step 2: Run the test to make sure it fails**
 
 Run: `npm test -- test/integration/admin-users.test.ts`
 Expected: FAIL, `adminUsers` is not exported from `src/schema.ts`.
 
-- [ ] **Step 3: Add the tables** to `src/schema.ts`
+- [x] **Step 3: Add the tables** to `src/schema.ts`
 
 Add `uniqueIndex` to the `drizzle-orm/pg-core` import. Append:
 
@@ -369,12 +369,12 @@ export const adminSessions = pgTable(
 );
 ```
 
-- [ ] **Step 4: Generate the migration**
+- [x] **Step 4: Generate the migration**
 
 Run: `npm run db:generate -- --name admin_users`
 Expected: `drizzle/0002_admin_users.sql` exists. Open it and make sure it contains `CREATE TABLE "admin_users"`, `CREATE TABLE "admin_sessions"`, the foreign key with `ON DELETE cascade`, the check constraint and `CREATE UNIQUE INDEX "admin_users_one_superuser" ON "admin_users" USING btree ("role") WHERE role = 'superuser';`. Do not edit the generated file by hand.
 
-- [ ] **Step 5: Update `truncateAll`** in `test/helpers.ts`
+- [x] **Step 5: Update `truncateAll`** in `test/helpers.ts`
 
 ```ts
 export async function truncateAll(db: Db): Promise<void> {
@@ -384,17 +384,17 @@ export async function truncateAll(db: Db): Promise<void> {
 }
 ```
 
-- [ ] **Step 6: Run the test to make sure it passes**
+- [x] **Step 6: Run the test to make sure it passes**
 
 Run: `npm test -- test/integration/admin-users.test.ts`
 Expected: PASS (2 tests). The global setup applies the new migration.
 
-- [ ] **Step 7: Run the full suite, types and lint**
+- [x] **Step 7: Run the full suite, types and lint**
 
 Run: `npm test && npm run typecheck && npm run lint`
 Expected: all pass.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add src/schema.ts drizzle test/helpers.ts test/integration/admin-users.test.ts

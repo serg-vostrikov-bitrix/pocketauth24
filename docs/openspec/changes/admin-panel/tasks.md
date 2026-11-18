@@ -1,6 +1,6 @@
 ## 1. Data and password primitives
 
-- [ ] 1.1 Add `admin_users` and `admin_sessions` to `src/schema.ts`; generate the migration with the partial unique index for the superuser
+- [x] 1.1 Add `admin_users` and `admin_sessions` to `src/schema.ts`; generate the migration with the partial unique index for the superuser
 - [x] 1.2 `src/admin/password.ts`: scrypt hash and verify with `timingSafeEqual`; unit tests
 
 ## 2. CLI
