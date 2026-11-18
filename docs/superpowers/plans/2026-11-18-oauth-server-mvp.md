@@ -1849,7 +1849,7 @@ git commit -m "feat: issue hashed token pairs via rest.authorize"
 
 ### Task 7: `rest.check`
 
-- [ ] Task 7 complete: `rest.check`
+- [x] Task 7 complete: `rest.check`
 
 tasks.md: **5.3**
 
@@ -1861,7 +1861,7 @@ tasks.md: **5.3**
 - Consumes: `sha256`, `memberId`, `tokenPairs`, `applications`, `fail`.
 - Produces: `type CheckResult = { client_id: string; expires: number; scope: string; member_id: string; user_id: number; parameters: Record<string, unknown> }`; `check(db: Db, portal: Portal, token: string): Promise<CheckResult>` — throws `invalid_token` (401) or `expired_token` (401); `restCheck: Method`.
 
-- [ ] **Step 1: Write the failing tests** (in `token-service.test.ts`; add `afterEach`, `vi` to the vitest import and register `afterEach(() => { vi.useRealTimers(); });` next to `beforeEach`)
+- [x] **Step 1: Write the failing tests** (in `token-service.test.ts`; add `afterEach`, `vi` to the vitest import and register `afterEach(() => { vi.useRealTimers(); });` next to `beforeEach`)
 
 ```ts
   it('Valid token', async () => {
@@ -1912,12 +1912,12 @@ tasks.md: **5.3**
   });
 ```
 
-- [ ] **Step 2: Run to verify they fail**
+- [x] **Step 2: Run to verify they fail**
 
 Run: `npx vitest run test/integration/token-service.test.ts`
 Expected: the 3 new tests FAIL with `ERROR_METHOD_NOT_FOUND`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 `src/tokens.ts` — append (add `and`, `eq` from `drizzle-orm`, `applications` to the schema import, `fail` from `./bitrix.js`):
 ```ts
@@ -1969,12 +1969,12 @@ export const restCheck = defineMethod<CheckBody>(checkSchema, async (ctx, body) 
 
 `src/routes/rpc.ts` — add `'rest.check': restCheck,`.
 
-- [ ] **Step 4: Run tests, typecheck, lint**
+- [x] **Step 4: Run tests, typecheck, lint**
 
 Run: `npm test && npm run typecheck && npm run lint`
 Expected: all PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src test
