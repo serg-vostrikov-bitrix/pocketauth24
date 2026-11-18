@@ -236,6 +236,32 @@ describe('event-delivery', () => {
     }
   });
 
+  it('Overload drops of one batch are counted with one write', async () => {
+    const portal = await registerPortal(t.app);
+    const handler = await startHandler({ hold: true });
+    const insert = vi.spyOn(t.db, 'insert');
+    try {
+      const items = Array.from({ length: 205 }, () => eventItem(handler.url));
+
+      await rpc(t.app, portal, 'rest.event.call', { QUERY: items });
+
+      await vi.waitFor(
+        () => {
+          expect(handler.requests).toHaveLength(200);
+        },
+        { timeout: 5000 },
+      );
+      await vi.waitFor(async () => {
+        expect((await counterRows()).find((r) => r.outcome === 'dropped')?.count).toBe(5);
+      });
+      expect(insert.mock.calls.filter(([table]) => table === eventCounters)).toHaveLength(1);
+      expect(t.logs.filter((l) => l.msg === 'event_dropped_overload')).toHaveLength(5);
+    } finally {
+      insert.mockRestore();
+      await handler.close();
+    }
+  });
+
   it('Failed delivery does not log handler credentials', async () => {
     const portal = await registerPortal(t.app);
     const closed = await startHandler();

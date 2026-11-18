@@ -87,27 +87,26 @@ function safeUrl(raw: string): string {
 }
 
 // A counter write never blocks or changes the delivery.
-function countOutcome(ctx: MethodContext, outcome: Outcome): void {
-  void recordOutcome(ctx.db, outcome, new Date()).catch((err: unknown) => {
+function countOutcome(ctx: MethodContext, outcome: Outcome, n = 1): void {
+  void recordOutcome(ctx.db, outcome, new Date(), n).catch((err: unknown) => {
     ctx.log.warn({ err }, 'event_counter_failed');
   });
 }
 
-// One attempt, no retries; nothing survives a restart (stage 3 adds a persistent queue).
-export async function deliver(ctx: MethodContext, item: EventItem): Promise<void> {
-  const data = item.query.QUERY_DATA ?? {};
-  const fields = {
+function logFields(ctx: MethodContext, item: EventItem) {
+  return {
     portal: ctx.portal.origin,
     client_id: item.client_id ?? null,
-    event: data.event ?? null,
+    event: item.query.QUERY_DATA?.event ?? null,
     url: safeUrl(item.query.QUERY_URL),
   };
-  if (ctx.delivery.inFlight >= EVENT_IN_FLIGHT_CAP) {
-    // ponytail: in-memory cap, persistent queue in stage 3
-    ctx.log.warn(fields, 'event_dropped_overload');
-    countOutcome(ctx, 'dropped');
-    return;
-  }
+}
+
+// One attempt, no retries; nothing survives a restart (stage 3 adds a persistent queue).
+// The caller checks the in-flight cap first.
+async function deliver(ctx: MethodContext, item: EventItem): Promise<void> {
+  const data = item.query.QUERY_DATA ?? {};
+  const fields = logFields(ctx, item);
   ctx.delivery.inFlight++;
   try {
     const auth = await buildAuth(ctx, item);
@@ -144,6 +143,17 @@ export async function deliver(ctx: MethodContext, item: EventItem): Promise<void
 }
 
 export const restEventCall = defineMethod<EventCallBody>(eventCallSchema, async (ctx, body) => {
-  for (const item of body.QUERY) void deliver(ctx, item);
+  let dropped = 0;
+  for (const item of body.QUERY) {
+    if (ctx.delivery.inFlight >= EVENT_IN_FLIGHT_CAP) {
+      // ponytail: in-memory cap, persistent queue in stage 3
+      ctx.log.warn(logFields(ctx, item), 'event_dropped_overload');
+      dropped++;
+    } else {
+      void deliver(ctx, item);
+    }
+  }
+  // One write per batch: a big batch must not queue one row update per dropped item.
+  if (dropped > 0) countOutcome(ctx, 'dropped', dropped);
   return null; // the cloud answers {"result":null}
 });

@@ -6,12 +6,12 @@ export function utcDay(now: Date): string {
   return now.toISOString().slice(0, 10);
 }
 
-export async function recordOutcome(db: Db, outcome: Outcome, now: Date): Promise<void> {
+export async function recordOutcome(db: Db, outcome: Outcome, now: Date, n = 1): Promise<void> {
   await db
     .insert(eventCounters)
-    .values({ day: utcDay(now), outcome, count: 1 })
+    .values({ day: utcDay(now), outcome, count: n })
     .onConflictDoUpdate({
       target: [eventCounters.day, eventCounters.outcome],
-      set: { count: sql`${eventCounters.count} + 1` },
+      set: { count: sql`${eventCounters.count} + ${n}` },
     });
 }
