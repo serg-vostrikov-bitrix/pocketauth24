@@ -5,8 +5,8 @@
 
 ## 2. CLI
 
-- [ ] 2.1 `src/cli.ts` with `superuser set-password`: hidden TTY prompt twice, `--password-stdin`, `--login`, length check
-- [ ] 2.2 Create or update the superuser and revoke its sessions; integration tests
+- [x] 2.1 `src/cli.ts` with `superuser set-password`: hidden TTY prompt twice, `--password-stdin`, `--login`, length check
+- [x] 2.2 Create or update the superuser and revoke its sessions; integration tests
 
 ## 3. Auth API
 

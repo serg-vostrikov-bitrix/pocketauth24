@@ -407,7 +407,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ### Task 3: Superuser CLI
 
-- [ ] Task 3 complete: Superuser CLI
+- [x] Task 3 complete: Superuser CLI
 
 **Covers tasks.md:** 2.1, 2.2
 
@@ -425,7 +425,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 Decision recorded here: the spec says the CLI replaces the login of an existing superuser only when `--login` is given. So `setSuperuser` takes `login: string | undefined`: without `--login` it keeps the current login, and it uses `admin` only when it creates the first superuser.
 
-- [ ] **Step 1: Write the failing test** `test/integration/admin-cli.test.ts`
+- [x] **Step 1: Write the failing test** `test/integration/admin-cli.test.ts`
 
 ```ts
 import { spawn } from 'node:child_process';
@@ -538,12 +538,12 @@ it('Without a TTY and without --password-stdin the command exits with 2', { time
 });
 ```
 
-- [ ] **Step 2: Run the test to make sure it fails**
+- [x] **Step 2: Run the test to make sure it fails**
 
 Run: `npm test -- test/integration/admin-cli.test.ts`
 Expected: FAIL, `src/cli.ts` does not exist (non-zero exit codes, wrong output).
 
-- [ ] **Step 3: Write `src/admin/sessions.ts`** (first part)
+- [x] **Step 3: Write `src/admin/sessions.ts`** (first part)
 
 ```ts
 import { eq } from 'drizzle-orm';
@@ -557,7 +557,7 @@ export async function deleteSessionsOfUser(db: DbOrTx, userId: number): Promise<
 }
 ```
 
-- [ ] **Step 4: Write `src/admin/users.ts`** (first part)
+- [x] **Step 4: Write `src/admin/users.ts`** (first part)
 
 ```ts
 import { eq } from 'drizzle-orm';
@@ -601,7 +601,7 @@ export async function setSuperuser(
 }
 ```
 
-- [ ] **Step 5: Write `src/cli.ts`**
+- [x] **Step 5: Write `src/cli.ts`**
 
 ```ts
 import { parseArgs } from 'node:util';
@@ -722,22 +722,22 @@ async function main(argv: string[]): Promise<number> {
 process.exitCode = await main(process.argv.slice(2));
 ```
 
-- [ ] **Step 6: Run the test to make sure it passes**
+- [x] **Step 6: Run the test to make sure it passes**
 
 Run: `npm test -- test/integration/admin-cli.test.ts`
 Expected: PASS (7 tests).
 
-- [ ] **Step 7: Check the build output**
+- [x] **Step 7: Check the build output**
 
 Run: `npm run build`
 Expected: `dist/cli.js` exists. (The Dockerfile already copies `src` and runs `npm run build`, so the image contains `dist/cli.js`.)
 
-- [ ] **Step 8: Manual check of the hidden prompt** (needs a real terminal and the dev database)
+- [x] **Step 8: Manual check of the hidden prompt** (needs a real terminal and the dev database)
 
 Run: `DATABASE_URL=postgres://b24auth:b24auth@localhost:5432/b24auth npx tsx src/cli.ts superuser set-password`
 Expected: two prompts echo nothing; Backspace works; different inputs print "The passwords do not match." with exit code 1; Ctrl+C exits with 130 (`echo $?`).
 
-- [ ] **Step 9: Types, lint, commit**
+- [x] **Step 9: Types, lint, commit**
 
 Run: `npm run typecheck && npm run lint`
 
