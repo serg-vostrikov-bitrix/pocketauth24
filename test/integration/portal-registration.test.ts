@@ -1,6 +1,14 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { portals } from '../../src/schema.js';
-import { form, PORTAL, startApp, truncateAll, type TestApp } from '../helpers.js';
+import { applications, portals } from '../../src/schema.js';
+import {
+  form,
+  PORTAL,
+  registerPortal,
+  rpc,
+  startApp,
+  truncateAll,
+  type TestApp,
+} from '../helpers.js';
 
 let t: TestApp;
 beforeAll(async () => {
@@ -42,5 +50,61 @@ describe('portal-registration', () => {
       error_description: expect.any(String) as string,
     });
     expect(await t.db.select().from(portals)).toHaveLength(0);
+  });
+
+  it('Portal re-registers', async () => {
+    const first = await registerPortal(t.app);
+    const [before] = await t.db.select().from(portals);
+    await t.db.insert(applications).values({
+      portalId: before.id,
+      clientId: 'local.00000000000000.00000001',
+      secretHash: 'kept',
+      title: 'Kept app',
+      redirectUri: '',
+      scope: 'crm',
+    });
+
+    const second = await registerPortal(t.app);
+
+    expect(second.client_id).not.toBe(first.client_id);
+    const after = await t.db.select().from(portals);
+    expect(after).toHaveLength(1);
+    expect(after[0].id).toBe(before.id);
+    expect((await rpc(t.app, first, 'application.list')).body.error).toBe('invalid_client');
+    expect((await rpc(t.app, second, 'application.list')).body).toEqual({ result: [] });
+    expect(await t.db.select().from(applications)).toHaveLength(1);
+  });
+
+  it('Valid service credentials', async () => {
+    const creds = await registerPortal(t.app);
+    const res = await rpc(t.app, creds, 'application.list', {
+      client_redirect_uri: `${PORTAL}/`,
+      member_id: 'ignored',
+      bx24_request_id: 'ignored',
+    });
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ result: [] });
+  });
+
+  it('Invalid service credentials', async () => {
+    const creds = await registerPortal(t.app);
+    const unknown = await rpc(
+      t.app,
+      { client_id: 'nope', client_secret: 'nope' },
+      'application.list',
+    );
+    const wrongSecret = await rpc(t.app, { ...creds, client_secret: 'wrong' }, 'application.list');
+    for (const res of [unknown, wrongSecret]) {
+      expect(res.status).toBe(401);
+      expect(res.body.error).toBe('invalid_client');
+      expect(res.body.result).toBeUndefined();
+    }
+  });
+
+  it('Unknown method', async () => {
+    const creds = await registerPortal(t.app);
+    const res = await rpc(t.app, creds, 'application.install');
+    expect(res.status).toBe(400);
+    expect(res.body.error).toBe('ERROR_METHOD_NOT_FOUND');
   });
 });

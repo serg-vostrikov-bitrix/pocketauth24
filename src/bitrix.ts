@@ -1,4 +1,7 @@
-import type { FastifyError, FastifyReply, FastifyRequest } from 'fastify';
+import type { FastifyBaseLogger, FastifyError, FastifyReply, FastifyRequest } from 'fastify';
+import type { Config } from './config.js';
+import type { Db } from './db.js';
+import type { Portal } from './schema.js';
 
 export class BitrixError extends Error {
   constructor(
@@ -35,4 +38,27 @@ export function sendError(
   }
   request.log.error({ err: error }, 'unhandled_error');
   return reply.status(500).send({ error: 'internal_error' });
+}
+
+export type DeliveryState = { inFlight: number };
+
+export type MethodContext = {
+  portal: Portal;
+  db: Db;
+  config: Config;
+  log: FastifyBaseLogger;
+  delivery: DeliveryState;
+};
+
+export type Method = {
+  schema: object;
+  handler: (ctx: MethodContext, body: unknown) => Promise<unknown>;
+};
+
+// The body is validated against `schema` by Fastify before the handler runs.
+export function defineMethod<B>(
+  schema: object,
+  handler: (ctx: MethodContext, body: B) => Promise<unknown>,
+): Method {
+  return { schema, handler: (ctx, body) => handler(ctx, body as B) };
 }

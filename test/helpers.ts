@@ -75,3 +75,22 @@ export async function registerPortal(
   });
   return res.json<Credentials>();
 }
+
+export type RpcResponse<T> = {
+  status: number;
+  body: { result?: T; error?: string; error_description?: string };
+};
+
+export async function rpc<T = unknown>(
+  app: FastifyInstance,
+  creds: Credentials,
+  method: string,
+  body: Record<string, unknown> = {},
+): Promise<RpcResponse<T>> {
+  const res = await app.inject({
+    method: 'POST',
+    url: `/rest/${method}`,
+    ...form({ ...creds, ...body }),
+  });
+  return { status: res.statusCode, body: res.json<RpcResponse<T>['body']>() };
+}
