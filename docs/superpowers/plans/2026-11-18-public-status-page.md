@@ -1382,7 +1382,7 @@ git commit -m "feat(web): add the React status page with theme tokens and a 30-s
 
 ### Task 6: Gyroscope
 
-- [ ] Task 6 complete: Gyroscope
+- [x] Task 6 complete: Gyroscope
 
 Checks off: **tasks.md 3.3**
 
@@ -1395,7 +1395,7 @@ Checks off: **tasks.md 3.3**
 - Consumes: `StatusPage` `<header className="hero">`, CSS tokens `--accent`, `--color-error` (Task 5).
 - Produces: `export function Gyroscope({ state }: { state: 'ok' | 'error' })`.
 
-- [ ] **Step 1: Write `web/src/Gyroscope.tsx`**
+- [x] **Step 1: Write `web/src/Gyroscope.tsx`**
 
 ```tsx
 // Decoration only; the status pills carry the meaning.
@@ -1412,7 +1412,7 @@ export function Gyroscope({ state }: { state: 'ok' | 'error' }) {
 }
 ```
 
-- [ ] **Step 2: Append the gyroscope styles to `web/src/status.css`**
+- [x] **Step 2: Append the gyroscope styles to `web/src/status.css`**
 
 Each ring has a static tilted `transform` equal to the first keyframe. With reduced motion, `animation: none` leaves the rings static and tilted.
 
@@ -1523,7 +1523,7 @@ Each ring has a static tilted `transform` equal to the first keyframe. With redu
 }
 ```
 
-- [ ] **Step 3: Render the gyroscope**
+- [x] **Step 3: Render the gyroscope**
 
 In `web/src/StatusPage.tsx`, add `import { Gyroscope } from './Gyroscope';`. Before `return (`, add:
 
@@ -1539,12 +1539,12 @@ Make the gyroscope the first child of the header:
         <h1 className="title">b24auth-server</h1>
 ```
 
-- [ ] **Step 4: Typecheck, format and build**
+- [x] **Step 4: Typecheck, format and build**
 
 Run: `npx prettier --write web && npm run web:typecheck && npm run web:build && npm run lint`
 Expected: all PASS.
 
-- [ ] **Step 5: Manual check in a browser**
+- [x] **Step 5: Manual check in a browser**
 
 Use the two terminals from Task 5, Step 12.
 
@@ -1554,7 +1554,7 @@ Use the two terminals from Task 5, Step 12.
 4. Turn on "reduce motion" in the operating system (Windows: Settings → Accessibility → Visual effects → Animation effects off). Reload. Make sure that the rings are static and tilted and the content is the same.
 5. In the browser DevTools Network tab, make sure that all requests go to the local host only.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add web/src/Gyroscope.tsx web/src/status.css web/src/StatusPage.tsx
