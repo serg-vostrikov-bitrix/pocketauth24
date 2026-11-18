@@ -76,3 +76,25 @@ Findings for deployment (portal behaviour, not server defects):
 - The portal refuses REST for a user who never logged in (`LAST_LOGIN` / `LAST_ACTIVITY_DATE`).
 - Apps load `BX24` from `//api.bitrix24.com/api/v1/`. In a closed network that script must be
   served from an internal host; the browser in this run had internet access.
+
+### Run 2026-11-18 (closed network)
+
+Same portal and image as the run above, repeated with the portal's PHP container cut off from the
+internet: an `iptables` OUTPUT policy in its network namespace allowed only the portal subnet and
+the OAuth server port, and rejected everything else. `curl` to `oauth.bitrix.info`,
+`oauth.bitrix24.tech`, `api.bitrix24.com` and `www.google.com` from the PHP container failed
+before and after the run. The app pages loaded `BX24` from a local copy on the app host.
+
+| Step | Result | Notes |
+|---|---|---|
+| 1 | Pass | Outbound internet blocked as described; the server log shows every OAuth call. |
+| 2 | Pass | Registration succeeded. |
+| 3 | Pass | `application.add` for both apps. |
+| 4 | Pass | Install page got `AUTH_ID` and `REFRESH_ID`; `BX24.installFinish()` completed. |
+| 5 | Pass | `user.current` returned the admin. |
+| 6 | Pass | A non-admin user's token returned that user (REST call, not browser). |
+| 7 | Pass | `ONAPPINSTALL` carried tokens, `domain`, `member_id`, `application_token`. |
+| 8 | Pass | The event access token worked for `/rest/profile`. |
+| 9 | Pass | Both apps: renewal and repeated renewal with the same refresh token gave working new pairs. |
+| 10 | Pass | After deletion, old and renewed tokens got `invalid_token`; renewal failed. |
+

@@ -104,4 +104,7 @@ keeps their history in `b_option`).
 
 ## Open Questions
 
-- Exact error codes the cloud returns for unknown method and invalid client.
+- Resolved for the token and check flows by the protocol capture (`docs/protocol-capture.md`).
+  Still inferred, not captured: the RPC statuses for invalid service credentials (401
+  `invalid_client`) and an unknown method (400 `ERROR_METHOD_NOT_FOUND`). The portal client parses
+  the JSON body regardless of status, so a mismatch only affects logs.

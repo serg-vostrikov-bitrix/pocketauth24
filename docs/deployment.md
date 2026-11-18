@@ -85,6 +85,16 @@ Applications renew tokens at `/oauth/token/`. Most SDKs (CRest, official SDKs) h
 - Or point DNS for `oauth.bitrix.info` (and `oauth.bitrix24.tech`) to the reverse proxy and
   issue a certificate for those names from the internal CA trusted by application servers.
 
+## 7a. Portal URL, app hosts and the BX24 library
+
+- The portal must know its real public URL and port. Behind a proxy on a non-default port the
+  portal may assume port 80; the app frame then gets a wrong `DOMAIN` and `BX24` cannot talk to
+  the portal.
+- Local app and handler URLs need a host name with a dot: `localhost` is rejected by the portal;
+  use an FQDN or an IP address.
+- Apps usually load `BX24` from `//api.bitrix24.com/api/v1/`, which is unreachable in a closed
+  network. Serve a copy of that script from an internal host and point the apps at it.
+
 ## 8. Events
 
 Event handlers receive one POST per event with a 10 s timeout; no retries. Failed and dropped
