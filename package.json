@@ -7,6 +7,9 @@
   },
   "scripts": {
     "test": "vitest run",
+    "web:install": "npm ci --prefix web",
+    "web:build": "npm run build --prefix web",
+    "web:typecheck": "npm run typecheck --prefix web",
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",

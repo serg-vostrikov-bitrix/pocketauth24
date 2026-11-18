@@ -1,0 +1,101 @@
+.page {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: 48px 24px;
+}
+
+.hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  color: var(--text-muted);
+}
+
+.pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 12px;
+}
+
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  font-size: 0.875rem;
+  transition:
+    border-color var(--dur-base) ease,
+    color var(--dur-base) ease;
+}
+
+.pill-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.pill--ok {
+  color: var(--color-ok);
+}
+
+.pill--error {
+  color: var(--color-error);
+  border-color: var(--color-error);
+}
+
+.pill--muted {
+  color: var(--text-muted);
+}
+
+.version {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+}
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  padding: 20px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  animation: fade-in var(--dur-base) ease both;
+  animation-delay: calc(var(--i, 0) * 40ms);
+}
+
+.card-label {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
+
+.card-value {
+  margin-top: 8px;
+  font-size: 2rem;
+  font-variant-numeric: tabular-nums;
+  animation: fade-in var(--dur-base) ease;
+}
+
+.card-detail {
+  margin-top: 4px;
+  color: var(--text-muted);
+  font-size: 0.8125rem;
+}
