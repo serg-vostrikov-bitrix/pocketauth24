@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { fetchStatus, type EventTotals, type Status } from './api';
+import { Gyroscope } from './Gyroscope';
 import { formatCount, StatCard } from './StatCard';
 import { StatusPill } from './StatusPill';
 
@@ -40,9 +41,12 @@ export function StatusPage() {
   const database = status?.database ?? 'loading';
   const events = status?.events ?? null;
 
+  const gyroState = !reachable || status?.status === 'degraded' ? 'error' : 'ok';
+
   return (
     <main className="page">
       <header className="hero">
+        <Gyroscope state={gyroState} />
         <h1 className="title">b24auth-server</h1>
         <div className="pills">
           <StatusPill label="Service" value={service} />
