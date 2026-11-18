@@ -16,7 +16,7 @@ with fields `event`, `event_handler_id`, `data`, `ts` taken from `QUERY_DATA`, a
 `additional.sendAuth` is true, the `auth` block SHALL contain a newly issued token
 response plus `application_token`; `refresh_token` SHALL be included only when
 `additional.sendRefreshToken` is true. Otherwise `auth` SHALL contain only `domain`,
-`member_id` and `application_token`.
+`client_endpoint`, `server_endpoint`, `member_id` and `application_token`.
 
 #### Scenario: Install event reaches a server-side app
 - **WHEN** a portal sends an `ONAPPINSTALL` item with `sendAuth` and `sendRefreshToken` true for user 1
@@ -24,7 +24,7 @@ response plus `application_token`; `refresh_token` SHALL be included only when
 
 #### Scenario: Event without user auth
 - **WHEN** an item has no `client_id` or `LOCAL_USER` is 0
-- **THEN** the handler receives `auth` with only `domain`, `member_id` and `application_token`
+- **THEN** the handler receives `auth` with only `domain`, `client_endpoint`, `server_endpoint`, `member_id` and `application_token`
 
 ### Requirement: No retries in this stage
 A failed delivery (connection error, timeout, non-2xx status) SHALL be logged with the

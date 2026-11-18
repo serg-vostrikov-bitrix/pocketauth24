@@ -5,7 +5,7 @@ The server SHALL expose `POST /oauth/register/` accepting the form fields sent b
 `Bitrix\Rest\OAuthService::register()`: `redirect_uri` (portal base URL), `type`
 (`B`), optional `member_id`, and optional licence fields (`BX_TYPE`, `BX_LICENCE`,
 `BX_HASH`). On success it SHALL respond with JSON `{"client_id": "...",
-"client_secret": "..."}` and persist the portal with its base URL and credentials.
+"client_secret": "...", "host": "<portal host>"}` and persist the portal with its base URL and credentials.
 
 #### Scenario: Allowed portal registers
 - **WHEN** a portal whose `redirect_uri` host is in the configured allowlist posts to `/oauth/register/`

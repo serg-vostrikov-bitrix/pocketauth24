@@ -2,7 +2,7 @@
 
 ### Requirement: Add local application
 `application.add` SHALL accept `TITLE`, `REDIRECT_URI` and `SCOPE` and respond with
-`{"result": {"client_id": "...", "client_secret": "..."}}`. The `client_id` SHALL use
+`{"result": {"client_id": "...", "client_secret": "...", "redirect_uri": "...", "scope": "..."}}`. The `client_id` SHALL use
 the cloud local-app format `local.<14 hex>.<8 digits>`. The application SHALL belong to
 the calling portal and SHALL be usable on it immediately: the portal never calls
 `application.install` or `application.uninstall` for local apps (`AppTable::uninstall`

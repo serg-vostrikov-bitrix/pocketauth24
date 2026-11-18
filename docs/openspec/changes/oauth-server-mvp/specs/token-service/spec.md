@@ -4,7 +4,7 @@
 Every successful token issue SHALL return these fields: `access_token`,
 `refresh_token`, `expires` (Unix time), `expires_in` (seconds), `scope`
 (comma-separated), `domain` (portal host), `server_endpoint` (`<server>/rest/`),
-`client_endpoint` (`<portal>/rest/`), `member_id`, `user_id`, `status` (`L` for local
+`client_endpoint` (`<portal>/rest/`), `member_id`, `status` (`L` for local
 apps). `member_id` SHALL equal `md5` of the portal's current service `client_id`, the value
 the portal computes in `OAuthService::getMemberId()`. The access token lifetime SHALL be
 3600 seconds and the refresh token lifetime 180 days (6 months), as in the cloud.
@@ -17,12 +17,12 @@ the portal computes in `OAuthService::getMemberId()`. The access token lifetime 
 `rest.authorize` SHALL accept `CLIENT_ID`, `SCOPE` and `PARAMS` (containing
 `LOCAL_USER`, `TZ_OFFSET` and the event session) and respond with
 `{"result": <token response>}`. The token scope SHALL be the intersection of the
-requested `SCOPE` and the application scope. `PARAMS` SHALL be stored with the token,
-and `user_id` SHALL equal `PARAMS.LOCAL_USER`.
+requested `SCOPE` and the application scope. `PARAMS` SHALL be stored with the token;
+the stored user SHALL equal `PARAMS.LOCAL_USER`.
 
 #### Scenario: App page opens
 - **WHEN** a portal calls `rest.authorize` for an installed application and user 5
-- **THEN** the server returns a new token pair with `user_id` 5 and stores `PARAMS` with it
+- **THEN** the server returns a new token pair for user 5 and stores `PARAMS` with it
 
 #### Scenario: Unknown application
 - **WHEN** `rest.authorize` is called with a `CLIENT_ID` not owned by the portal
@@ -30,8 +30,9 @@ and `user_id` SHALL equal `PARAMS.LOCAL_USER`.
 
 ### Requirement: Validate tokens for the portal
 `rest.check` SHALL accept `TOKEN` and, for a valid access token issued on the calling
-portal, respond with `{"result": {...}}` containing `client_id`, `expires`, `scope`,
-`member_id`, `user_id` and `parameters` (the stored `PARAMS`, including `LOCAL_USER`).
+portal, respond with `{"result": {...}}` containing `access_token`, `expires_in`, `expires`, `scope`,
+`client_id`, `parameters` (the stored `PARAMS`, including `LOCAL_USER`) and `status`. An
+unknown token is answered with HTTP 400.
 
 #### Scenario: Valid token
 - **WHEN** a portal checks an access token the server issued for it
@@ -48,11 +49,13 @@ portal, respond with `{"result": {...}}` containing `client_id`, `expires`, `sco
 ### Requirement: Token renewal for applications
 `/oauth/token/` SHALL accept GET and POST with `grant_type=refresh_token`,
 `client_id`, `client_secret` and `refresh_token`, and respond with the token response
-as top-level JSON (not wrapped in `result`). The new pair SHALL keep the user, scope
+as top-level JSON (not wrapped in `result`) with `user_id` added, `scope` set to the
+literal `app` and `domain` set to the OAuth server host, as the cloud does. The new pair SHALL keep the user, scope
 and stored parameters of the old one. A refresh token SHALL stay valid until its own
 expiry and MAY be presented again, matching observed cloud behaviour (confirmed against
 captured traffic before release). An expired or unknown refresh token SHALL be rejected
-with `invalid_grant`.
+with `invalid_grant`. `/oauth/token/` errors are HTTP 400 and carry no `error_description`,
+except `invalid_request` for an unknown `grant_type`.
 
 #### Scenario: Successful renewal
 - **WHEN** an application posts a valid unused refresh token with its own `client_id` and `client_secret`
@@ -72,7 +75,7 @@ with `invalid_grant`.
 
 #### Scenario: Unsupported grant type
 - **WHEN** `grant_type` is anything other than `refresh_token`
-- **THEN** the server responds with `error` = `unsupported_grant_type`
+- **THEN** the server responds with `error` = `invalid_request` (`invalid_grant` for `authorization_code`)
 
 ### Requirement: Token storage safety
 The server SHALL store only hashes of access and refresh tokens and SHALL generate
