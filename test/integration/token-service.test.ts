@@ -102,6 +102,16 @@ describe('token-service', () => {
     expect(pair.params).toEqual(params);
   });
 
+  it.each(['1e20', '-1'])('Out-of-range LOCAL_USER %s is stored as 0', async (value) => {
+    const portal = await registerPortal(t.app);
+    const app = await addApp(t.app, portal);
+
+    await authorize(t.app, portal, app.client_id, { PARAMS: { LOCAL_USER: value } });
+
+    const [pair] = await t.db.select().from(tokenPairs);
+    expect(pair.userId).toBe(0);
+  });
+
   it('Unknown application', async () => {
     const portal = await registerPortal(t.app);
     const other = await registerPortal(t.app, `${OTHER_PORTAL}/`);

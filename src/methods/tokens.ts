@@ -1,7 +1,7 @@
 import { and, eq } from 'drizzle-orm';
 import { defineMethod, fail } from '../bitrix.js';
 import { applications } from '../schema.js';
-import { check, intersectScope, issuePair, normalizeScope } from '../tokens.js';
+import { check, intersectScope, issuePair, localUserId, normalizeScope } from '../tokens.js';
 import { scopeSchema } from './applications.js';
 
 type AuthorizeBody = {
@@ -27,10 +27,9 @@ export const restAuthorize = defineMethod<AuthorizeBody>(authorizeSchema, async 
     .where(and(eq(applications.clientId, body.CLIENT_ID), eq(applications.portalId, ctx.portal.id)))
     .limit(1);
   if (!app) fail('ERROR_OAUTH', 'Application not installed');
-  const userId = Number(body.PARAMS.LOCAL_USER ?? 0);
   return issuePair(ctx.db, ctx.config, app, ctx.portal, {
     scope: intersectScope(normalizeScope(body.SCOPE), app.scope),
-    userId: Number.isInteger(userId) ? userId : 0,
+    userId: localUserId(body.PARAMS.LOCAL_USER),
     params: body.PARAMS,
   });
 });

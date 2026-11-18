@@ -48,6 +48,15 @@ Run one app instance only (migrations on boot are not locked).
 Proxy `https://<BASE_URL host>/` to `http://<app host>:3000/`. Use a certificate from your
 internal CA that the portal servers and application servers trust.
 
+Restrict access at the proxy. `/oauth/register/` has no shared secret, so anyone who can reach it
+can rotate an allowlisted portal's credentials and lock the portal out:
+
+- Allow `/oauth/register/` and `/rest/` only from the portal servers' IP addresses.
+- Leave `/oauth/token/` reachable by the application servers, which refresh their tokens there.
+- Keep the app port on the loopback interface (`127.0.0.1:3000`, as in `docker-compose.yml`) so
+  that nothing bypasses the proxy. If the proxy runs on another host, publish the port only on
+  the private interface that the proxy uses.
+
 ## 5. Switch the portal
 
 On the portal ("PHP command line" in the admin panel):

@@ -178,3 +178,11 @@ export async function refresh(db: Db, config: Config, input: RefreshInput): Prom
 export async function deleteExpiredPairs(db: Db, now: Date): Promise<void> {
   await db.delete(tokenPairs).where(lt(tokenPairs.refreshExpiresAt, now));
 }
+
+const INT4_MAX = 2_147_483_647;
+
+// LOCAL_USER comes from the portal as a string; anything that is not a valid user id means "no user".
+export function localUserId(value: unknown): number {
+  const id = Number(value ?? 0);
+  return Number.isInteger(id) && id >= 0 && id <= INT4_MAX ? id : 0;
+}

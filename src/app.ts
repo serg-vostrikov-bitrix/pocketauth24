@@ -26,11 +26,15 @@ const logOptions = {
 
 export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   const app = Fastify({
+    routerOptions: { ignoreTrailingSlash: true },
     bodyLimit: BODY_LIMIT_BYTES,
     logger: deps.logStream ? { ...logOptions, stream: deps.logStream } : logOptions,
   });
   await app.register(formbody, { parser: (body) => qs.parse(body, QS_OPTIONS) });
   app.setErrorHandler(sendError);
+  app.setNotFoundHandler(async (_request, reply) =>
+    reply.status(404).send({ error: 'not_found', error_description: 'Not found' }),
+  );
   app.get('/health', async () => ({ status: 'ok' }));
   registerRoute(app, deps);
   rpcRoute(app, deps);

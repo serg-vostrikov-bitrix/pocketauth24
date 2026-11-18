@@ -232,3 +232,4 @@ real proof is the end-to-end check.
 | Events lost on restart / outage / overload | Accepted for MVP, logged; stage 3 persistent queue |
 | Portal caches `rest.check` 3600 s, including errors | Documented behaviour |
 | Apps hard-code `oauth.bitrix.info` | Deployment guide: app config or DNS + internal CA |
+| Unauthenticated `/oauth/register/` and `/rest/` let a peer who reaches the server take over an allowlisted portal's identity | App port bound to loopback; proxy allows both paths only from portal server IPs (deployment guide section 4). Residual: a host inside the portal's IP range |

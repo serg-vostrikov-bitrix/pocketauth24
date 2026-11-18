@@ -203,4 +203,27 @@ describe('event-delivery', () => {
       await handler.close();
     }
   });
+
+  it('Failed delivery does not log handler credentials', async () => {
+    const portal = await registerPortal(t.app);
+    const closed = await startHandler();
+    const closedUrl = new URL(closed.url);
+    await closed.close();
+
+    await rpc(t.app, portal, 'rest.event.call', {
+      QUERY: [
+        eventItem(`http://user:pass@127.0.0.1:${closedUrl.port}/hook?token=SECRET`),
+        eventItem('not a url'),
+      ],
+    });
+    await vi.waitFor(() => {
+      expect(t.logs.filter((l) => l.msg === 'event_delivery_failed')).toHaveLength(2);
+    });
+
+    const text = JSON.stringify(t.logs);
+    expect(text).not.toContain('user:pass');
+    expect(text).not.toContain('SECRET');
+    expect(text).toContain(`http://127.0.0.1:${closedUrl.port}/hook`);
+    expect(text).toContain('<invalid url>');
+  });
 });

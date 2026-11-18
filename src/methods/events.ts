@@ -3,7 +3,7 @@ import qs from 'qs';
 import { defineMethod, type MethodContext } from '../bitrix.js';
 import { EVENT_IN_FLIGHT_CAP, EVENT_TIMEOUT_MS } from '../config.js';
 import { applications } from '../schema.js';
-import { issuePair, memberId, portalDomain } from '../tokens.js';
+import { issuePair, localUserId, memberId, portalDomain } from '../tokens.js';
 
 export type EventItem = {
   client_id?: string;
@@ -45,10 +45,10 @@ async function buildAuth(ctx: MethodContext, item: EventItem): Promise<Record<st
     member_id: memberId(ctx.portal),
     application_token: applicationToken,
   };
-  const localUser = Number(item.auth?.LOCAL_USER ?? 0);
+  const localUser = localUserId(item.auth?.LOCAL_USER);
   const additional = item.additional ?? {};
   // PHP http_build_query sends booleans as "1" / "0".
-  if (!item.client_id || !(localUser > 0) || additional.sendAuth !== '1') return base;
+  if (!item.client_id || localUser === 0 || additional.sendAuth !== '1') return base;
   const [app] = await ctx.db
     .select()
     .from(applications)
@@ -72,6 +72,16 @@ function errorText(error: unknown): string {
   return error.cause instanceof Error ? `${error.message}: ${error.cause.message}` : error.message;
 }
 
+// Handler URLs may carry credentials (userinfo, query); log origin and path only.
+function safeUrl(raw: string): string {
+  try {
+    const url = new URL(raw);
+    return url.origin + url.pathname;
+  } catch {
+    return '<invalid url>';
+  }
+}
+
 // One attempt, no retries; nothing survives a restart (stage 3 adds a persistent queue).
 export async function deliver(ctx: MethodContext, item: EventItem): Promise<void> {
   const data = item.query.QUERY_DATA ?? {};
@@ -79,7 +89,7 @@ export async function deliver(ctx: MethodContext, item: EventItem): Promise<void
     portal: ctx.portal.origin,
     client_id: item.client_id ?? null,
     event: data.event ?? null,
-    url: item.query.QUERY_URL,
+    url: safeUrl(item.query.QUERY_URL),
   };
   if (ctx.delivery.inFlight >= EVENT_IN_FLIGHT_CAP) {
     // ponytail: in-memory cap, persistent queue in stage 3
@@ -106,7 +116,10 @@ export async function deliver(ctx: MethodContext, item: EventItem): Promise<void
     await response.body?.cancel();
     if (!response.ok) ctx.log.warn({ ...fields, status: response.status }, 'event_delivery_failed');
   } catch (error) {
-    ctx.log.warn({ ...fields, error: errorText(error) }, 'event_delivery_failed');
+    ctx.log.warn(
+      { ...fields, error: errorText(error).replaceAll(item.query.QUERY_URL, fields.url) },
+      'event_delivery_failed',
+    );
   } finally {
     ctx.delivery.inFlight--;
   }
