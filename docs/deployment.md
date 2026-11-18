@@ -78,7 +78,9 @@ On the portal ("PHP command line" in the admin panel):
     \Bitrix\Main\Config\Option::delete('rest', ['name' => 'service_client_id']);
     \Bitrix\Main\Config\Option::delete('rest', ['name' => 'service_client_secret']);
 
-Alternative: define `BITRIX_OAUTH_URL` in `bitrix/php_interface/dbconn.php`. The portal
+Alternative: define `BITRIX_OAUTH_URL` in `local/php_interface/init.php`
+(`define('BITRIX_OAUTH_URL', 'https://<BASE_URL host>');`). The constant overrides the
+`oauth_server` option, so use one or the other. Do not edit `dbconn.php`. The portal
 registers itself on its next OAuth call. Registering again later (same deletion) issues new
 service credentials; apps and tokens are kept.
 
