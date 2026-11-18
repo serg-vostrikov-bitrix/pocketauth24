@@ -1344,7 +1344,7 @@ git commit -m "feat: authenticate portal RPC calls and dispatch methods"
 
 ### Task 5: `application.add`
 
-- [ ] Task 5 complete: `application.add`
+- [x] Task 5 complete: `application.add`
 
 tasks.md: **4.1**
 
@@ -1356,7 +1356,7 @@ tasks.md: **4.1**
 - Consumes: `defineMethod`, `randomHex`, `sha256`, `applications`.
 - Produces: `normalizeScope(value: string | string[] | undefined): string`; `scopeSchema` (exported from `methods/applications.ts`); `applicationAdd: Method`; helpers `APP_FIELDS = { TITLE: 'Demo app', REDIRECT_URI: 'https://app.test/handler', SCOPE: 'crm,user' }`, `addApp(app, portal: Credentials, fields?): Promise<Credentials>`.
 
-- [ ] **Step 1: Add helpers to `test/helpers.ts`** (append)
+- [x] **Step 1: Add helpers to `test/helpers.ts`** (append)
 
 ```ts
 export const APP_FIELDS = {
@@ -1376,7 +1376,7 @@ export async function addApp(
 }
 ```
 
-- [ ] **Step 2: Write the failing test** (in `application-registry.test.ts`; import `applications` from `../../src/schema.js` and `APP_FIELDS`, `type Credentials` from helpers)
+- [x] **Step 2: Write the failing test** (in `application-registry.test.ts`; import `applications` from `../../src/schema.js` and `APP_FIELDS`, `type Credentials` from helpers)
 
 ```ts
   it('Portal creates a local app', async () => {
@@ -1398,12 +1398,12 @@ export async function addApp(
   });
 ```
 
-- [ ] **Step 3: Run to verify it fails**
+- [x] **Step 3: Run to verify it fails**
 
 Run: `npx vitest run test/integration/application-registry.test.ts -t "Portal creates a local app"`
 Expected: FAIL — `ERROR_METHOD_NOT_FOUND`.
 
-- [ ] **Step 4: Implement**
+- [x] **Step 4: Implement**
 
 `src/tokens.ts` — append:
 ```ts
@@ -1476,12 +1476,12 @@ const methods: Record<string, Method> = {
 };
 ```
 
-- [ ] **Step 5: Run tests, typecheck, lint**
+- [x] **Step 5: Run tests, typecheck, lint**
 
 Run: `npm test && npm run typecheck && npm run lint`
 Expected: all PASS.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add src test

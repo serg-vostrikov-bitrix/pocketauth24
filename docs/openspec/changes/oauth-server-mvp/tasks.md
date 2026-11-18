@@ -16,7 +16,7 @@
 
 ## 4. Application registry
 
-- [ ] 4.1 Implement `application.add` with `local.*` client_id format
+- [x] 4.1 Implement `application.add` with `local.*` client_id format
 - [ ] 4.2 Implement `application.update` and `application.delete` with ownership check; delete cascades tokens
 - [x] 4.3 Implement `application.list` returning an empty list
 
