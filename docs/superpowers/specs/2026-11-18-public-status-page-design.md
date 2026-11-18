@@ -150,3 +150,10 @@ All server tests use vitest with real PostgreSQL, as the existing suites do.
 `truncateAll` in `test/helpers.ts` adds `event_counters`.
 
 Visual behavior (gyroscope, transitions, reduced motion) gets a manual check in a browser before verify. It has no automated test.
+
+## Implementation Divergence
+
+Recorded in the verify phase on 2026-11-18. The delta specs are unchanged and satisfied.
+
+1. **Dropped-event counter (section 2.4).** The final whole-branch review found that one upsert per dropped item on the same `(day, 'dropped')` row can exhaust the 10-connection pool under a large `rest.event.call` batch, and break `/oauth/token` for every portal. The in-flight cap check therefore moved from `deliver()` into `restEventCall`. `restEventCall` counts the dropped items of one batch and writes them with one upsert: `recordOutcome(db, 'dropped', now, n)`, which sets `count = count + n`. `deliver()` is no longer exported. The `event_dropped_overload` log line stays per item. `delivered` and `failed` stay one upsert per item, because the in-flight cap bounds them. Each dropped item still adds 1 to the daily `dropped` total.
+2. **Unreachable API (sections 3 and 5).** When `/api/status` cannot be reached, the Database pill shows a neutral `unknown` state instead of the last value, and the gyroscope uses the error color. The service pill shows `unreachable`, as designed.
