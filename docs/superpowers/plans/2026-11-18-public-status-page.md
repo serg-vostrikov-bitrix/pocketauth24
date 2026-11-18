@@ -288,7 +288,7 @@ git commit -m "feat(events): count delivery outcomes per UTC day"
 
 ### Task 2: Health probe
 
-- [ ] Task 2 complete: Health probe
+- [x] Task 2 complete: Health probe
 
 Checks off: **tasks.md 2.1** and the `/health` part of **2.4**
 
@@ -304,7 +304,7 @@ Checks off: **tasks.md 2.1** and the `/health` part of **2.4**
 - Produces: `export const DEAD_DATABASE_URL: string` and `startApp(options: { databaseUrl?: string; webRoot?: string } = {})` in `test/helpers.ts`.
 - Produces: `AppDeps.webRoot?: string` in `src/app.ts` (used in Task 4).
 
-- [ ] **Step 1: Extend `startApp`**
+- [x] **Step 1: Extend `startApp`**
 
 In `test/helpers.ts`, add below `TEST_DATABASE_URL`:
 
@@ -334,7 +334,7 @@ In `src/app.ts`, change `AppDeps` so that this compiles:
 export type AppDeps = { config: Config; db: Db; logStream?: Writable; webRoot?: string };
 ```
 
-- [ ] **Step 2: Write the failing test**
+- [x] **Step 2: Write the failing test**
 
 Replace `test/integration/health.test.ts` with:
 
@@ -364,12 +364,12 @@ it('GET /health returns 503 when the database is down', async () => {
 });
 ```
 
-- [ ] **Step 3: Run the test to verify it fails**
+- [x] **Step 3: Run the test to verify it fails**
 
 Run: `npm test -- test/integration/health.test.ts`
 Expected: FAIL in the second test: status 200, expected 503.
 
-- [ ] **Step 4: Set the pool connection timeout**
+- [x] **Step 4: Set the pool connection timeout**
 
 In `src/db.ts`:
 
@@ -378,7 +378,7 @@ In `src/db.ts`:
   const pool = new pg.Pool({ connectionString: url, connectionTimeoutMillis: 2000 });
 ```
 
-- [ ] **Step 5: Write `probeDatabase` in `src/status.ts`**
+- [x] **Step 5: Write `probeDatabase` in `src/status.ts`**
 
 ```ts
 import { sql } from 'drizzle-orm';
@@ -400,7 +400,7 @@ export async function probeDatabase(db: Db, timeoutMs = 2000): Promise<boolean> 
 }
 ```
 
-- [ ] **Step 6: Use the probe in `/health`**
+- [x] **Step 6: Use the probe in `/health`**
 
 In `src/app.ts`, add `import { probeDatabase } from './status.js';` and replace line 38:
 
@@ -412,17 +412,17 @@ In `src/app.ts`, add `import { probeDatabase } from './status.js';` and replace 
   );
 ```
 
-- [ ] **Step 7: Run the tests to verify they pass**
+- [x] **Step 7: Run the tests to verify they pass**
 
 Run: `npm test -- test/integration/health.test.ts`
 Expected: PASS (2 tests).
 
-- [ ] **Step 8: Run the full checks**
+- [x] **Step 8: Run the full checks**
 
 Run: `npm test && npm run lint && npm run typecheck`
 Expected: all PASS.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add src/db.ts src/status.ts src/app.ts test/helpers.ts test/integration/health.test.ts
