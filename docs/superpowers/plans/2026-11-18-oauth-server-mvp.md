@@ -124,6 +124,8 @@ Order: Tasks 1 → 13 are sequential and need no capture. Task 2's capture is do
 
 ### Task 1: Service skeleton, tooling and CTO exception note
 
+- [ ] Task 1 complete: Service skeleton, tooling and CTO exception note
+
 tasks.md: **1.2**, part of **1.4**
 
 **Files:**
@@ -390,6 +392,8 @@ git commit -m "chore: add Fastify TypeScript service skeleton with health endpoi
 
 ### Task 2: Protocol capture procedure and fixture sanitization (manual capture by the user)
 
+- [ ] Task 2 complete: Protocol capture procedure and fixture sanitization (manual capture by the user)
+
 tasks.md: **1.1**
 
 The agent writes the procedure and the sanitize script; **the user** performs the capture on a test portal with internet access and runs the sanitizer. No other task waits for this except Task 14.
@@ -598,6 +602,8 @@ git commit -m "test: add sanitized cloud protocol capture fixtures"
 ---
 
 ### Task 3: Storage schema, migrations and portal registration
+
+- [ ] Task 3 complete: Storage schema, migrations and portal registration
 
 tasks.md: **2.1**, **3.1**, part of **1.3** (database service) and **1.4** (DB test setup)
 
@@ -1089,6 +1095,8 @@ git commit -m "feat: add storage schema and portal registration with allowlist"
 
 ### Task 4: Portal RPC authentication, method dispatch and `application.list`
 
+- [ ] Task 4 complete: Portal RPC authentication, method dispatch and `application.list`
+
 tasks.md: **3.2**, **4.3**, and the re-registration scenario of **3.1**
 
 **Files:**
@@ -1336,6 +1344,8 @@ git commit -m "feat: authenticate portal RPC calls and dispatch methods"
 
 ### Task 5: `application.add`
 
+- [ ] Task 5 complete: `application.add`
+
 tasks.md: **4.1**
 
 **Files:**
@@ -1481,6 +1491,8 @@ git commit -m "feat: add local applications with cloud client_id format"
 ---
 
 ### Task 6: Token pair issue, response builder, scope intersection and `rest.authorize`
+
+- [ ] Task 6 complete: Token pair issue, response builder, scope intersection and `rest.authorize`
 
 tasks.md: **5.1**, **5.2**
 
@@ -1837,6 +1849,8 @@ git commit -m "feat: issue hashed token pairs via rest.authorize"
 
 ### Task 7: `rest.check`
 
+- [ ] Task 7 complete: `rest.check`
+
 tasks.md: **5.3**
 
 **Files:**
@@ -1970,6 +1984,8 @@ git commit -m "feat: validate access tokens via rest.check"
 ---
 
 ### Task 8: `/oauth/token/` refresh grant
+
+- [ ] Task 8 complete: `/oauth/token/` refresh grant
 
 tasks.md: **5.4**
 
@@ -2196,6 +2212,8 @@ git commit -m "feat: renew tokens via /oauth/token/ with reusable refresh tokens
 
 ### Task 9: `application.update` and `application.delete`
 
+- [ ] Task 9 complete: `application.update` and `application.delete`
+
 tasks.md: **4.2**
 
 **Files:**
@@ -2347,6 +2365,8 @@ git commit -m "feat: update and delete local applications with ownership check"
 ---
 
 ### Task 10: `rest.event.call` intake, fire-and-forget delivery, failure logging
+
+- [ ] Task 10 complete: `rest.event.call` intake, fire-and-forget delivery, failure logging
 
 tasks.md: **6.1** (intake, timeout), **6.2** (no-user `auth` block), **6.3**
 
@@ -2684,6 +2704,8 @@ git commit -m "feat: accept rest.event.call and deliver events once without retr
 
 ### Task 11: In-flight cap for event deliveries
 
+- [ ] Task 11 complete: In-flight cap for event deliveries
+
 tasks.md: **6.1** (cap)
 
 **Files:**
@@ -2753,6 +2775,8 @@ git commit -m "feat: drop event deliveries above the in-flight cap"
 ---
 
 ### Task 12: User token in the event `auth` block
+
+- [ ] Task 12 complete: User token in the event `auth` block
 
 tasks.md: **6.2** (`sendAuth`, `sendRefreshToken`)
 
@@ -2871,6 +2895,8 @@ git commit -m "feat: include a fresh user token in event auth when requested"
 ---
 
 ### Task 13: Server boot, token cleanup, container image, compose app service and CI
+
+- [ ] Task 13 complete: Server boot, token cleanup, container image, compose app service and CI
 
 tasks.md: **1.3**, **1.4** (CI)
 
@@ -3056,6 +3082,8 @@ git commit -m "build: add container image, compose app service, token cleanup an
 ---
 
 ### Task 14: Contract tests against captured cloud traffic
+
+- [ ] Task 14 complete: Contract tests against captured cloud traffic
 
 tasks.md: **7.1** — **blocked until Task 2 fixtures (`test/fixtures/cloud-capture.har`, `test/fixtures/event-handler.har`) are committed.** The suite skips itself while the fixtures are absent.
 
@@ -3274,6 +3302,8 @@ git commit -m "test: compare response shapes with captured cloud traffic"
 
 ### Task 15: End-to-end checklist on the test portal (manual)
 
+- [ ] Task 15 complete: End-to-end checklist on the test portal (manual)
+
 tasks.md: **7.2** — also the real proof of the "Install URL of a local app still runs" scenario.
 
 **Files:**
@@ -3348,6 +3378,8 @@ git commit -m "docs: add end-to-end checklist for an offline test portal"
 ---
 
 ### Task 16: Deployment guide
+
+- [ ] Task 16 complete: Deployment guide
 
 tasks.md: **7.3**
 
