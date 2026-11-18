@@ -1,0 +1,11 @@
+dist
+drizzle
+docs
+*.har
+package-lock.json
+.agents
+.claude
+.codex
+.comet
+.superpowers
+openspec
