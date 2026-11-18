@@ -104,7 +104,7 @@ base-ref: 576b9e6dc429496ddee51209b7b5927a2b6df76a
 
 ### Task 1: Password primitives
 
-- [ ] Task 1 complete: Password primitives
+- [x] Task 1 complete: Password primitives
 
 **Covers tasks.md:** 1.2
 
@@ -116,7 +116,7 @@ base-ref: 576b9e6dc429496ddee51209b7b5927a2b6df76a
 **Interfaces:**
 - Produces: `hashPassword(plain: string): Promise<string>`, `verifyPassword(plain: string, stored: string): Promise<boolean>`, `DUMMY_HASH: string`, `generatePassword(): string` in `src/admin/password.ts`; `MIN_PASSWORD_LENGTH = 12` and `requiredEnv(env: NodeJS.ProcessEnv, name: string): string` in `src/config.ts`.
 
-- [ ] **Step 1: Write the failing test** `test/unit/password.test.ts`
+- [x] **Step 1: Write the failing test** `test/unit/password.test.ts`
 
 ```ts
 import { describe, expect, it } from 'vitest';
@@ -165,12 +165,12 @@ describe('password hashing', () => {
 });
 ```
 
-- [ ] **Step 2: Run the test to make sure it fails**
+- [x] **Step 2: Run the test to make sure it fails**
 
 Run: `npm test -- test/unit/password.test.ts`
 Expected: FAIL, cannot resolve `../../src/admin/password.js`.
 
-- [ ] **Step 3: Write the implementation** `src/admin/password.ts`
+- [x] **Step 3: Write the implementation** `src/admin/password.ts`
 
 ```ts
 import { randomBytes, randomInt, scrypt, timingSafeEqual, type ScryptOptions } from 'node:crypto';
@@ -231,7 +231,7 @@ export function generatePassword(): string {
 }
 ```
 
-- [ ] **Step 4: Add the config values** in `src/config.ts`
+- [x] **Step 4: Add the config values** in `src/config.ts`
 
 Add after `QS_OPTIONS`:
 
@@ -250,17 +250,17 @@ export function requiredEnv(env: NodeJS.ProcessEnv, name: string): string {
 }
 ```
 
-- [ ] **Step 5: Run the test to make sure it passes**
+- [x] **Step 5: Run the test to make sure it passes**
 
 Run: `npm test -- test/unit/password.test.ts`
 Expected: PASS (5 tests).
 
-- [ ] **Step 6: Check types and lint**
+- [x] **Step 6: Check types and lint**
 
 Run: `npm run typecheck && npm run lint`
 Expected: no errors.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/admin/password.ts src/config.ts test/unit/password.test.ts
