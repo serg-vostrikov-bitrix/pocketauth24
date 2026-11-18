@@ -124,7 +124,7 @@ Order: Tasks 1 → 13 are sequential and need no capture. Task 2's capture is do
 
 ### Task 1: Service skeleton, tooling and CTO exception note
 
-- [ ] Task 1 complete: Service skeleton, tooling and CTO exception note
+- [x] Task 1 complete: Service skeleton, tooling and CTO exception note
 
 tasks.md: **1.2**, part of **1.4**
 
@@ -136,7 +136,7 @@ tasks.md: **1.2**, part of **1.4**
 **Interfaces:**
 - Produces: constants `ACCESS_TTL_SECONDS`, `REFRESH_TTL_SECONDS`, `EVENT_TIMEOUT_MS`, `EVENT_IN_FLIGHT_CAP`, `LOG_LEVEL`, `PORT`, `CLEANUP_INTERVAL_MS`, `BODY_LIMIT_BYTES`, `QS_OPTIONS`; `type Config = { baseUrl: string; databaseUrl: string; portalAllowlist: string[] }`; `loadConfig(env?: NodeJS.ProcessEnv): Config`; `buildApp(deps: { config: Config; logStream?: Writable }): Promise<FastifyInstance>` (Task 3 adds `db`).
 
-- [ ] **Step 1: Initialize the package and install dependencies**
+- [x] **Step 1: Initialize the package and install dependencies**
 
 ```bash
 cd /d/Work/projects/b24auth-server
@@ -148,7 +148,7 @@ npm install fastify @fastify/formbody qs drizzle-orm pg
 npm install -D typescript tsx vitest drizzle-kit @types/node @types/pg @types/qs eslint @eslint/js typescript-eslint eslint-config-prettier prettier
 ```
 
-- [ ] **Step 2: Write tooling config files**
+- [x] **Step 2: Write tooling config files**
 
 `tsconfig.json`:
 ```json
@@ -244,7 +244,7 @@ export default defineConfig({
 });
 ```
 
-- [ ] **Step 3: Write `README.md` with the CTO exception note**
+- [x] **Step 3: Write `README.md` with the CTO exception note**
 
 ```markdown
 # b24auth-server
@@ -277,7 +277,7 @@ Deployment: `docs/deployment.md`.
 
 The "to be filled in" lines are deliberate: the user records the approval (Comet constraint); the agent does not invent it.
 
-- [ ] **Step 4: Write the failing health test**
+- [x] **Step 4: Write the failing health test**
 
 `test/integration/health.test.ts`:
 ```ts
@@ -295,12 +295,12 @@ it('GET /health returns ok', async () => {
 });
 ```
 
-- [ ] **Step 5: Run it to verify it fails**
+- [x] **Step 5: Run it to verify it fails**
 
 Run: `npx vitest run test/integration/health.test.ts`
 Expected: FAIL — cannot resolve `../../src/app.js`.
 
-- [ ] **Step 6: Write `src/config.ts`**
+- [x] **Step 6: Write `src/config.ts`**
 
 ```ts
 export const ACCESS_TTL_SECONDS = 3600;
@@ -341,7 +341,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
 
 Note: tasks.md 1.2 lists event timeout and in-flight cap as config; the Design Doc (§3) makes them constants. The Design Doc wins.
 
-- [ ] **Step 7: Write `src/app.ts` and `src/server.ts`**
+- [x] **Step 7: Write `src/app.ts` and `src/server.ts`**
 
 `src/app.ts`:
 ```ts
@@ -376,12 +376,12 @@ const app = await buildApp({ config });
 await app.listen({ host: '0.0.0.0', port: PORT });
 ```
 
-- [ ] **Step 8: Run the test, typecheck and lint**
+- [x] **Step 8: Run the test, typecheck and lint**
 
 Run: `npx vitest run test/integration/health.test.ts && npm run typecheck && npm run format && npm run lint`
 Expected: test PASS, no type or lint errors.
 
-- [ ] **Step 9: Commit**
+- [x] **Step 9: Commit**
 
 ```bash
 git add package.json package-lock.json tsconfig.json tsconfig.build.json eslint.config.js .prettierrc.json .prettierignore .gitignore vitest.config.ts README.md src test
