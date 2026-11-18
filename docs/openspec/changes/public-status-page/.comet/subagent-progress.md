@@ -2,6 +2,6 @@
 
 - review_mode: standard
 - tdd_mode: tdd
-- Tasks 1-6: done (ee85fca, 4dd4bad, be1a538, 7cd1914, 6902749, a241b48); manual browser check done
-- Current task: "Task 7 complete: Docker, CI and Dependabot" (OpenSpec 4.1, 4.2)
+- Tasks 1-7: done (ee85fca, 4dd4bad, be1a538, 7cd1914, 6902749, a241b48, 361af74)
+- Current task: "Task 8 complete: Documentation" (OpenSpec 4.3)
 - Stage: implementing

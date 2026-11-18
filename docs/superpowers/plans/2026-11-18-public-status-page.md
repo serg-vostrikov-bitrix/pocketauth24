@@ -1565,7 +1565,7 @@ git commit -m "feat(web): add the gyroscope animation with an error color state"
 
 ### Task 7: Docker, CI and Dependabot
 
-- [ ] Task 7 complete: Docker, CI and Dependabot
+- [x] Task 7 complete: Docker, CI and Dependabot
 
 Checks off: **tasks.md 4.1, 4.2**
 
@@ -1578,7 +1578,7 @@ Checks off: **tasks.md 4.1, 4.2**
 **Interfaces:**
 - Consumes: root scripts `web:install`, `web:typecheck`, `web:build` (Task 5); `webRoot` = `/app/public` (Task 4); `/api/status` (Task 3).
 
-- [ ] **Step 1: Update the Dockerfile**
+- [x] **Step 1: Update the Dockerfile**
 
 Replace the build stage and add one `COPY` to the runtime stage:
 
@@ -1607,7 +1607,7 @@ EXPOSE 3000
 ENTRYPOINT ["node", "dist/server.js"]
 ```
 
-- [ ] **Step 2: Update `.dockerignore`**
+- [x] **Step 2: Update `.dockerignore`**
 
 Root patterns in `.dockerignore` match only at the top level. Add:
 
@@ -1616,7 +1616,7 @@ web/node_modules
 web/dist
 ```
 
-- [ ] **Step 3: Update the CI `test` job**
+- [x] **Step 3: Update the CI `test` job**
 
 In `.github/workflows/ci.yml`, replace the `test` job steps (lines 30-39):
 
@@ -1640,7 +1640,7 @@ In `.github/workflows/ci.yml`, replace the `test` job steps (lines 30-39):
       - run: npm run web:build
 ```
 
-- [ ] **Step 4: Extend the container smoke test**
+- [x] **Step 4: Extend the container smoke test**
 
 In the `Smoke test` step, add after the line with `grep -q '"status":"ok"'`:
 
@@ -1649,7 +1649,7 @@ In the `Smoke test` step, add after the line with `grep -q '"status":"ok"'`:
           curl -fs http://localhost:3000/api/status | grep -q '"database":"ok"'
 ```
 
-- [ ] **Step 5: Add the Dependabot entry**
+- [x] **Step 5: Add the Dependabot entry**
 
 In `.github/dependabot.yml`, add after the first `npm` entry:
 
@@ -1660,7 +1660,7 @@ In `.github/dependabot.yml`, add after the first `npm` entry:
       interval: weekly
 ```
 
-- [ ] **Step 6: Verify the image locally**
+- [x] **Step 6: Verify the image locally**
 
 Run:
 
@@ -1675,12 +1675,12 @@ docker compose down
 
 Expected: `page-ok`, `status-ok` and the CSP header line. If `.env` already exists, make sure it has `BASE_URL=http://localhost:3000` and `PORTAL_ALLOWLIST=portal.test`. If Docker is not available, write this in the task report; the CI `container` job runs the same checks.
 
-- [ ] **Step 7: Run the format check**
+- [x] **Step 7: Run the format check**
 
 Run: `npm run lint`
 Expected: PASS (Prettier checks the YAML files).
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 git add Dockerfile .dockerignore .github/workflows/ci.yml .github/dependabot.yml
