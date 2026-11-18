@@ -1,7 +1,9 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { applications } from '../../src/schema.js';
 import {
+  addApp,
   APP_FIELDS,
+  authorize,
   registerPortal,
   rpc,
   startApp,
@@ -44,5 +46,12 @@ describe('application-registry', () => {
       scope: 'crm,user',
     });
     expect(rows[0].secretHash).not.toBe(created?.client_secret);
+  });
+
+  it('Local app is usable immediately', async () => {
+    const portal = await registerPortal(t.app);
+    const app = await addApp(t.app, portal);
+    const token = await authorize(t.app, portal, app.client_id);
+    expect(token.access_token).toMatch(/^[0-9a-f]{64}$/);
   });
 });

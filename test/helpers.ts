@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import { Writable } from 'node:stream';
 import { sql } from 'drizzle-orm';
 import type { FastifyInstance } from 'fastify';
@@ -5,6 +6,7 @@ import qs from 'qs';
 import { buildApp } from '../src/app.js';
 import type { Config } from '../src/config.js';
 import { createDb, type Db } from '../src/db.js';
+import type { TokenResponse } from '../src/tokens.js';
 
 // Tests TRUNCATE this database; never point it at real data.
 export const TEST_DATABASE_URL =
@@ -108,5 +110,25 @@ export async function addApp(
 ): Promise<Credentials> {
   const res = await rpc<Credentials>(app, portal, 'application.add', fields);
   if (!res.body.result) throw new Error(`application.add failed: ${JSON.stringify(res.body)}`);
+  return res.body.result;
+}
+
+export function md5(value: string): string {
+  return createHash('md5').update(value).digest('hex');
+}
+
+export async function authorize(
+  app: FastifyInstance,
+  portal: Credentials,
+  appClientId: string,
+  extra: Record<string, unknown> = {},
+): Promise<TokenResponse> {
+  const res = await rpc<TokenResponse>(app, portal, 'rest.authorize', {
+    CLIENT_ID: appClientId,
+    SCOPE: 'crm,user',
+    PARAMS: { LOCAL_USER: '5', TZ_OFFSET: '10800' },
+    ...extra,
+  });
+  if (!res.body.result) throw new Error(`rest.authorize failed: ${JSON.stringify(res.body)}`);
   return res.body.result;
 }
