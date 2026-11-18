@@ -38,6 +38,19 @@ function buildHar(): Har {
             },
           },
         },
+        {
+          request: {
+            url: 'https://oauth.example/rest/check',
+            headers: [],
+            cookies: [],
+            queryString: [],
+            postData: {
+              mimeType: 'application/x-www-form-urlencoded',
+              text: 'auth=BODYAUTH&other=keep',
+            },
+          },
+          response: { headers: [], cookies: [], content: { mimeType: 'text/plain' } },
+        },
       ],
     },
   };
@@ -46,7 +59,7 @@ function buildHar(): Har {
 it('redacts secrets and replaces the portal host everywhere in a HAR', () => {
   const out = sanitizeHar(buildHar(), PORTAL);
   const serialized = JSON.stringify(out);
-  for (const leaked of [PORTAL, 'AT"', 'RT', 's3cr3t', 'live', 'Set-Cookie']) {
+  for (const leaked of [PORTAL, 'AT"', 'RT', 's3cr3t', 'live', 'Set-Cookie', 'abc', 'BODYAUTH']) {
     expect(serialized).not.toContain(leaked);
   }
 
@@ -67,4 +80,8 @@ it('redacts secrets and replaces the portal host everywhere in a HAR', () => {
     client_endpoint: 'https://portal.example/rest/',
     expires_in: 3600,
   });
+
+  const plain = new URLSearchParams(out.log.entries[1].request.postData?.text);
+  expect(plain.get('auth')).toBe('<redacted>');
+  expect(plain.get('other')).toBe('keep');
 });

@@ -22,7 +22,7 @@ type HarEntry = {
 };
 export type Har = { log: { entries: HarEntry[] } };
 
-const SECRET_KEY = /token|secret|client_id|member_id|^bx_|hash|licen|password|^code$/i;
+const SECRET_KEY = /token|secret|client_id|member_id|^auth$|^bx_|hash|licen|password|^code$/i;
 const KEPT_HEADERS = new Set(['content-type']);
 
 function scrub(value: Json, portalHost: string, key = ''): Json {
