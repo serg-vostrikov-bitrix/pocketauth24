@@ -95,7 +95,8 @@ The portal hands events to the server; the server sends one HTTP POST per event 
 | Wrong application secret on renewal | Error `invalid_client`. |
 | Unsupported `grant_type` on renewal | Error `invalid_request` (`invalid_grant` for `authorization_code`). |
 | Event handler is down or answers non-2xx | One log entry `event_delivery_failed`; the event is not sent again. |
-| Too many deliveries in flight (limit 200) | The event is dropped and logged as `event_dropped_overload`. |
+| Too many deliveries in flight (limit 200) | The event is dropped and logged as `event_dropped_overload` with `limit: global`. |
+| Too many deliveries in flight to one handler host (limit 100) | The event is dropped and logged as `event_dropped_overload` with `limit: host`. Other handler hosts still get their events. |
 | Unknown path | Error `not_found`. |
 
 The portal caches `rest.check` results for 3600 seconds, so after an application is deleted its old access token may keep working until that cache expires (or is cleared on the portal).
@@ -211,7 +212,7 @@ Found during the end-to-end run. These are portal behaviours, not server defects
 ## Limits And Rules
 
 - **No registration secret.** Registration cannot be protected by a shared secret because the portal sends none. Anyone who can reach `/oauth/register/` with an allowlisted portal address can rotate that portal's credentials and lock the portal out. The reverse proxy (IP restriction) is the control. The same applies to the portal-facing `/rest/` calls.
-- **Events** are delivered once, with a 10 second timeout per attempt. Pending deliveries are lost when the server restarts. At most 200 deliveries run at once; further events are dropped and logged.
+- **Events** are delivered once, with a 10 second timeout per attempt. Pending deliveries are lost when the server restarts. At most 200 deliveries run at once, and at most 100 of them go to one handler host; further events are dropped and logged.
 - **Single instance.** Run one application instance.
 - **Token lifetimes** are fixed: access 3600 seconds, refresh 180 days.
 - **Request size:** request bodies up to 10 MB.

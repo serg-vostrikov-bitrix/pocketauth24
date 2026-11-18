@@ -1,7 +1,7 @@
 import { and, eq } from 'drizzle-orm';
 import qs from 'qs';
 import { defineMethod, type MethodContext } from '../bitrix.js';
-import { EVENT_IN_FLIGHT_CAP, EVENT_TIMEOUT_MS } from '../config.js';
+import { EVENT_HOST_IN_FLIGHT_CAP, EVENT_IN_FLIGHT_CAP, EVENT_TIMEOUT_MS } from '../config.js';
 import { applications } from '../schema.js';
 import { issuePair, localUserId, memberId, portalDomain } from '../tokens.js';
 
@@ -85,6 +85,14 @@ function safeUrl(raw: string): string {
   }
 }
 
+function hostOf(raw: string): string {
+  try {
+    return new URL(raw).host;
+  } catch {
+    return '<invalid url>';
+  }
+}
+
 // One attempt, no retries; nothing survives a restart (stage 3 adds a persistent queue).
 export async function deliver(ctx: MethodContext, item: EventItem): Promise<void> {
   const data = item.query.QUERY_DATA ?? {};
@@ -94,12 +102,21 @@ export async function deliver(ctx: MethodContext, item: EventItem): Promise<void
     event: data.event ?? null,
     url: safeUrl(item.query.QUERY_URL),
   };
-  if (ctx.delivery.inFlight >= EVENT_IN_FLIGHT_CAP) {
-    // ponytail: in-memory cap, persistent queue in stage 3
-    ctx.log.warn(fields, 'event_dropped_overload');
+  const { delivery } = ctx;
+  const host = hostOf(item.query.QUERY_URL);
+  const hostInFlight = delivery.byHost.get(host) ?? 0;
+  // ponytail: in-memory caps, persistent queue in stage 3.
+  // The host cap keeps one slow handler from taking every slot of the global cap.
+  if (delivery.inFlight >= EVENT_IN_FLIGHT_CAP) {
+    ctx.log.warn({ ...fields, limit: 'global' }, 'event_dropped_overload');
     return;
   }
-  ctx.delivery.inFlight++;
+  if (hostInFlight >= EVENT_HOST_IN_FLIGHT_CAP) {
+    ctx.log.warn({ ...fields, limit: 'host' }, 'event_dropped_overload');
+    return;
+  }
+  delivery.inFlight++;
+  delivery.byHost.set(host, hostInFlight + 1);
   try {
     const auth = await buildAuth(ctx, item);
     const body = qs.stringify({
@@ -124,7 +141,10 @@ export async function deliver(ctx: MethodContext, item: EventItem): Promise<void
       'event_delivery_failed',
     );
   } finally {
-    ctx.delivery.inFlight--;
+    delivery.inFlight--;
+    const left = (delivery.byHost.get(host) ?? 1) - 1;
+    if (left > 0) delivery.byHost.set(host, left);
+    else delivery.byHost.delete(host);
   }
 }
 

@@ -30,7 +30,7 @@ export const methods: Record<string, Method> = {
 };
 
 export function rpcRoute(app: FastifyInstance, deps: AppDeps): void {
-  const delivery: DeliveryState = { inFlight: 0 };
+  const delivery: DeliveryState = { inFlight: 0, byHost: new Map() };
   app.decorateRequest('portal', null);
 
   // preValidation: credentials are checked before the body schema, so a bad caller

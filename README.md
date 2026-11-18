@@ -147,7 +147,7 @@ Know these before you deploy:
 - **Local applications only.** Marketplace applications do not work, because their secrets live in the cloud.
 - **Existing apps must be re-created**, and hard-coded token URLs changed or redirected.
 - **The proxy is the security control for registration.** The portal sends no shared secret, so anyone who reaches `/oauth/register/` with an allowlisted portal address could rotate that portal's credentials. Restrict it by IP.
-- **Events are delivered once**, with a 10-second timeout. They are not stored or retried, are lost on restart and are dropped above 200 concurrent deliveries.
+- **Events are delivered once**, with a 10-second timeout. They are not stored or retried, are lost on restart and are dropped above 200 concurrent deliveries in total or 100 concurrent deliveries to one handler host.
 - **Single instance.** Migrations run on start without a lock.
 - **Not supported:** licence checks, the `authorization_code` grant, server-side install/uninstall handling. Token lifetimes are fixed; request bodies are limited to 10 MB.
 - **No user interface.** You observe the server through `/health`, its logs and the portal's own screens.

@@ -45,7 +45,8 @@ export function sendError(
   return reply.status(500).send({ error: 'internal_error' });
 }
 
-export type DeliveryState = { inFlight: number };
+// inFlight counts all deliveries; byHost counts them per handler host (host:port).
+export type DeliveryState = { inFlight: number; byHost: Map<string, number> };
 
 export type MethodContext = {
   portal: Portal;

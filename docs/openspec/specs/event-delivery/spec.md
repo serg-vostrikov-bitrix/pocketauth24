@@ -40,5 +40,10 @@ deliveries SHALL NOT survive a server restart.
 
 #### Scenario: Overload
 - **WHEN** an item arrives while the number of deliveries in flight is at the configured limit
-- **THEN** the server logs the item as dropped and does not deliver it
+- **THEN** the server logs the item as dropped with `limit: global` and does not deliver it
+
+#### Scenario: Slow handler does not block other handlers
+- **WHEN** an item arrives while the number of deliveries in flight to the same handler host (host and port) is at the configured host limit
+- **THEN** the server logs the item as dropped with `limit: host` and does not deliver it
+- **AND** the server continues to deliver items to other handler hosts
 
