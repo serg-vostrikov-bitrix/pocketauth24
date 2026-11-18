@@ -3,7 +3,7 @@
 **Keep local applications working on a Bitrix24 on-premise portal that has no internet access.**
 
 [![CI](https://github.com/serg-vostrikov-bitrix/b24auth-server/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/serg-vostrikov-bitrix/b24auth-server/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/tests-55%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-56%20passing-brightgreen)
 ![Contract tests](https://img.shields.io/badge/contract--tested-captured%20cloud%20traffic-blue)
 ![Closed network](https://img.shields.io/badge/closed%20network-verified%20on%20test%20portal-blue)
 ![Dependabot](https://img.shields.io/badge/Dependabot-enabled-025E8C?logo=dependabot)
@@ -77,7 +77,7 @@ OAuth traffic between the portal, local applications and the server stays inside
 
 | Check                              | What it covers                                                                                                                                                                                                                                                                                                    |
 | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **55 automated tests**             | Integration tests against real PostgreSQL for portal registration, application registry, token service, event delivery, routing and health, plus unit tests.                                                                                                                                                      |
+| **56 automated tests**             | Integration tests against real PostgreSQL for portal registration, application registry, token service, event delivery, routing and health, plus unit tests.                                                                                                                                                      |
 | **Contract tests**                 | Response shapes and error codes compared with traffic captured between a test portal (`rest` 26.1100) and `oauth.bitrix.info`.                                                                                                                                                                                    |
 | **Container smoke test (CI)**      | The container starts, `/health` answers, a portal registers, no error-level logs, the process does not run as root.                                                                                                                                                                                               |
 | **End-to-end in a closed network** | A 10-step checklist on a local Docker test portal (`rest` 26.1100) whose PHP container was cut off from the internet: registration, app creation, install page with tokens, REST as administrator and non-administrator, `ONAPPINSTALL` with tokens, renewal and repeated renewal, deletion. All 10 steps passed. |
@@ -140,6 +140,30 @@ Found during the end-to-end run. These are portal behaviours, not server defects
 - **Serve the `BX24` script internally.** Apps usually load it from `//api.bitrix24.com/api/v1/`, which is unreachable in a closed network.
 - The portal refuses REST calls for a user who has never logged in.
 
+## ⚡ Event delivery performance
+
+**How delivery works.** The portal sends all events of one request (hit) in one `rest.event.call` batch. The batch has no size limit, and the portal does not retry it. The server answers `{"result":null}` at once and delivers each event in the background, in the same process. Each event gets one HTTP POST attempt with a 10-second timeout.
+
+**Limits.** The values are fixed in [`src/config.ts`](src/config.ts).
+
+| Limit                                     | Value | When it is reached                                                           |
+| ----------------------------------------- | ----- | ---------------------------------------------------------------------------- |
+| Concurrent deliveries in total            | 200   | The event is dropped and logged as `event_dropped_overload`, `limit: global` |
+| Concurrent deliveries to one handler host | 100   | The event is dropped and logged as `event_dropped_overload`, `limit: host`   |
+| Timeout of one delivery                   | 10 s  | The delivery stops and is logged as `event_delivery_failed`                  |
+
+A handler host is the host and port of the handler URL. The host limit is half of the total limit. Thus one slow handler can take at most 100 slots, and other handlers always keep 100 slots. The host limit is not lower because one portal hit can send a large batch to one handler, for example during a mass import.
+
+**What a slow handler costs the server.** A delivery that waits for the handler holds one open connection and a small amount of memory. It does not hold a database connection: the server issues the tokens before it sends the POST. The event loop is not blocked. If every handler waits until the timeout, the server delivers at most 20 events per second in total and 10 events per second to one host. Further events are dropped.
+
+**Recommendations for application handlers.**
+
+- Answer within one second. Accept the event, put it in your own queue, then process it.
+- Give each heavy application its own handler host. Then a slow application uses only its own 100 slots.
+- Monitor the server log for `event_dropped_overload`. The `limit` field tells which limit was reached.
+
+Events that were dropped or failed are not sent again. A persistent queue with retries is a proposed further stage.
+
 ## 🧭 Limitations and roadmap
 
 Know these before you deploy:
@@ -147,7 +171,7 @@ Know these before you deploy:
 - **Local applications only.** Marketplace applications do not work, because their secrets live in the cloud.
 - **Existing apps must be re-created**, and hard-coded token URLs changed or redirected.
 - **The proxy is the security control for registration.** The portal sends no shared secret, so anyone who reaches `/oauth/register/` with an allowlisted portal address could rotate that portal's credentials. Restrict it by IP.
-- **Events are delivered once**, with a 10-second timeout. They are not stored or retried, are lost on restart and are dropped above 200 concurrent deliveries in total or 100 concurrent deliveries to one handler host.
+- **Events are delivered once**, with a 10-second timeout. They are not stored or retried, are lost on restart and are dropped above 200 concurrent deliveries in total or 100 concurrent deliveries to one handler host. See [Event delivery performance](#-event-delivery-performance).
 - **Single instance.** Migrations run on start without a lock.
 - **Not supported:** licence checks, the `authorization_code` grant, server-side install/uninstall handling. Token lifetimes are fixed; request bodies are limited to 10 MB.
 - **No user interface.** You observe the server through `/health`, its logs and the portal's own screens.
