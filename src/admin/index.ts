@@ -1,9 +1,11 @@
 import cookie from '@fastify/cookie';
 import type { FastifyInstance } from 'fastify';
 import type { Db } from '../db.js';
+import { createLoginLimiter } from './rateLimit.js';
 import { jsonGuard, loginRoute, sessionGuard, sessionRoutes } from './auth.js';
 
 export async function registerAdmin(app: FastifyInstance, deps: { db: Db }): Promise<void> {
+  const limiter = createLoginLimiter({ max: 5, windowMs: 15 * 60_000 });
   await app.register(
     async (admin) => {
       await admin.register(cookie);
@@ -16,7 +18,7 @@ export async function registerAdmin(app: FastifyInstance, deps: { db: Db }): Pro
       admin.setNotFoundHandler(async (_request, reply) =>
         reply.status(404).send({ error: 'not_found' }),
       );
-      loginRoute(admin, deps.db);
+      loginRoute(admin, deps.db, limiter);
       // Every route in this scope needs a valid session. The check runs at onRequest, before
       // body parsing and validation; the cookie plugin's own onRequest hook runs first.
       await admin.register(async (authed) => {

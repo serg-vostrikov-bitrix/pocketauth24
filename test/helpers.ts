@@ -23,6 +23,7 @@ export const TEST_CONFIG: Config = {
   baseUrl: 'https://auth.test',
   databaseUrl: TEST_DATABASE_URL,
   portalAllowlist: ['portal.test', 'other.test'],
+  trustProxy: false,
 };
 
 export type LogLine = { level: number; msg: string; [key: string]: unknown };

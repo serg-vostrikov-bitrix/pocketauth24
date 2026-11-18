@@ -1,6 +1,7 @@
 import '@fastify/cookie';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { Db } from '../db.js';
+import type { LoginLimiter } from './rateLimit.js';
 import { DUMMY_HASH, verifyPassword } from './password.js';
 import {
   createSession,
@@ -62,12 +63,13 @@ const loginSchema = {
   },
 } as const;
 
-export function loginRoute(app: FastifyInstance, db: Db): void {
+export function loginRoute(app: FastifyInstance, db: Db, limiter: LoginLimiter): void {
   app.post<{ Body: { login: string; password: string } }>(
     '/login',
     { schema: loginSchema },
     async (request, reply) => {
       const ip = request.ip;
+      if (limiter.blocked(ip)) return reply.status(429).send({ error: 'too_many_attempts' });
       if (!(await hasSuperuser(db))) {
         return reply.status(503).send({ error: 'no_superuser', hint: NO_SUPERUSER_HINT });
       }
@@ -75,9 +77,11 @@ export function loginRoute(app: FastifyInstance, db: Db): void {
       const user = await findUserByLogin(db, login);
       const valid = await verifyPassword(password, user?.passwordHash ?? DUMMY_HASH);
       if (!user || !valid) {
+        limiter.fail(ip);
         request.log.info({ login, ip }, 'admin_login_failed');
         return reply.status(401).send({ error: 'invalid_credentials' });
       }
+      limiter.reset(ip);
       const sessionId = await createSession(db, user.id);
       reply.setCookie(SESSION_COOKIE, sessionId, {
         ...COOKIE_ATTRIBUTES,

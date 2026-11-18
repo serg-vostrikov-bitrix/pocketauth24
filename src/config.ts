@@ -18,6 +18,7 @@ export type Config = {
   baseUrl: string;
   databaseUrl: string;
   portalAllowlist: string[];
+  trustProxy: boolean;
 };
 
 export function requiredEnv(env: NodeJS.ProcessEnv, name: string): string {
@@ -36,5 +37,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       .split(',')
       .map((host) => host.trim().toLowerCase())
       .filter((host) => host.length > 0),
+    // Set it only when the proxy sets X-Forwarded-For; request.ip then uses that header.
+    trustProxy: env.TRUST_PROXY?.trim() === 'true',
   };
 }

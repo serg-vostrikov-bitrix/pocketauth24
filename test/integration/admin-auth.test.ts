@@ -1,4 +1,6 @@
 import { afterEach, beforeEach, expect, it } from 'vitest';
+import { eq } from 'drizzle-orm';
+import { deleteExpiredSessions } from '../../src/admin/sessions.js';
 import { adminSessions } from '../../src/schema.js';
 import {
   createSuperuser,
@@ -172,4 +174,36 @@ it('Logout clears the cookie with the same attributes', async () => {
   for (const flag of ['Path=/', 'HttpOnly', 'SameSite=Strict', 'Secure']) {
     expect(header).toContain(flag);
   }
+});
+
+it('The sixth login after five failures gets 429 without a password check', async () => {
+  await createSuperuser(t.db);
+  for (let i = 0; i < 5; i++) {
+    expect((await login({ login: 'admin', password: `wrong-password-${i}` })).statusCode).toBe(401);
+  }
+  const res = await login(SUPERUSER);
+  expect(res.statusCode).toBe(429);
+  expect(res.json()).toEqual({ error: 'too_many_attempts' });
+});
+
+it('A successful login clears earlier failures', async () => {
+  await createSuperuser(t.db);
+  for (let i = 0; i < 4; i++) await login({ login: 'admin', password: `wrong-password-${i}` });
+  await loginAs(t.app, SUPERUSER.login, SUPERUSER.password);
+  for (let i = 0; i < 4; i++) {
+    expect((await login({ login: 'admin', password: `wrong-password-${i}` })).statusCode).toBe(401);
+  }
+});
+
+it('deleteExpiredSessions deletes only expired sessions', async () => {
+  await createSuperuser(t.db);
+  await loginAs(t.app, SUPERUSER.login, SUPERUSER.password);
+  await loginAs(t.app, SUPERUSER.login, SUPERUSER.password);
+  const [first] = await t.db.select().from(adminSessions).limit(1);
+  await t.db
+    .update(adminSessions)
+    .set({ expiresAt: new Date(Date.now() - 1000) })
+    .where(eq(adminSessions.idHash, first.idHash));
+  await deleteExpiredSessions(t.db, new Date());
+  expect(await t.db.$count(adminSessions)).toBe(1);
 });

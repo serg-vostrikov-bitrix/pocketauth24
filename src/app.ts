@@ -31,6 +31,7 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   const app = Fastify({
     routerOptions: { ignoreTrailingSlash: true },
     bodyLimit: BODY_LIMIT_BYTES,
+    trustProxy: deps.config.trustProxy,
     logger: deps.logStream ? { ...logOptions, stream: deps.logStream } : logOptions,
   });
   await app.register(formbody, { parser: (body) => qs.parse(body, QS_OPTIONS) });
