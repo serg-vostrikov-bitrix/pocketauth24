@@ -84,6 +84,58 @@ describe('event-delivery', () => {
     }
   });
 
+  it('Install event reaches a server-side app', async () => {
+    const portal = await registerPortal(t.app);
+    const app = await addApp(t.app, portal);
+    const handler = await startHandler();
+    const userAuth = { LOCAL_USER: '1', application_token: 'apptoken123' };
+    try {
+      await rpc(t.app, portal, 'rest.event.call', {
+        QUERY: [
+          eventItem(handler.url, {
+            client_id: app.client_id,
+            event: 'ONAPPINSTALL',
+            auth: userAuth,
+            additional: { sendAuth: '1', sendRefreshToken: '1' },
+          }),
+          eventItem(handler.url, {
+            client_id: app.client_id,
+            event: 'ONCRMDEALADD',
+            auth: userAuth,
+            additional: { sendAuth: '1', sendRefreshToken: '0' },
+          }),
+        ],
+      });
+
+      await vi.waitFor(() => {
+        expect(handler.requests).toHaveLength(2);
+      });
+      const byEvent = Object.fromEntries(
+        handler.requests.map((r) => [String(r.event), r.auth as Record<string, unknown>]),
+      );
+      const install = byEvent.ONAPPINSTALL;
+      expect(install).toMatchObject({
+        domain: 'portal.test',
+        member_id: md5(portal.client_id),
+        application_token: 'apptoken123',
+        user_id: '1',
+        scope: 'crm,user',
+        status: 'L',
+      });
+      expect(install.access_token).toMatch(/^[0-9a-f]{64}$/);
+      expect(install.refresh_token).toMatch(/^[0-9a-f]{64}$/);
+      expect(byEvent.ONCRMDEALADD.access_token).toMatch(/^[0-9a-f]{64}$/);
+      expect(byEvent.ONCRMDEALADD).not.toHaveProperty('refresh_token');
+
+      const checked = await rpc(t.app, portal, 'rest.check', {
+        TOKEN: String(install.access_token),
+      });
+      expect(checked.body.result).toMatchObject({ client_id: app.client_id, user_id: 1 });
+    } finally {
+      await handler.close();
+    }
+  });
+
   it('Handler is down', async () => {
     const portal = await registerPortal(t.app);
     const app = await addApp(t.app, portal);

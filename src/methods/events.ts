@@ -1,7 +1,9 @@
+import { and, eq } from 'drizzle-orm';
 import qs from 'qs';
 import { defineMethod, type MethodContext } from '../bitrix.js';
 import { EVENT_IN_FLIGHT_CAP, EVENT_TIMEOUT_MS } from '../config.js';
-import { memberId, portalDomain } from '../tokens.js';
+import { applications } from '../schema.js';
+import { issuePair, memberId, portalDomain } from '../tokens.js';
 
 export type EventItem = {
   client_id?: string;
@@ -36,11 +38,32 @@ const eventCallSchema = {
   },
 } as const;
 
-function buildAuth(ctx: MethodContext, item: EventItem): Record<string, unknown> {
-  return {
+async function buildAuth(ctx: MethodContext, item: EventItem): Promise<Record<string, unknown>> {
+  const applicationToken = item.auth?.application_token ?? '';
+  const base = {
     domain: portalDomain(ctx.portal),
     member_id: memberId(ctx.portal),
-    application_token: item.auth?.application_token ?? '',
+    application_token: applicationToken,
+  };
+  const localUser = Number(item.auth?.LOCAL_USER ?? 0);
+  const additional = item.additional ?? {};
+  // PHP http_build_query sends booleans as "1" / "0".
+  if (!item.client_id || !(localUser > 0) || additional.sendAuth !== '1') return base;
+  const [app] = await ctx.db
+    .select()
+    .from(applications)
+    .where(and(eq(applications.clientId, item.client_id), eq(applications.portalId, ctx.portal.id)))
+    .limit(1);
+  if (!app) return base;
+  const { refresh_token, ...tokens } = await issuePair(ctx.db, ctx.config, app, ctx.portal, {
+    scope: app.scope,
+    userId: localUser,
+    params: item.auth ?? {},
+  });
+  return {
+    ...tokens,
+    ...(additional.sendRefreshToken === '1' ? { refresh_token } : {}),
+    application_token: applicationToken,
   };
 }
 
@@ -65,7 +88,7 @@ export async function deliver(ctx: MethodContext, item: EventItem): Promise<void
   }
   ctx.delivery.inFlight++;
   try {
-    const auth = buildAuth(ctx, item);
+    const auth = await buildAuth(ctx, item);
     const body = qs.stringify({
       event: data.event,
       event_handler_id: data.event_handler_id,
