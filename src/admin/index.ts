@@ -2,6 +2,7 @@ import cookie from '@fastify/cookie';
 import type { FastifyInstance } from 'fastify';
 import type { Db } from '../db.js';
 import { createLoginLimiter } from './rateLimit.js';
+import { usersRoutes } from './usersRoutes.js';
 import { jsonGuard, loginRoute, sessionGuard, sessionRoutes } from './auth.js';
 
 export async function registerAdmin(app: FastifyInstance, deps: { db: Db }): Promise<void> {
@@ -24,6 +25,7 @@ export async function registerAdmin(app: FastifyInstance, deps: { db: Db }): Pro
       await admin.register(async (authed) => {
         authed.addHook('onRequest', sessionGuard(deps.db));
         sessionRoutes(authed, deps.db);
+        await usersRoutes(authed, deps.db);
       });
     },
     { prefix: '/api/admin' },
