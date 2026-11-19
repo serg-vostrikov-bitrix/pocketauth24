@@ -1,5 +1,7 @@
 # b24auth-server
 
+**English** · [Deutsch](README.de.md) · [Italiano](README.it.md) · [Español](README.es.md) · [Português](README.pt.md) · [Русский](README.ru.md)
+
 **Keep local applications working on a Bitrix24 on-premise portal that has no internet access.**
 
 [![CI](https://github.com/serg-vostrikov-bitrix/b24auth-server/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/serg-vostrikov-bitrix/b24auth-server/actions/workflows/ci.yml)
