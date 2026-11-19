@@ -2949,7 +2949,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ### Task 10: Data table and the four data pages
 
-- [ ] Task 10 complete: Data table and the four data pages
+- [x] Task 10 complete: Data table and the four data pages
 
 **Covers tasks.md:** 6.3, 6.4 (data pages)
 
@@ -2963,7 +2963,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 The URL query of the page is the API query: the table keeps `filter[...]` and `page` in `useSearchParams` and sends the same string to the API.
 
-- [ ] **Step 1: Write `web/src/admin/DataTable.tsx`**
+- [x] **Step 1: Write `web/src/admin/DataTable.tsx`**
 
 ```tsx
 import { useEffect, useState } from 'react';
@@ -3199,7 +3199,7 @@ export function DataTable({ endpoint, columns }: { endpoint: string; columns: re
 
 `web/` has no ESLint. If `tsc` or Vite complains about the `eslint-disable-next-line` comment, delete the comment and keep the explanation line.
 
-- [ ] **Step 2: Write `web/src/admin/pages.tsx`**
+- [x] **Step 2: Write `web/src/admin/pages.tsx`**
 
 ```tsx
 import { DataTable, type TableColumn } from './DataTable';
@@ -3278,7 +3278,7 @@ export function EventsPage() {
 }
 ```
 
-- [ ] **Step 3: Register the data routes** in `web/src/admin/AdminApp.tsx`
+- [x] **Step 3: Register the data routes** in `web/src/admin/AdminApp.tsx`
 
 Add `import { ApplicationsPage, EventsPage, PortalsPage, TokensPage } from './pages';`. Replace the line `<Route path="portals" element={<h1 className="admin-title">Portals</h1>} />` with:
 
@@ -3291,7 +3291,7 @@ Add `import { ApplicationsPage, EventsPage, PortalsPage, TokensPage } from './pa
 
 Each route element must remount when the user switches tables, so the table state does not leak between pages. React Router does this already, because each route has a different element type.
 
-- [ ] **Step 4: Add the table styles** — append to `web/src/admin/admin.css`
+- [x] **Step 4: Add the table styles** — append to `web/src/admin/admin.css`
 
 ```css
 .admin-table-wrap {
@@ -3381,12 +3381,12 @@ Each route element must remount when the user switches tables, so the table stat
 }
 ```
 
-- [ ] **Step 5: Check types, build and format**
+- [x] **Step 5: Check types, build and format**
 
 Run: `npm run web:typecheck && npm run web:build && npm run lint`
 Expected: no errors.
 
-- [ ] **Step 6: Manual browser check** (as in Task 9, with some data: register a portal and authorize a user with the integration helpers or a real portal)
+- [x] **Step 6: Manual browser check** (as in Task 9, with some data: register a portal and authorize a user with the integration helpers or a real portal)
 
 1. Open `/admin/tokens`: rows fade in; long values end with an ellipsis and show the full value on hover; there is no edit or delete control.
 2. Type in the Portal filter: the URL changes about 300 ms after the last key; the page resets to 1.
@@ -3395,7 +3395,7 @@ Expected: no errors.
 5. Reload the page with filters in the URL: the filters stay. Previous and Next move between pages when there are more than 50 rows.
 6. With `prefers-reduced-motion: reduce` (browser dev tools), rows appear without animation.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add web/src/admin

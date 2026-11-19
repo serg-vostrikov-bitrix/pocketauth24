@@ -31,7 +31,7 @@
 
 - [x] 6.1 React Router under `/admin`; Fastify serves `index.html` for `/admin/*`
 - [x] 6.2 Login page with the gyroscope from `public-status-page`, the "run the CLI command" state, logout
-- [ ] 6.3 Shared table component with per-column filters and pagination
+- [x] 6.3 Shared table component with per-column filters and pagination
 - [ ] 6.4 Four data pages and the user management page (visible to the superuser only)
 
 ## 7. Docs
