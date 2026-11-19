@@ -2,6 +2,8 @@
 comet_change: admin-panel
 role: technical-design
 canonical_spec: openspec
+archived-with: 2026-11-19-admin-panel
+status: final
 ---
 
 # Admin panel: technical design

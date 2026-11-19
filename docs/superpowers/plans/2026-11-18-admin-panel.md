@@ -2,6 +2,7 @@
 change: admin-panel
 design-doc: docs/superpowers/specs/2026-11-18-admin-panel-design.md
 base-ref: 576b9e6dc429496ddee51209b7b5927a2b6df76a
+archived-with: 2026-11-19-admin-panel
 ---
 
 # Admin Panel Implementation Plan
