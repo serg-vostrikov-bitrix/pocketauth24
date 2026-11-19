@@ -32,7 +32,7 @@ Create `.env` next to `docker-compose.yml`:
 | `BASE_URL` | `https://auth.corp.local` | Public URL behind the proxy; becomes `server_endpoint` |
 | `DATABASE_URL` | `postgres://b24auth:<password>@db:5432/b24auth` | Database connection |
 | `PORTAL_ALLOWLIST` | `portal.corp.local,crm.corp.local:8443` | Portal `host[:port]` allowed to register; exact, case-insensitive |
-| `TRUST_PROXY` | `true` | Optional, default `false`. Accepts only `true` or `false`. Set `true` only when the proxy sets `X-Forwarded-For`. The admin login rate limit then uses the client IP from that header |
+| `TRUST_PROXY` | `true` | Optional, default `false`. Accepts only `true` or `false`. Set `true` only when the proxy overwrites `X-Forwarded-For` with the client IP (`proxy_set_header X-Forwarded-For $remote_addr;` in nginx). The admin login rate limit then uses the client IP from that header. If the proxy appends to the header, a client can send a false IP and bypass the limit |
 
 If `TRUST_PROXY` has any other value, the server stops at start.
 
@@ -80,6 +80,7 @@ Example for nginx:
     location ~ ^/(admin|api/admin)(/|$) {
         allow 10.0.0.0/24; # operators
         deny  all;
+        proxy_set_header X-Forwarded-For $remote_addr; # overwrite, never append
         proxy_pass http://127.0.0.1:3000;
     }
     location / {
@@ -180,6 +181,10 @@ Sessions and login limit:
   earlier failures.
 - If `TRUST_PROXY` is `false`, or the proxy does not set `X-Forwarded-For`, all clients share the
   proxy IP address for this limit. Set `TRUST_PROXY=true` only when the proxy sets the header.
+- If `TRUST_PROXY` is `true`, the proxy must overwrite `X-Forwarded-For` with the client IP. Do
+  not use `$proxy_add_x_forwarded_for` for `/api/admin`. That value appends to the header from
+  the client. The server then reads the left-most entry, which the client controls, and each
+  attempt can get a new limit key.
 - The log records each login success, login failure and logout with the login name and the IP
   address. It never records passwords or session IDs.
 

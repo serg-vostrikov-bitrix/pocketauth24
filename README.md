@@ -106,13 +106,13 @@ docker tag b24auth-server:<version> b24auth-server:local
 
 Create `.env` next to `docker-compose.yml`:
 
-| Variable            | Example                                         | Meaning                                                                                          |
-| ------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `BASE_URL`          | `https://auth.corp.local`                       | Public URL behind the proxy; becomes `server_endpoint`.                                          |
-| `DATABASE_URL`      | `postgres://b24auth:<password>@db:5432/b24auth` | Database connection.                                                                             |
-| `PORTAL_ALLOWLIST`  | `portal.corp.local,crm.corp.local:8443`         | Portal `host[:port]` allowed to register; list non-default ports explicitly.                     |
-| `POSTGRES_PASSWORD` | `<password>`                                    | Same password as in `DATABASE_URL`.                                                              |
-| `TRUST_PROXY`       | `true`                                          | Optional. Accepts only `true` or `false`. Set `true` only when the proxy sets `X-Forwarded-For`. |
+| Variable            | Example                                         | Meaning                                                                                                                                                                             |
+| ------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BASE_URL`          | `https://auth.corp.local`                       | Public URL behind the proxy; becomes `server_endpoint`.                                                                                                                             |
+| `DATABASE_URL`      | `postgres://b24auth:<password>@db:5432/b24auth` | Database connection.                                                                                                                                                                |
+| `PORTAL_ALLOWLIST`  | `portal.corp.local,crm.corp.local:8443`         | Portal `host[:port]` allowed to register; list non-default ports explicitly.                                                                                                        |
+| `POSTGRES_PASSWORD` | `<password>`                                    | Same password as in `DATABASE_URL`.                                                                                                                                                 |
+| `TRUST_PROXY`       | `true`                                          | Optional. Accepts only `true` or `false`. Set `true` only when the proxy overwrites `X-Forwarded-For` with the client IP (nginx: `$remote_addr`, not `$proxy_add_x_forwarded_for`). |
 
 `BASE_URL`, `DATABASE_URL` and `PORTAL_ALLOWLIST` are required; the server does not start without them. Then:
 

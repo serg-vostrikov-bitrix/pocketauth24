@@ -128,6 +128,7 @@ export function DataTable({
         },
         (err: unknown) => {
           if (!active) return;
+          setData(null);
           const column = err instanceof ApiError ? err.body.column : undefined;
           setError(
             column ? `Invalid filter value in "${column}".` : 'The data could not be loaded.',
