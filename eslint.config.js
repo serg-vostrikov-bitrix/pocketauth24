@@ -8,6 +8,8 @@ export default tseslint.config(
       'dist',
       'drizzle',
       'node_modules',
+      'public',
+      'web',
       '.agents',
       '.claude',
       '.codex',

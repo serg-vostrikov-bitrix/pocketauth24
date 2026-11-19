@@ -1,8 +1,9 @@
 import { and, eq } from 'drizzle-orm';
 import qs from 'qs';
 import { defineMethod, type MethodContext } from '../bitrix.js';
-import { EVENT_IN_FLIGHT_CAP, EVENT_TIMEOUT_MS } from '../config.js';
-import { applications } from '../schema.js';
+import { EVENT_HOST_IN_FLIGHT_CAP, EVENT_IN_FLIGHT_CAP, EVENT_TIMEOUT_MS } from '../config.js';
+import { recordOutcome } from '../eventCounters.js';
+import { applications, type Outcome } from '../schema.js';
 import { issuePair, localUserId, memberId, portalDomain } from '../tokens.js';
 
 export type EventItem = {
@@ -85,21 +86,40 @@ function safeUrl(raw: string): string {
   }
 }
 
-// One attempt, no retries; nothing survives a restart (stage 3 adds a persistent queue).
-export async function deliver(ctx: MethodContext, item: EventItem): Promise<void> {
-  const data = item.query.QUERY_DATA ?? {};
-  const fields = {
+// A counter write never blocks or changes the delivery.
+function countOutcome(ctx: MethodContext, outcome: Outcome, n = 1): void {
+  void recordOutcome(ctx.db, outcome, new Date(), n).catch((err: unknown) => {
+    ctx.log.warn({ err }, 'event_counter_failed');
+  });
+}
+
+function hostOf(raw: string): string {
+  try {
+    return new URL(raw).host;
+  } catch {
+    return '<invalid url>';
+  }
+}
+
+function logFields(ctx: MethodContext, item: EventItem) {
+  return {
     portal: ctx.portal.origin,
     client_id: item.client_id ?? null,
-    event: data.event ?? null,
+    event: item.query.QUERY_DATA?.event ?? null,
     url: safeUrl(item.query.QUERY_URL),
   };
-  if (ctx.delivery.inFlight >= EVENT_IN_FLIGHT_CAP) {
-    // ponytail: in-memory cap, persistent queue in stage 3
-    ctx.log.warn(fields, 'event_dropped_overload');
-    return;
-  }
-  ctx.delivery.inFlight++;
+}
+
+// One attempt, no retries; nothing survives a restart (stage 3 adds a persistent queue).
+// The caller checks the in-flight caps first.
+async function deliver(ctx: MethodContext, item: EventItem): Promise<void> {
+  const data = item.query.QUERY_DATA ?? {};
+  const fields = logFields(ctx, item);
+  const { delivery } = ctx;
+  const host = hostOf(item.query.QUERY_URL);
+  // Count before the first await, so the next item of the batch sees this slot as taken.
+  delivery.inFlight++;
+  delivery.byHost.set(host, (delivery.byHost.get(host) ?? 0) + 1);
   try {
     const auth = await buildAuth(ctx, item);
     const body = qs.stringify({
@@ -117,18 +137,44 @@ export async function deliver(ctx: MethodContext, item: EventItem): Promise<void
       signal: AbortSignal.timeout(EVENT_TIMEOUT_MS),
     });
     await response.body?.cancel();
-    if (!response.ok) ctx.log.warn({ ...fields, status: response.status }, 'event_delivery_failed');
+    if (response.ok) {
+      countOutcome(ctx, 'delivered');
+    } else {
+      ctx.log.warn({ ...fields, status: response.status }, 'event_delivery_failed');
+      countOutcome(ctx, 'failed');
+    }
   } catch (error) {
     ctx.log.warn(
       { ...fields, error: errorText(error).replaceAll(item.query.QUERY_URL, fields.url) },
       'event_delivery_failed',
     );
+    countOutcome(ctx, 'failed');
   } finally {
-    ctx.delivery.inFlight--;
+    delivery.inFlight--;
+    const left = (delivery.byHost.get(host) ?? 1) - 1;
+    if (left > 0) delivery.byHost.set(host, left);
+    else delivery.byHost.delete(host);
   }
 }
 
 export const restEventCall = defineMethod<EventCallBody>(eventCallSchema, async (ctx, body) => {
-  for (const item of body.QUERY) void deliver(ctx, item);
+  const { delivery } = ctx;
+  let dropped = 0;
+  for (const item of body.QUERY) {
+    // ponytail: in-memory caps, persistent queue in stage 3.
+    // The host cap keeps one slow handler from taking every slot of the global cap.
+    let limit: 'global' | 'host' | null = null;
+    if (delivery.inFlight >= EVENT_IN_FLIGHT_CAP) limit = 'global';
+    else if ((delivery.byHost.get(hostOf(item.query.QUERY_URL)) ?? 0) >= EVENT_HOST_IN_FLIGHT_CAP)
+      limit = 'host';
+    if (limit) {
+      ctx.log.warn({ ...logFields(ctx, item), limit }, 'event_dropped_overload');
+      dropped++;
+    } else {
+      void deliver(ctx, item);
+    }
+  }
+  // One write per batch: a big batch must not queue one row update per dropped item.
+  if (dropped > 0) countOutcome(ctx, 'dropped', dropped);
   return null; // the cloud answers {"result":null}
 });

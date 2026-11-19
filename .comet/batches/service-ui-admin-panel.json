@@ -1,0 +1,38 @@
+{
+  "version": 1,
+  "goal": "Issue #6: public status page at the service root and multi-user read-only admin panel with a CLI-managed superuser.",
+  "createdAt": "2026-11-18",
+  "decisions": {
+    "events": "persist daily counters only (delivered / failed), no event content",
+    "frontend": "React SPA built with Vite, served by Fastify from the same container",
+    "roles": "superuser manages admin users; other admins are read-only viewers"
+  },
+  "items": [
+    {
+      "change": "public-status-page",
+      "status": "selected",
+      "goals": "React/Vite frontend skeleton served by Fastify; /health checks the database; daily event delivery counters; public page at / with health and aggregate statistics.",
+      "scope": "frontend build pipeline, Dockerfile, health check, event counters table and increments, public stats JSON endpoint, status page UI",
+      "nonGoals": "admin panel, authentication, per-portal data, event content",
+      "acceptance": [
+        "GET / shows service and database health and aggregate counts",
+        "If the database is down, the page and /health report it",
+        "The page and its endpoint expose no secrets, tokens or portal hosts"
+      ]
+    },
+    {
+      "change": "admin-panel",
+      "status": "open-complete",
+      "dependsOn": "public-status-page",
+      "goals": "Multi-user admin panel: CLI sets the superuser password; superuser manages admin users; all admins browse portals, applications, token metadata and event counters read-only with search by fields.",
+      "scope": "admin users and sessions tables, CLI command, login/logout, session cookies, rate limit, admin JSON API, admin UI tables with search, docs",
+      "nonGoals": "editing or deleting service data, token values or hashes, SSO, fine-grained permissions",
+      "acceptance": [
+        "Admin panel refuses login until a superuser exists",
+        "CLI sets the superuser password from a hidden prompt or stdin only",
+        "A non-superuser admin cannot manage users",
+        "Each table filters by its fields"
+      ]
+    }
+  ]
+}

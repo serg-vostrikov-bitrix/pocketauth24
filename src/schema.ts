@@ -1,12 +1,17 @@
+import { sql } from 'drizzle-orm';
 import {
   bigint,
   bigserial,
+  check,
+  date,
   index,
   integer,
   jsonb,
   pgTable,
+  primaryKey,
   text,
   timestamp,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core';
 
 export const portals = pgTable('portals', {
@@ -52,3 +57,54 @@ export const tokenPairs = pgTable(
 export type Portal = typeof portals.$inferSelect;
 export type Application = typeof applications.$inferSelect;
 export type TokenPair = typeof tokenPairs.$inferSelect;
+
+export type Outcome = 'delivered' | 'failed' | 'dropped';
+
+export const eventCounters = pgTable(
+  'event_counters',
+  {
+    day: date('day').notNull(),
+    outcome: text('outcome').$type<Outcome>().notNull(),
+    count: bigint('count', { mode: 'number' }).notNull().default(0),
+  },
+  (table) => [
+    primaryKey({ columns: [table.day, table.outcome] }),
+    check(
+      'event_counters_outcome_check',
+      sql`${table.outcome} in ('delivered', 'failed', 'dropped')`,
+    ),
+  ],
+);
+
+export type AdminRole = 'superuser' | 'viewer';
+
+export const adminUsers = pgTable(
+  'admin_users',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    login: text('login').notNull().unique(),
+    passwordHash: text('password_hash').notNull(),
+    role: text('role').$type<AdminRole>().notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    // At most one superuser.
+    uniqueIndex('admin_users_one_superuser')
+      .on(table.role)
+      .where(sql`role = 'superuser'`),
+    check('admin_users_role_check', sql`${table.role} in ('superuser', 'viewer')`),
+  ],
+);
+
+export const adminSessions = pgTable(
+  'admin_sessions',
+  {
+    // SHA-256 hex of the cookie value; the cookie value itself is never stored.
+    idHash: text('id_hash').primaryKey(),
+    userId: bigint('user_id', { mode: 'number' })
+      .notNull()
+      .references(() => adminUsers.id, { onDelete: 'cascade' }),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  },
+  (table) => [index('admin_sessions_expires_at_idx').on(table.expiresAt)],
+);

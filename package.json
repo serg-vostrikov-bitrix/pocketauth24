@@ -1,12 +1,15 @@
 {
-  "name": "b24auth-server",
-  "version": "0.1.0",
+  "name": "pocketauth24",
+  "version": "0.2.0",
   "description": "",
   "directories": {
     "doc": "docs"
   },
   "scripts": {
     "test": "vitest run",
+    "web:install": "npm ci --prefix web",
+    "web:build": "npm run build --prefix web",
+    "web:typecheck": "npm run typecheck --prefix web",
     "build": "tsc -p tsconfig.build.json",
     "start": "node dist/server.js",
     "dev": "tsx watch src/server.ts",
@@ -17,22 +20,24 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/serg-vostrikov-bitrix/b24auth-server.git"
+    "url": "git+https://github.com/serg-vostrikov-bitrix/pocketauth24.git"
   },
   "keywords": [],
   "author": "",
-  "license": "ISC",
+  "license": "MIT",
   "type": "module",
   "bugs": {
-    "url": "https://github.com/serg-vostrikov-bitrix/b24auth-server/issues"
+    "url": "https://github.com/serg-vostrikov-bitrix/pocketauth24/issues"
   },
-  "homepage": "https://github.com/serg-vostrikov-bitrix/b24auth-server#readme",
+  "homepage": "https://github.com/serg-vostrikov-bitrix/pocketauth24#readme",
   "private": "true",
   "engines": {
     "node": ">=24"
   },
   "dependencies": {
+    "@fastify/cookie": "^11.1.5",
     "@fastify/formbody": "^9.0.2",
+    "@fastify/static": "^10.1.11",
     "drizzle-orm": "^0.45.4",
     "fastify": "^5.12.8",
     "pg": "^8.23.1",
