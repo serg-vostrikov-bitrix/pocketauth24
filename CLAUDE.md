@@ -134,3 +134,13 @@ machine-written text. Rule 2 (STE) still applies to the result.
 - Load the skill before you write the English text. Write the translations from the result.
 - Do not use Sepia for code blocks, commands, configuration keys or tables of values.
 - Sepia must not add facts. Take versions, numbers and limits from the code and the docs only.
+
+## 5. Logging
+
+Follow the logging rules in [docs/logging.md](docs/logging.md) for all server code.
+
+- Log every failure with a fixed `snake_case` event name and the correct level.
+- Send API errors through `fail()`. Give each cause its own `reason` when one error code has more
+  than one cause.
+- Never log secrets, tokens, passwords, session IDs or query strings.
+- When you add or change a log event, update the table in `docs/logging.md` and test the event.

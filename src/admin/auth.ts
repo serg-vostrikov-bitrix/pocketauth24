@@ -82,7 +82,8 @@ export function loginRoute(app: FastifyInstance, db: Db, limiter: LoginLimiter):
         const valid = await verifyPassword(password, user?.passwordHash ?? DUMMY_HASH);
         if (!user || !valid) {
           keep = true;
-          request.log.info({ login, ip }, 'admin_login_failed');
+          const reason = user ? 'wrong_password' : 'unknown_login';
+          request.log.info({ login, ip, reason }, 'admin_login_failed');
           return reply.status(401).send({ error: 'invalid_credentials' });
         }
         const sessionId = await createSession(db, user.id);

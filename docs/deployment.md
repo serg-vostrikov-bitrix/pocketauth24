@@ -133,6 +133,9 @@ Applications renew tokens at `/oauth/token/`. Most SDKs (CRest, official SDKs) h
   the portal.
 - Local app and handler URLs need a host name with a dot: `localhost` is rejected by the portal;
   use an FQDN or an IP address.
+- `BX24` is the old JS SDK. For new apps we recommend
+  [b24jssdk](https://github.com/bitrix24/b24jssdk). The next point applies to existing apps
+  that still use `BX24`.
 - Apps usually load `BX24` from `//api.bitrix24.com/api/v1/`, which is unreachable in a closed
   network. Serve a copy of that script from an internal host and point the apps at it.
 
@@ -141,6 +144,8 @@ Applications renew tokens at `/oauth/token/`. Most SDKs (CRest, official SDKs) h
 Event handlers receive one POST per event with a 10 s timeout; no retries. Failed and dropped
 deliveries appear in the container log as `event_delivery_failed` / `event_dropped_overload`.
 Pending deliveries are lost on restart.
+
+For the full list of error log events and their fields, see [logging.md](logging.md).
 
 The server counts delivered, failed and dropped deliveries per UTC day in the table
 `event_counters`. The status page and `GET /api/status` show the counts for today and for the

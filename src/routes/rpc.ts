@@ -44,8 +44,9 @@ export function rpcRoute(app: FastifyInstance, deps: AppDeps): void {
       .from(portals)
       .where(eq(portals.clientId, clientId))
       .limit(1);
-    if (!portal || !hashMatches(portal.secretHash, secret)) {
-      fail('invalid_client', 'Invalid client credentials', 401);
+    if (!portal) fail('invalid_client', 'Invalid client credentials', 401, 'client_id_unknown');
+    if (!hashMatches(portal.secretHash, secret)) {
+      fail('invalid_client', 'Invalid client credentials', 401, 'client_secret_mismatch');
     }
     request.portal = portal;
   };

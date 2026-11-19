@@ -111,6 +111,13 @@ it('Login events log the login and the IP, and no password or session ID', async
   for (const msg of ['admin_login_failed', 'admin_login_succeeded', 'admin_logout']) {
     expect(t.logs.find((l) => l.msg === msg)).toMatchObject({ login: 'admin', ip: '127.0.0.1' });
   }
+  expect(t.logs.find((l) => l.msg === 'admin_login_failed')).toMatchObject({
+    reason: 'wrong_password',
+  });
+  expect(t.logs.find((l) => l.msg === 'request_failed')).toMatchObject({
+    status: 401,
+    error: 'invalid_credentials',
+  });
   const text = JSON.stringify(t.logs);
   expect(text).not.toContain('wrong-password-1');
   expect(text).not.toContain(SUPERUSER.password);
