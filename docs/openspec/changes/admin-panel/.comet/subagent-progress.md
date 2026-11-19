@@ -2,7 +2,7 @@
 
 - review_mode: thorough
 - tdd_mode: tdd
-- Done: T1-T8 (… db3236f)
+- Done: T1-T9 (… f116127)
 - Pending: manual TTY prompt check (Task 3); manual browser check after Task 11
-- Current task: "Task 9 complete: Admin routing, login page and layout" (OpenSpec 6.1, 6.2)
+- Current task: "Task 10 complete: Data table and the four data pages" (OpenSpec 6.3, 6.4 part)
 - Stage: implementing

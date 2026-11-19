@@ -2385,7 +2385,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ### Task 9: Admin routing, login page and layout
 
-- [ ] Task 9 complete: Admin routing, login page and layout
+- [x] Task 9 complete: Admin routing, login page and layout
 
 **Covers tasks.md:** 6.1, 6.2
 
@@ -2399,7 +2399,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - Consumes: `Gyroscope` from `web/src/Gyroscope.tsx` (its CSS lives in `status.css`, which `main.tsx` loads); `/api/admin/login`, `/logout`, `/me` (Task 4).
 - Produces (`web/src/admin/api.ts`): `type Role = 'superuser' | 'viewer'`; `type AdminUser = { login: string; role: Role }`; `type ApiErrorBody = { error: string; hint?: string; column?: string }`; `class ApiError extends Error { status: number; body: ApiErrorBody }`; `setUnauthorizedHandler(handler: () => void): void`; `apiGet<T>(path: string, query?: URLSearchParams): Promise<T>`; `apiSend<T>(method: 'POST' | 'DELETE', path: string, body?: unknown): Promise<T>`. `AdminApp` (named export) with nested routes under `Layout` (`<Outlet />`).
 
-- [ ] **Step 1: Write the failing server test** — append to `test/integration/static.test.ts`
+- [x] **Step 1: Write the failing server test** — append to `test/integration/static.test.ts`
 
 ```ts
 it('GET /admin and /admin/* return index.html with the security headers', async () => {
@@ -2420,12 +2420,12 @@ it('Unknown paths under /api/admin keep the JSON 404', async () => {
 });
 ```
 
-- [ ] **Step 2: Run it to make sure it fails**
+- [x] **Step 2: Run it to make sure it fails**
 
 Run: `npm test -- test/integration/static.test.ts`
 Expected: FAIL, `/admin` returns 404.
 
-- [ ] **Step 3: Serve `index.html` for the admin paths** in `src/static.ts`
+- [x] **Step 3: Serve `index.html` for the admin paths** in `src/static.ts`
 
 Replace the last line of `registerWeb` with:
 
@@ -2440,17 +2440,17 @@ Replace the last line of `registerWeb` with:
 
 Change the fastify import to `import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';`.
 
-- [ ] **Step 4: Run the server test to make sure it passes**
+- [x] **Step 4: Run the server test to make sure it passes**
 
 Run: `npm test -- test/integration/static.test.ts`
 Expected: PASS (6 tests).
 
-- [ ] **Step 5: Add React Router**
+- [x] **Step 5: Add React Router**
 
 Run: `npm install react-router@^7 --prefix web`
 Expected: `react-router` appears in `web/package.json` `dependencies`.
 
-- [ ] **Step 6: Route `/` and `/admin/*`** in `web/src/main.tsx`
+- [x] **Step 6: Route `/` and `/admin/*`** in `web/src/main.tsx`
 
 ```tsx
 import { lazy, StrictMode, Suspense } from 'react';
@@ -2484,7 +2484,7 @@ createRoot(root).render(
 );
 ```
 
-- [ ] **Step 7: Write `web/src/admin/api.ts`**
+- [x] **Step 7: Write `web/src/admin/api.ts`**
 
 ```ts
 export type Role = 'superuser' | 'viewer';
@@ -2537,7 +2537,7 @@ export function apiSend<T>(method: 'POST' | 'DELETE', path: string, body: unknow
 }
 ```
 
-- [ ] **Step 8: Write `web/src/admin/LoginPage.tsx`**
+- [x] **Step 8: Write `web/src/admin/LoginPage.tsx`**
 
 ```tsx
 import { useState, type FormEvent } from 'react';
@@ -2613,7 +2613,7 @@ export function LoginPage({ onLogin }: { onLogin: (user: AdminUser) => void }) {
 }
 ```
 
-- [ ] **Step 9: Write `web/src/admin/Layout.tsx`**
+- [x] **Step 9: Write `web/src/admin/Layout.tsx`**
 
 ```tsx
 import { NavLink, Outlet } from 'react-router';
@@ -2658,7 +2658,7 @@ export function Layout({ user, onLogout }: { user: AdminUser; onLogout: () => vo
 }
 ```
 
-- [ ] **Step 10: Write `web/src/admin/AdminApp.tsx`**
+- [x] **Step 10: Write `web/src/admin/AdminApp.tsx`**
 
 ```tsx
 import { useEffect, useState } from 'react';
@@ -2703,7 +2703,7 @@ export function AdminApp() {
 
 The `portals` route shows only a heading in this task; Task 10 replaces it with the data pages.
 
-- [ ] **Step 11: Write `web/src/admin/admin.css`** (tokens from `theme.css`; the reduced-motion block of `theme.css` covers these animations)
+- [x] **Step 11: Write `web/src/admin/admin.css`** (tokens from `theme.css`; the reduced-motion block of `theme.css` covers these animations)
 
 ```css
 .admin-login {
@@ -2923,12 +2923,12 @@ The `portals` route shows only a heading in this task; Task 10 replaces it with 
 }
 ```
 
-- [ ] **Step 12: Check types, build and format**
+- [x] **Step 12: Check types, build and format**
 
 Run: `npm run web:typecheck && npm run web:build && npm run lint`
 Expected: no errors. `web/dist/assets/` contains more than one `.js` file (the lazy `AdminApp` chunk is separate).
 
-- [ ] **Step 13: Manual browser check** (dev database running)
+- [x] **Step 13: Manual browser check** (dev database running)
 
 1. Start the API: `npm run dev` (with `.env` that has `BASE_URL`, `DATABASE_URL`, `PORTAL_ALLOWLIST`).
 2. Start the UI: `npm run dev --prefix web`, open `http://localhost:5173/admin`.
@@ -2936,7 +2936,7 @@ Expected: no errors. `web/dist/assets/` contains more than one `.js` file (the l
 4. Run `DATABASE_URL=... npx tsx src/cli.ts superuser set-password`, log in: the sidebar shows the login, the role and Log out; `/` still shows the status page.
 5. Narrow the window below 720 px: the sidebar becomes a top bar. Log out: the login page returns.
 
-- [ ] **Step 14: Commit**
+- [x] **Step 14: Commit**
 
 ```bash
 git add src/static.ts test/integration/static.test.ts web/package.json web/package-lock.json web/src/main.tsx web/src/admin
