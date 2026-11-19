@@ -33,8 +33,11 @@ Create `.env` next to `docker-compose.yml`:
 | `DATABASE_URL` | `postgres://b24auth:<password>@db:5432/b24auth` | Database connection |
 | `PORTAL_ALLOWLIST` | `portal.corp.local,crm.corp.local:8443` | Portal `host[:port]` allowed to register; exact, case-insensitive |
 | `TRUST_PROXY` | `true` | Optional, default `false`. Accepts only `true` or `false`. Set `true` only when the proxy overwrites `X-Forwarded-For` with the client IP (`proxy_set_header X-Forwarded-For $remote_addr;` in nginx). The admin login rate limit then uses the client IP from that header. If the proxy appends to the header, a client can send a false IP and bypass the limit |
+| `TOKEN_PRUNING` | `true` | Optional, default `true`. Accepts only `true` or `false`. If `true`, each new token pair deletes the older pairs of the same application and user that are not among the newest `TOKEN_PRUNING_KEEP` pairs and whose access token has expired. A pair with a live access token stays. If `false`, each pair stays until its refresh token expires, as in the Bitrix24 cloud |
+| `TOKEN_PRUNING_KEEP` | `5` | Optional, default `5`. A positive integer: the number of newest pairs that each application and user keep. The server reads it also when `TOKEN_PRUNING` is `false` |
 
-If `TRUST_PROXY` has any other value, the server stops at start.
+If `TRUST_PROXY` or `TOKEN_PRUNING` has any other value, or `TOKEN_PRUNING_KEEP` is not a positive
+integer, the server stops at start with an error that names the variable.
 
 `PORTAL_ALLOWLIST` entries are matched against the host of the portal's `redirect_uri`,
 including any port (`host[:port]`), case-insensitively. A portal on a non-default port must

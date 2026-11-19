@@ -14,5 +14,5 @@
 
 ## 4. Documentation
 
-- [ ] 4.1 Add both variables to `docs/deployment.md`
+- [x] 4.1 Add both variables to `docs/deployment.md`
 - [ ] 4.2 Add both variables to `README.md` with the note on cloud behaviour, and the same change to the five translations
