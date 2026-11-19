@@ -55,9 +55,10 @@ unknown token is answered with HTTP 400.
 as top-level JSON (not wrapped in `result`) with `user_id` added, `scope` set to the
 literal `app` and `domain` set to the OAuth server host, as the cloud does. The new pair SHALL keep the user, scope
 and stored parameters of the old one. A refresh token SHALL stay valid until its own
-expiry and MAY be presented again, matching observed cloud behaviour (confirmed against
-captured traffic before release). An expired or unknown refresh token SHALL be rejected
-with `invalid_grant`. `/oauth/token/` errors are HTTP 400; `invalid_grant` and `invalid_client` carry no
+expiry or until the server prunes its pair (see "Pruning of old token pairs"), and MAY be
+presented again, matching observed cloud behaviour (confirmed against captured traffic before
+release). An expired, unknown or pruned refresh token SHALL be rejected with `invalid_grant`.
+`/oauth/token/` errors are HTTP 400; `invalid_grant` and `invalid_client` carry no
 `error_description`.
 
 #### Scenario: Successful renewal
@@ -65,11 +66,11 @@ with `invalid_grant`. `/oauth/token/` errors are HTTP 400; `invalid_grant` and `
 - **THEN** the server returns a new access token and a new refresh token for the same user and scope
 
 #### Scenario: Refresh token reused
-- **WHEN** an application presents a refresh token that was already used and has not expired
+- **WHEN** an application presents a refresh token that was already used, has not expired and was not pruned
 - **THEN** the server returns another new token pair for the same user and scope
 
 #### Scenario: Refresh token expired or unknown
-- **WHEN** an application presents a refresh token past its expiry or one that does not exist (including tokens of a deleted application)
+- **WHEN** an application presents a refresh token past its expiry, one that does not exist (including tokens of a deleted application), or one whose pair was pruned
 - **THEN** the server responds with `error` = `invalid_grant`
 
 #### Scenario: Wrong application secret
@@ -87,4 +88,49 @@ tokens with a cryptographically secure random source.
 #### Scenario: Database leak
 - **WHEN** the token table is read directly
 - **THEN** it contains no usable access or refresh token values
+
+### Requirement: Pruning of old token pairs
+A pair is "used" when the server has accepted its refresh token in a successful renewal at
+least once. The server SHALL record the time of the first such renewal on the pair, in the same
+transaction that issues the new pair. If the pair was deleted after the server read it, the
+renewal SHALL fail with `invalid_grant`. A pair whose refresh token the server does not deliver
+(event auth without `sendRefreshToken`) is used from the start. When `TOKEN_PRUNING` is `true` (the default), each time
+the server issues a token pair it SHALL delete the used pairs of the same application and user
+that are older than the newest `TOKEN_PRUNING_KEEP` used pairs (default 5) and whose access token
+has expired. The server SHALL NOT delete a pair that is not used, or a pair whose access token
+has not expired. When `TOKEN_PRUNING` is `false`, the server SHALL keep each pair until its
+refresh token expires. The server SHALL stop at start if `TOKEN_PRUNING` is not `true` or
+`false`, or if `TOKEN_PRUNING_KEEP` is not a positive integer.
+
+#### Scenario: Old used pairs are deleted
+- **WHEN** pruning is on with keep 5, and after an issue a user of an application has 6 used pairs whose access token has expired
+- **THEN** the oldest used pair is deleted and its refresh token gets `invalid_grant`
+
+#### Scenario: Unused pairs are kept
+- **WHEN** pruning is on with keep 5, a backend keeps the refresh token of an unused pair whose access token has expired, and the server issues 10 newer pairs for the same user of the application
+- **THEN** the unused pair stays and its refresh token gets a new pair
+
+#### Scenario: Event pairs without a refresh token are used
+- **WHEN** the server delivers an event with `sendAuth` and without `sendRefreshToken`
+- **THEN** the pair it issues for the event is used from the start, and the pair of an event with `sendRefreshToken` is not used
+
+#### Scenario: A repeat renewal keeps the first use
+- **WHEN** an application presents the same refresh token a second time
+- **THEN** the pair keeps the time of the first renewal
+
+#### Scenario: Live access tokens are kept
+- **WHEN** pruning is on with keep 5, a user of an application has 7 used pairs with a live access token, and the server issues a new pair for them
+- **THEN** all 8 pairs stay
+
+#### Scenario: Other users and applications are not touched
+- **WHEN** the server issues a pair for one user of one application
+- **THEN** pairs of other users and other applications stay
+
+#### Scenario: Pruning is off
+- **WHEN** `TOKEN_PRUNING` is `false` and the server issues a new pair
+- **THEN** no pair is deleted
+
+#### Scenario: Invalid setting
+- **WHEN** `TOKEN_PRUNING` is `yes`, or `TOKEN_PRUNING_KEEP` is `0` or `abc`
+- **THEN** the server stops at start with an error that names the variable
 

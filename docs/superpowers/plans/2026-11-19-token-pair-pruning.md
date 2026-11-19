@@ -2,6 +2,7 @@
 change: token-pair-pruning
 design-doc: docs/superpowers/specs/2026-11-19-token-pair-pruning-design.md
 base-ref: 6c449ccc93ac7c4e9835baf69741f5263b69d0bc
+archived-with: 2026-11-19-token-pair-pruning
 ---
 
 # Token pair pruning Implementation Plan

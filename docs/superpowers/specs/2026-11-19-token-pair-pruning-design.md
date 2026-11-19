@@ -2,6 +2,8 @@
 comet_change: token-pair-pruning
 role: technical-design
 canonical_spec: openspec
+archived-with: 2026-11-19-token-pair-pruning
+status: final
 ---
 
 # Token pair pruning: technical design
