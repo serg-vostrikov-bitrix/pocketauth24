@@ -22,7 +22,9 @@ const tokenParamsSchema = {
 
 export function oauthTokenRoute(app: FastifyInstance, deps: AppDeps): void {
   const handle = async (params: TokenParams): Promise<RefreshResponse> => {
-    if (params.grant_type === 'authorization_code') fail('invalid_grant', '');
+    if (params.grant_type === 'authorization_code') {
+      fail('invalid_grant', '', 400, 'authorization_code_not_supported');
+    }
     if (params.grant_type !== 'refresh_token') {
       fail('invalid_request', 'Invalid grant_type parameter or parameter missing');
     }

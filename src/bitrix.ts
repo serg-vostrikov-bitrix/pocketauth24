@@ -3,18 +3,56 @@ import type { Config } from './config.js';
 import type { Db } from './db.js';
 import type { Portal } from './schema.js';
 
+// `reason` goes to the log only. Use it when one client-visible code has several causes.
 export class BitrixError extends Error {
   constructor(
     readonly code: string,
     readonly description: string,
     readonly status = 400,
+    readonly reason?: string,
   ) {
     super(`${code}: ${description}`);
   }
 }
 
-export function fail(code: string, description: string, status = 400): never {
-  throw new BitrixError(code, description, status);
+export function fail(code: string, description: string, status = 400, reason?: string): never {
+  throw new BitrixError(code, description, status, reason);
+}
+
+const rejectReasons = new WeakMap<FastifyRequest, string>();
+
+function field(body: unknown, key: string): unknown {
+  return typeof body === 'object' && body !== null && key in body
+    ? (body as Record<string, unknown>)[key]
+    : undefined;
+}
+
+// onSend hook: one `request_failed` line for every error response, also for replies that do not
+// go through sendError. It logs selected fields only, because a body can carry other data.
+export async function logErrorResponse(
+  request: FastifyRequest,
+  reply: FastifyReply,
+  payload: unknown,
+): Promise<unknown> {
+  if (reply.statusCode < 400) return payload;
+  let body: unknown;
+  try {
+    body = typeof payload === 'string' ? JSON.parse(payload) : undefined;
+  } catch {
+    body = undefined;
+  }
+  const level = reply.statusCode >= 500 ? 'warn' : 'info';
+  request.log[level](
+    {
+      status: reply.statusCode,
+      error: field(body, 'error') ?? null,
+      error_description: field(body, 'error_description') ?? null,
+      column: field(body, 'column'),
+      reason: rejectReasons.get(request),
+    },
+    'request_failed',
+  );
+  return payload;
 }
 
 export function ok<T>(result: T): { result: T } {
@@ -27,6 +65,7 @@ export function sendError(
   reply: FastifyReply,
 ): FastifyReply {
   if (error instanceof BitrixError) {
+    if (error.reason) rejectReasons.set(request, error.reason);
     // The cloud's /oauth/token/ errors carry no description; an empty one is left out.
     return reply
       .status(error.status)

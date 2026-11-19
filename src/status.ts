@@ -26,7 +26,11 @@ export const VERSION = (
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-export async function probeDatabase(db: Db, timeoutMs = 2000): Promise<boolean> {
+export async function probeDatabase(
+  db: Db,
+  log: FastifyBaseLogger,
+  timeoutMs = 2000,
+): Promise<boolean> {
   let timer: NodeJS.Timeout | undefined;
   const timeout = new Promise<never>((_resolve, reject) => {
     timer = setTimeout(() => reject(new Error('database_probe_timeout')), timeoutMs);
@@ -34,7 +38,8 @@ export async function probeDatabase(db: Db, timeoutMs = 2000): Promise<boolean> 
   try {
     await Promise.race([db.execute(sql`select 1`), timeout]);
     return true;
-  } catch {
+  } catch (err) {
+    log.warn({ err }, 'database_probe_failed');
     return false;
   } finally {
     clearTimeout(timer);

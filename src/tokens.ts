@@ -175,12 +175,16 @@ export async function refresh(
     .innerJoin(portals, eq(applications.portalId, portals.id))
     .where(eq(tokenPairs.refreshHash, sha256(input.refreshToken)))
     .limit(1);
-  if (!row) fail('invalid_grant', '');
-  if (row.app.clientId !== input.clientId || !hashMatches(row.app.secretHash, input.clientSecret)) {
-    fail('invalid_client', '');
+  // The cloud gives no description here, so the log-only reason tells the cases apart.
+  if (!row) fail('invalid_grant', '', 400, 'refresh_token_unknown');
+  if (row.app.clientId !== input.clientId) {
+    fail('invalid_client', '', 400, 'client_id_mismatch');
+  }
+  if (!hashMatches(row.app.secretHash, input.clientSecret)) {
+    fail('invalid_client', '', 400, 'client_secret_mismatch');
   }
   if (row.pair.refreshExpiresAt.getTime() <= Date.now()) {
-    fail('invalid_grant', '');
+    fail('invalid_grant', '', 400, 'refresh_token_expired');
   }
   // The old pair stays valid until its own expiry (reusable refresh tokens, spec D3).
   const issued = await issuePair(db, config, row.app, row.portal, {

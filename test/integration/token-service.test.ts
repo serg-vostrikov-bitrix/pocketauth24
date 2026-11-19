@@ -237,6 +237,11 @@ describe('token-service', () => {
       expect(res.statusCode).toBe(400);
       expect(res.json<{ error: string }>().error).toBe('invalid_grant');
     }
+    // The responses are the same; only the log tells the causes apart.
+    const reasons = t.logs.filter((l) => l.msg === 'request_failed').map((l) => l.reason);
+    expect(reasons).toEqual(
+      expect.arrayContaining(['refresh_token_unknown', 'refresh_token_expired']),
+    );
   });
 
   it('Wrong application secret', async () => {

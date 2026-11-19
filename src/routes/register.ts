@@ -24,7 +24,12 @@ export function registerRoute(app: FastifyInstance, deps: AppDeps): void {
         fail('invalid_request', 'redirect_uri is not a valid URL');
       }
       if (!deps.config.portalAllowlist.includes(url.host.toLowerCase())) {
-        fail('access_denied', 'Portal is not allowed to register on this server');
+        fail(
+          'access_denied',
+          'Portal is not allowed to register on this server',
+          400,
+          `host_not_allowed: ${url.host.toLowerCase()}`,
+        );
       }
       const origin = url.origin.toLowerCase();
       const clientId = randomHex(16);

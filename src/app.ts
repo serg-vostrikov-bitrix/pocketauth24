@@ -3,7 +3,7 @@ import formbody from '@fastify/formbody';
 import Fastify, { type FastifyInstance, type FastifyRequest } from 'fastify';
 import qs from 'qs';
 import { registerAdmin } from './admin/index.js';
-import { sendError } from './bitrix.js';
+import { logErrorResponse, sendError } from './bitrix.js';
 import { BODY_LIMIT_BYTES, LOG_LEVEL, QS_OPTIONS, type Config } from './config.js';
 import type { Db } from './db.js';
 import { oauthTokenRoute } from './routes/oauthToken.js';
@@ -36,11 +36,12 @@ export async function buildApp(deps: AppDeps): Promise<FastifyInstance> {
   });
   await app.register(formbody, { parser: (body) => qs.parse(body, QS_OPTIONS) });
   app.setErrorHandler(sendError);
+  app.addHook('onSend', logErrorResponse);
   app.setNotFoundHandler(async (_request, reply) =>
     reply.status(404).send({ error: 'not_found', error_description: 'Not found' }),
   );
   app.get('/health', async (_request, reply) =>
-    (await probeDatabase(deps.db))
+    (await probeDatabase(deps.db, app.log))
       ? { status: 'ok' }
       : reply.status(503).send({ status: 'error', database: 'down' }),
   );
