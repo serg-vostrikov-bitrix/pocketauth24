@@ -55,6 +55,20 @@ Los equipos de redes corporativas cerradas y entornos regulados se quedan con do
 | **Operación**               | Una página de estado pública en `/` (estado del servicio y de la base de datos, recuentos de portales, aplicaciones, pares de tokens activos y entregas de eventos) y los mismos datos en JSON en `/api/status`. `/health` devuelve HTTP 503 cuando PostgreSQL no responde. Logs JSON, barra final aceptada en todas las rutas.                                                                             |
 | **Panel de administración** | Un panel de administración multiusuario en `/admin`: tablas de solo lectura y con búsqueda de portales, aplicaciones locales, metadatos de tokens (sin tokens ni hashes) y contadores diarios de eventos. La contraseña del superusuario solo se establece con la CLI; el superusuario gestiona a los lectores en el panel. Las sesiones duran 12 horas; los inicios de sesión tienen límite de frecuencia. |
 
+## 💡 Casos de uso
+
+El servidor también ayuda fuera de las redes cerradas: en cualquier lugar donde un portal no deba usar el servidor OAuth en la nube. Estos escenarios funcionan hoy.
+
+| Escenario                                     | Cómo usar el servidor                                                                                                                                                                                                                                                                                                                                             |
+| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Portal de desarrollo**                      | Ejecuta un portal on-premise local para desarrollar aplicaciones y conéctalo a su propia instancia del servidor. El portal no se registra en la nube, así que no entra en conflicto con un portal de producción con la misma clave de licencia.                                                                                                                   |
+| **Copias de staging, pruebas y formación**    | Restaura una copia de producción y conéctala a una instancia separada del servidor. Elimina las credenciales de servicio en la copia (consulta [Inicio rápido](#-inicio-rápido)) y vuelve a crear sus aplicaciones locales. No conectes la copia al servidor de producción: la copia trae las credenciales de servicio de producción desde la copia de seguridad. |
+| **Pruebas de extremo a extremo en CI**        | Inicia un contenedor del portal y el servidor en una misma pila de Compose. La instalación de aplicaciones, `ONAPPINSTALL`, las llamadas REST y la renovación de tokens funcionan sin la nube, así que los resultados de las pruebas no dependen de un servicio externo.                                                                                          |
+| **Un servidor para los portales de clientes** | Un integrador ejecuta una instancia para los portales on-premise de varios clientes. Añade cada portal a `PORTAL_ALLOWLIST`. El servidor mantiene separados los datos de cada portal.                                                                                                                                                                             |
+| **Inventario de aplicaciones locales**        | El panel de administración lista las aplicaciones locales de todos los portales y muestra cuáles tienen tokens activos. Obtienes esta vista sin iniciar sesión en cada portal.                                                                                                                                                                                    |
+
+Está prevista una guía para las copias de desarrollo y de staging: [#22](https://github.com/serg-vostrikov-bitrix/b24auth-server/issues/22).
+
 ## ⚙️ Cómo funciona
 
 ```mermaid
@@ -171,7 +185,7 @@ Un host de manejador es el host y el puerto de la URL del manejador. El límite 
 
 Los eventos descartados o fallidos no se reenvían. Una cola persistente con reintentos es una etapa posterior propuesta.
 
-## 🧭 Limitaciones y hoja de ruta
+## 🧭 Limitaciones
 
 Conócelas antes de desplegar:
 
@@ -184,7 +198,31 @@ Conócelas antes de desplegar:
 - **Panel de administración de solo lectura.** El panel muestra datos, pero no puede cambiar portales, aplicaciones ni tokens. No tiene SSO, autenticación de dos factores ni registro de auditoría. Restringe `/admin` y `/api/admin` en el proxy.
 - **Probado** con el módulo `rest` del portal 26.1100.
 
-Etapas posteriores propuestas, sin fechas: OAuth 2.0 completo e introspección (incluida la revocación al desinstalar y las comprobaciones de scope), una cola persistente de eventos con reintentos y funciones de operación como la migración de un portal ya registrado.
+El trabajo planificado y los escenarios que hace posibles: consulta la [hoja de ruta](#-hoja-de-ruta).
+
+## 🔭 Hoja de ruta
+
+Los elementos no tienen fechas. La primera tabla lista el trabajo planificado. La segunda tabla lista los escenarios que este trabajo hace posibles. Son ideas, no compromisos.
+
+### Trabajo planificado
+
+| Elemento                                                                                                                   | Qué añade                                                                                                                                                                                     |
+| -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **OAuth 2.0 completo e introspection**                                                                                     | El grant `authorization_code`, la revocación de tokens al desinstalar, las comprobaciones de scope.                                                                                           |
+| **Cola persistente de eventos**                                                                                            | El servidor almacena los eventos, reintenta las entregas fallidas y conserva los eventos tras un reinicio.                                                                                    |
+| **Modo de respaldo upstream** ([#10](https://github.com/serg-vostrikov-bitrix/b24auth-server/issues/10))                   | El servidor reenvía las llamadas al servidor OAuth en la nube y las responde él mismo cuando la nube no responde. Las aplicaciones locales siguen funcionando durante una caída de la nube.   |
+| **Operaciones**                                                                                                            | Migración de un portal ya registrado. Un aviso cuando un nuevo registro sobrescribe las credenciales de un portal ([#23](https://github.com/serg-vostrikov-bitrix/b24auth-server/issues/23)). |
+| **Guía para copias de desarrollo y de staging** ([#22](https://github.com/serg-vostrikov-bitrix/b24auth-server/issues/22)) | Reglas para los escenarios de desarrollo y de staging de [Casos de uso](#-casos-de-uso).                                                                                                      |
+
+### Escenarios que este trabajo hace posibles
+
+| Escenario                                                                                                                                              | Qué necesita                                                                   |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
+| **Inspector de eventos.** Registrar los eventos, mostrarlos en el panel de administración y enviarlos de nuevo al manejador, para depurar manejadores. | La cola persistente de eventos.                                                |
+| **Revocación de emergencia.** Revocar todos los tokens de una aplicación o de un portal tras una filtración.                                           | La revocación de tokens y acciones de escritura en el panel de administración. |
+| **Pruebas de fallos.** Duraciones cortas de los tokens, un `expired_token` forzado, manejadores lentos, tokens de prueba emitidos desde la CLI.        | Duraciones de tokens configurables. Hoy son fijas.                             |
+| **Bus de eventos.** Enviar los eventos del portal a un message broker para sistemas internos.                                                          | La cola persistente de eventos.                                                |
+| **Auditoría de accesos.** Un registro de quién recibió un token para qué aplicación, y cuándo.                                                         | Un log de auditoría.                                                           |
 
 ## 🔁 CI/CD
 

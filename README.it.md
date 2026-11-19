@@ -55,6 +55,20 @@ I team nelle reti aziendali chiuse e negli ambienti regolamentati restano con du
 | **Operatività**                 | Una pagina di stato pubblica su `/` (stato di servizio e database, conteggi di portali, applicazioni, coppie di token attive e consegne di eventi) e gli stessi dati in JSON su `/api/status`. `/health` restituisce HTTP 503 quando PostgreSQL non risponde. Log JSON, slash finale accettato su tutti i percorsi.                                                                              |
 | **Pannello di amministrazione** | Un pannello di amministrazione multiutente su `/admin`: tabelle in sola lettura e ricercabili di portali, applicazioni locali, metadati dei token (senza token né hash) e contatori giornalieri degli eventi. La password del superutente si imposta solo dalla CLI; il superutente gestisce i visualizzatori nel pannello. Le sessioni durano 12 ore; gli accessi hanno un limite di frequenza. |
 
+## 💡 Casi d'uso
+
+Il server è utile anche fuori dalle reti chiuse: ovunque un portale non debba usare il server OAuth cloud. Questi scenari funzionano già oggi.
+
+| Scenario                                 | Come usare il server                                                                                                                                                                                                                                                                                                                        |
+| ---------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Portale per sviluppatori**             | Esegui un portale on-premise locale per lo sviluppo di applicazioni e collegalo a una propria istanza del server. Il portale non si registra nel cloud, quindi non entra in conflitto con un portale di produzione con la stessa chiave di licenza.                                                                                         |
+| **Copie di staging, test e formazione**  | Ripristina una copia della produzione e collegala a un'istanza separata del server. Elimina le credenziali di servizio nella copia (vedi [Avvio rapido](#-avvio-rapido)) e ricrea le sue applicazioni locali. Non collegare la copia al server di produzione: la copia porta con sé le credenziali di servizio della produzione dal backup. |
+| **Test end-to-end in CI**                | Avvia un container del portale e il server in un unico stack Compose. Installazione delle applicazioni, `ONAPPINSTALL`, chiamate REST e rinnovo dei token funzionano senza cloud, quindi i risultati dei test non dipendono da un servizio esterno.                                                                                         |
+| **Un server per i portali dei clienti**  | Un integratore esegue un'istanza per i portali on-premise di più clienti. Aggiungi ogni portale a `PORTAL_ALLOWLIST`. Il server tiene separati i dati di ogni portale.                                                                                                                                                                      |
+| **Inventario delle applicazioni locali** | Il pannello di amministrazione elenca le applicazioni locali di tutti i portali e mostra quali hanno token attivi. Ottieni questa vista senza accedere a ogni portale.                                                                                                                                                                      |
+
+È prevista una guida per le copie di sviluppo e di staging: [#22](https://github.com/serg-vostrikov-bitrix/b24auth-server/issues/22).
+
 ## ⚙️ Come funziona
 
 ```mermaid
@@ -171,7 +185,7 @@ Un host gestore è l'host e la porta dell'URL del gestore. Il limite per host è
 
 Gli eventi scartati o falliti non vengono rinviati. Una coda persistente con ritentativi è una fase successiva proposta.
 
-## 🧭 Limitazioni e roadmap
+## 🧭 Limitazioni
 
 Conoscili prima di distribuire:
 
@@ -184,7 +198,31 @@ Conoscili prima di distribuire:
 - **Pannello di amministrazione in sola lettura.** Il pannello mostra i dati ma non può modificare portali, applicazioni o token. Non ha SSO, autenticazione a due fattori né log di audit. Limita `/admin` e `/api/admin` sul proxy.
 - **Testato** con il modulo `rest` del portale 26.1100.
 
-Fasi successive proposte, senza date: OAuth 2.0 completo e introspezione (inclusa la revoca alla disinstallazione e i controlli di scope), una coda persistente degli eventi con ritentativi e funzioni operative come la migrazione di un portale già registrato.
+Lavori pianificati e scenari che rendono possibili: vedi [Roadmap](#-roadmap).
+
+## 🔭 Roadmap
+
+Le voci non hanno date. La prima tabella elenca i lavori pianificati. La seconda tabella elenca gli scenari che questi lavori rendono possibili. Sono idee, non impegni.
+
+### Lavori pianificati
+
+| Voce                                                                                                                       | Cosa aggiunge                                                                                                                                                                                          |
+| -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **OAuth 2.0 completo e introspection**                                                                                     | Il grant `authorization_code`, la revoca dei token alla disinstallazione, i controlli dello scope.                                                                                                     |
+| **Coda persistente degli eventi**                                                                                          | Il server memorizza gli eventi, ritenta le consegne fallite e conserva gli eventi dopo un riavvio.                                                                                                     |
+| **Modalità di fallback upstream** ([#10](https://github.com/serg-vostrikov-bitrix/b24auth-server/issues/10))               | Il server inoltra le chiamate al server OAuth cloud e risponde da solo quando il cloud non risponde. Le applicazioni locali continuano a funzionare durante un'interruzione del cloud.                 |
+| **Operazioni**                                                                                                             | Migrazione di un portale già registrato. Un avviso quando una nuova registrazione sovrascrive le credenziali di un portale ([#23](https://github.com/serg-vostrikov-bitrix/b24auth-server/issues/23)). |
+| **Guida per le copie di sviluppo e di staging** ([#22](https://github.com/serg-vostrikov-bitrix/b24auth-server/issues/22)) | Regole per gli scenari di sviluppo e di staging in [Casi d'uso](#-casi-duso).                                                                                                                          |
+
+### Scenari che questi lavori rendono possibili
+
+| Scenario                                                                                                                                               | Cosa richiede                                                              |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------- |
+| **Ispettore degli eventi.** Registrare gli eventi, mostrarli nel pannello di amministrazione e inviarli di nuovo al gestore, per il debug dei gestori. | La coda persistente degli eventi.                                          |
+| **Revoca di emergenza.** Revocare tutti i token di un'applicazione o di un portale dopo una fuga di dati.                                              | La revoca dei token e azioni di scrittura nel pannello di amministrazione. |
+| **Test dei guasti.** Durate brevi dei token, un `expired_token` forzato, gestori lenti, token di test emessi dalla CLI.                                | Durate dei token configurabili. Oggi sono fisse.                           |
+| **Bus degli eventi.** Inviare gli eventi del portale a un message broker per i sistemi interni.                                                        | La coda persistente degli eventi.                                          |
+| **Audit degli accessi.** Un registro di chi ha ricevuto un token per quale applicazione, e quando.                                                     | Un log di audit.                                                           |
 
 ## 🔁 CI/CD
 

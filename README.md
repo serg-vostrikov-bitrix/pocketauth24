@@ -55,6 +55,20 @@ Teams in closed corporate networks and regulated environments are left with two 
 | **Operations**          | A public status page at `/` (service and database state, counts of portals, applications, active token pairs and event deliveries) and the same data as JSON at `/api/status`. `/health` returns HTTP 503 when PostgreSQL does not answer. JSON logs, trailing slashes accepted on all paths.                   |
 | **Admin panel**         | A multi-user admin panel at `/admin`: read-only, searchable tables of portals, local applications, token metadata (no tokens or hashes) and daily event counters. The superuser password is set only with the CLI; the superuser manages viewers in the panel. Sessions last 12 hours; logins are rate-limited. |
 
+## 💡 Use cases
+
+The server also helps outside closed networks: wherever a portal must not use the cloud OAuth server. These scenarios work today.
+
+| Scenario                              | How to use the server                                                                                                                                                                                                                                                                                                 |
+| ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Developer portal**                  | Run a local on-premise portal for application development and connect it to its own server instance. The portal does not register in the cloud, so it does not conflict with a production portal on the same licence key.                                                                                             |
+| **Staging, test and training copies** | Restore a copy of production and connect it to a separate server instance. Delete the service credentials in the copy (see [Quick start](#-quick-start)) and re-create its local applications. Do not connect the copy to the production server: the copy carries the production service credentials from the backup. |
+| **End-to-end tests in CI**            | Start a portal container and the server in one Compose stack. Application install, `ONAPPINSTALL`, REST calls and token renewal run without the cloud, so test results do not depend on an external service.                                                                                                          |
+| **One server for client portals**     | An integrator runs one instance for the on-premise portals of several clients. Add each portal to `PORTAL_ALLOWLIST`. The server keeps the data of each portal apart.                                                                                                                                                 |
+| **Inventory of local applications**   | The admin panel lists the local applications of all portals and shows which of them hold active tokens. You get this view without a sign-in to each portal.                                                                                                                                                           |
+
+A guide for dev and staging copies is planned: [#22](https://github.com/serg-vostrikov-bitrix/b24auth-server/issues/22).
+
 ## ⚙️ How it works
 
 ```mermaid
@@ -171,7 +185,7 @@ A handler host is the host and port of the handler URL. The host limit is half o
 
 Events that were dropped or failed are not sent again. A persistent queue with retries is a proposed further stage.
 
-## 🧭 Limitations and roadmap
+## 🧭 Limitations
 
 Know these before you deploy:
 
@@ -184,7 +198,31 @@ Know these before you deploy:
 - **Read-only admin panel.** The admin panel shows data but cannot change portals, applications or tokens. It has no SSO, no two-factor authentication and no audit log. Restrict `/admin` and `/api/admin` at the proxy.
 - **Tested** with the portal `rest` module 26.1100.
 
-Proposed further stages, with no dates: full OAuth 2.0 and introspection (including revocation on uninstall and scope checks), a persistent event queue with retries, and operations features such as migration of an already registered portal.
+Planned work and the scenarios it opens: see [Roadmap](#-roadmap).
+
+## 🔭 Roadmap
+
+The items have no dates. The first table lists planned work. The second table lists scenarios that this work makes possible. They are ideas, not commitments.
+
+### Planned work
+
+| Item                                                                                                            | What it adds                                                                                                                                                                                   |
+| --------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Full OAuth 2.0 and introspection**                                                                            | The `authorization_code` grant, revocation of tokens on uninstall, scope checks.                                                                                                               |
+| **Persistent event queue**                                                                                      | The server stores events, retries failed deliveries and keeps events across a restart.                                                                                                         |
+| **Upstream fallback mode** ([#10](https://github.com/serg-vostrikov-bitrix/b24auth-server/issues/10))           | The server forwards calls to the cloud OAuth server and answers them itself when the cloud does not respond. Local applications keep working during a cloud outage.                            |
+| **Operations**                                                                                                  | Migration of an already registered portal. A warning when a re-registration overwrites the credentials of a portal ([#23](https://github.com/serg-vostrikov-bitrix/b24auth-server/issues/23)). |
+| **Guide for dev and staging copies** ([#22](https://github.com/serg-vostrikov-bitrix/b24auth-server/issues/22)) | Rules for the developer and staging scenarios in [Use cases](#-use-cases).                                                                                                                     |
+
+### Scenarios this work opens
+
+| Scenario                                                                                                                | What it needs                                              |
+| ----------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| **Event inspector.** Record events, show them in the admin panel and send them to the handler again, to debug handlers. | The persistent event queue.                                |
+| **Emergency revocation.** Revoke all tokens of an application or a portal after a leak.                                 | Revocation of tokens and write actions in the admin panel. |
+| **Failure tests.** Short token lifetimes, a forced `expired_token`, slow handlers, test tokens issued from the CLI.     | Configurable token lifetimes. Today they are fixed.        |
+| **Event bus.** Send portal events to a message broker for internal systems.                                             | The persistent event queue.                                |
+| **Access audit.** A log of who received a token for which application, and when.                                        | An audit log.                                              |
 
 ## 🔁 CI/CD
 

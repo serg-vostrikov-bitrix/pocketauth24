@@ -55,6 +55,20 @@ Equipes em redes corporativas fechadas e ambientes regulados ficam com duas opç
 | **Operação**                | Uma página de status pública em `/` (estado do serviço e do banco de dados, contagens de portais, aplicações, pares de tokens ativos e entregas de eventos) e os mesmos dados em JSON em `/api/status`. `/health` retorna HTTP 503 quando o PostgreSQL não responde. Logs JSON, barra final aceita em todos os caminhos.                                                  |
 | **Painel de administração** | Um painel de administração multiusuário em `/admin`: tabelas somente leitura e pesquisáveis de portais, aplicações locais, metadados de tokens (sem tokens nem hashes) e contadores diários de eventos. A senha do superusuário é definida apenas pela CLI; o superusuário gerencia os visualizadores no painel. As sessões duram 12 horas; os logins têm limite de taxa. |
 
+## 💡 Casos de uso
+
+O servidor também ajuda fora de redes fechadas: em qualquer lugar onde um portal não deve usar o servidor OAuth na nuvem. Estes cenários funcionam hoje.
+
+| Cenário                                    | Como usar o servidor                                                                                                                                                                                                                                                                                              |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Portal de desenvolvimento**              | Execute um portal on-premise local para desenvolver aplicações e conecte-o à sua própria instância do servidor. O portal não se registra na nuvem, então não entra em conflito com um portal de produção com a mesma chave de licença.                                                                            |
+| **Cópias de staging, teste e treinamento** | Restaure uma cópia da produção e conecte-a a uma instância separada do servidor. Exclua as credenciais de serviço na cópia (veja [Início rápido](#-início-rápido)) e recrie as suas aplicações locais. Não conecte a cópia ao servidor de produção: a cópia traz as credenciais de serviço da produção do backup. |
+| **Testes de ponta a ponta na CI**          | Inicie um contêiner do portal e o servidor em uma mesma pilha do Compose. A instalação de aplicações, `ONAPPINSTALL`, as chamadas REST e a renovação de tokens funcionam sem a nuvem, então os resultados dos testes não dependem de um serviço externo.                                                          |
+| **Um servidor para portais de clientes**   | Um integrador executa uma instância para os portais on-premise de vários clientes. Adicione cada portal a `PORTAL_ALLOWLIST`. O servidor mantém os dados de cada portal separados.                                                                                                                                |
+| **Inventário de aplicações locais**        | O painel de administração lista as aplicações locais de todos os portais e mostra quais delas têm tokens ativos. Você obtém esta visão sem entrar em cada portal.                                                                                                                                                 |
+
+Está prevista uma guia para cópias de desenvolvimento e de staging: [#22](https://github.com/serg-vostrikov-bitrix/b24auth-server/issues/22).
+
 ## ⚙️ Como funciona
 
 ```mermaid
@@ -171,7 +185,7 @@ Um host manipulador é o host e a porta da URL do manipulador. O limite por host
 
 Os eventos descartados ou que falharam não são reenviados. Uma fila persistente com novas tentativas é uma etapa posterior proposta.
 
-## 🧭 Limitações e roteiro
+## 🧭 Limitações
 
 Conheça estes pontos antes de implantar:
 
@@ -184,7 +198,31 @@ Conheça estes pontos antes de implantar:
 - **Painel de administração somente leitura.** O painel mostra dados, mas não pode alterar portais, aplicações ou tokens. Não tem SSO, autenticação de dois fatores nem log de auditoria. Restrinja `/admin` e `/api/admin` no proxy.
 - **Testado** com o módulo `rest` do portal 26.1100.
 
-Etapas posteriores propostas, sem datas: OAuth 2.0 completo e introspecção (incluindo revogação na desinstalação e verificações de scope), uma fila persistente de eventos com novas tentativas e recursos de operação como a migração de um portal já registrado.
+O trabalho planejado e os cenários que ele torna possíveis: veja o [roteiro](#-roteiro).
+
+## 🔭 Roteiro
+
+Os itens não têm datas. A primeira tabela lista o trabalho planejado. A segunda tabela lista os cenários que este trabalho torna possíveis. São ideias, não compromissos.
+
+### Trabalho planejado
+
+| Item                                                                                                                            | O que acrescenta                                                                                                                                                                          |
+| ------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **OAuth 2.0 completo e introspection**                                                                                          | O grant `authorization_code`, a revogação de tokens na desinstalação, as verificações de scope.                                                                                           |
+| **Fila persistente de eventos**                                                                                                 | O servidor armazena os eventos, repete as entregas que falharam e mantém os eventos após uma reinicialização.                                                                             |
+| **Modo de fallback upstream** ([#10](https://github.com/serg-vostrikov-bitrix/b24auth-server/issues/10))                        | O servidor encaminha as chamadas ao servidor OAuth na nuvem e responde ele mesmo quando a nuvem não responde. As aplicações locais continuam funcionando durante uma queda da nuvem.      |
+| **Operações**                                                                                                                   | Migração de um portal já registrado. Um aviso quando um novo registro sobrescreve as credenciais de um portal ([#23](https://github.com/serg-vostrikov-bitrix/b24auth-server/issues/23)). |
+| **Guia para cópias de desenvolvimento e de staging** ([#22](https://github.com/serg-vostrikov-bitrix/b24auth-server/issues/22)) | Regras para os cenários de desenvolvimento e de staging em [Casos de uso](#-casos-de-uso).                                                                                                |
+
+### Cenários que este trabalho torna possíveis
+
+| Cenário                                                                                                                                           | O que precisa                                                        |
+| ------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- |
+| **Inspetor de eventos.** Gravar os eventos, mostrá-los no painel de administração e enviá-los de novo ao manipulador, para depurar manipuladores. | A fila persistente de eventos.                                       |
+| **Revogação de emergência.** Revogar todos os tokens de uma aplicação ou de um portal após um vazamento.                                          | A revogação de tokens e ações de escrita no painel de administração. |
+| **Testes de falhas.** Durações curtas dos tokens, um `expired_token` forçado, manipuladores lentos, tokens de teste emitidos pela CLI.            | Durações de tokens configuráveis. Hoje são fixas.                    |
+| **Barramento de eventos.** Enviar os eventos do portal a um message broker para sistemas internos.                                                | A fila persistente de eventos.                                       |
+| **Auditoria de acessos.** Um registro de quem recebeu um token para qual aplicação, e quando.                                                     | Um log de auditoria.                                                 |
 
 ## 🔁 CI/CD
 
