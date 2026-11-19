@@ -158,3 +158,11 @@ it('A form-encoded POST /users gets 415 and creates nothing', async () => {
   expect(res.statusCode).toBe(415);
   expect(await t.db.$count(adminUsers)).toBe(1);
 });
+
+it('A huge or non-numeric user id gets 400', async () => {
+  const su = await superuserCookie();
+  for (const id of ['100000000000000000000', 'abc']) {
+    expect((await send(su, 'POST', `/users/${id}/password`)).statusCode).toBe(400);
+    expect((await send(su, 'DELETE', `/users/${id}`)).statusCode).toBe(400);
+  }
+});
