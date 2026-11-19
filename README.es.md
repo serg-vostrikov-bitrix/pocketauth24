@@ -158,7 +158,7 @@ Los encontramos durante la ejecución de extremo a extremo. Son manías del port
 
 - El portal debe conocer su **URL pública y puerto reales**. Si no, el marco de la app recibe un `DOMAIN` incorrecto y `BX24` no puede llegar al portal.
 - Las URL de aplicaciones y manejadores necesitan un **nombre de host con un punto** (un FQDN o una dirección IP). El portal rechaza `localhost`.
-- **Sirve el script `BX24` dentro de tu red.** Las apps suelen cargarlo desde `//api.bitrix24.com/api/v1/`, y una red cerrada no puede llegar a esa dirección.
+- **Sirve el script `BX24` dentro de tu red.** `BX24` es el SDK de JS antiguo; para apps nuevas recomendamos [b24jssdk](https://github.com/bitrix24/b24jssdk). Las apps existentes que aún usan `BX24` suelen cargarlo desde `//api.bitrix24.com/api/v1/`, y una red cerrada no puede llegar a esa dirección.
 - El portal rechaza las llamadas REST de un usuario que nunca ha iniciado sesión.
 
 ## ⚡ Rendimiento de la entrega de eventos

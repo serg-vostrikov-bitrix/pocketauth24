@@ -158,7 +158,7 @@ Diese Punkte haben wir beim End-to-End-Lauf gefunden. Das sind Marotten des Port
 
 - Das Portal muss seine **echte öffentliche URL und seinen Port** kennen. Sonst erhält der App-Frame eine falsche `DOMAIN`, und `BX24` erreicht das Portal nicht.
 - Anwendungs- und Handler-URLs brauchen einen **Hostnamen mit Punkt** (FQDN oder IP-Adresse). Das Portal lehnt `localhost` ab.
-- **Liefern Sie das `BX24`-Skript in Ihrem Netzwerk aus.** Apps laden es meist von `//api.bitrix24.com/api/v1/`, und ein geschlossenes Netzwerk erreicht diese Adresse nicht.
+- **Liefern Sie das `BX24`-Skript in Ihrem Netzwerk aus.** `BX24` ist das alte JS-SDK; für neue Apps empfehlen wir [b24jssdk](https://github.com/bitrix24/b24jssdk). Bestehende Apps, die noch `BX24` nutzen, laden es meist von `//api.bitrix24.com/api/v1/`, und ein geschlossenes Netzwerk erreicht diese Adresse nicht.
 - Das Portal verweigert REST-Aufrufe für einen Benutzer, der sich nie angemeldet hat.
 
 ## ⚡ Leistung der Ereigniszustellung

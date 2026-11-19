@@ -158,7 +158,7 @@ Li abbiamo trovati durante l'esecuzione end-to-end. Sono vizi del portale, non d
 
 - Il portale deve conoscere il suo **URL pubblico e la porta reali**. Altrimenti il frame dell'app riceve un `DOMAIN` errato, e `BX24` non raggiunge il portale.
 - Gli URL delle applicazioni e dei gestori richiedono un **nome host con un punto** (un FQDN o un indirizzo IP). Il portale rifiuta `localhost`.
-- **Servi lo script `BX24` dentro la tua rete.** Le app di solito lo caricano da `//api.bitrix24.com/api/v1/`, e una rete chiusa non raggiunge quell'indirizzo.
+- **Servi lo script `BX24` dentro la tua rete.** `BX24` è il vecchio SDK JS; per le nuove app consigliamo [b24jssdk](https://github.com/bitrix24/b24jssdk). Le app esistenti che usano ancora `BX24` di solito lo caricano da `//api.bitrix24.com/api/v1/`, e una rete chiusa non raggiunge quell'indirizzo.
 - Il portale rifiuta le chiamate REST per un utente che non ha mai effettuato l'accesso.
 
 ## ⚡ Prestazioni della consegna degli eventi

@@ -130,6 +130,9 @@ Applications renew tokens at `/oauth/token/`. Most SDKs (CRest, official SDKs) h
   the portal.
 - Local app and handler URLs need a host name with a dot: `localhost` is rejected by the portal;
   use an FQDN or an IP address.
+- `BX24` is the old JS SDK. For new apps we recommend
+  [b24jssdk](https://github.com/bitrix24/b24jssdk). The next point applies to existing apps
+  that still use `BX24`.
 - Apps usually load `BX24` from `//api.bitrix24.com/api/v1/`, which is unreachable in a closed
   network. Serve a copy of that script from an internal host and point the apps at it.
 
