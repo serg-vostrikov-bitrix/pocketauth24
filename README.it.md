@@ -5,9 +5,8 @@
 **Mantieni funzionanti le applicazioni locali su un portale Bitrix24 on-premise senza accesso a internet.**
 
 [![CI](https://github.com/serg-vostrikov-bitrix/b24auth-server/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/serg-vostrikov-bitrix/b24auth-server/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/tests-153%20passing-brightgreen)
 ![Contract tests](https://img.shields.io/badge/contract--tested-captured%20cloud%20traffic-blue)
-![Closed network](https://img.shields.io/badge/closed%20network-verified%20on%20test%20portal-blue)
+![Closed network](https://img.shields.io/badge/closed%20network-verified-blue)
 ![Dependabot](https://img.shields.io/badge/Dependabot-enabled-025E8C?logo=dependabot)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
 <br>
@@ -84,7 +83,7 @@ Il traffico OAuth tra portale, applicazioni locali e server resta dentro la tua 
 
 | Verifica                          | Cosa copre                                                                                                                                                                                                                                                                                                                                            |
 | --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **153 test automatici**           | Test di integrazione su PostgreSQL reale per registrazione del portale, registro delle applicazioni, servizio token, consegna degli eventi, routing e health, più test unitari.                                                                                                                                                                       |
+| **Test automatici**               | Test di integrazione su PostgreSQL reale per registrazione del portale, registro delle applicazioni, servizio token, consegna degli eventi, routing e health, più test unitari.                                                                                                                                                                       |
 | **Test di contratto**             | Forme delle risposte e codici di errore confrontati con il traffico catturato tra un portale di test (`rest` 26.1100) e `oauth.bitrix.info`.                                                                                                                                                                                                          |
 | **Smoke test del container (CI)** | Il container si avvia, `/health` risponde, rispondono la pagina di stato e `/api/status`, un portale si registra, nessun log di livello error, il processo non gira come root.                                                                                                                                                                        |
 | **End-to-end in una rete chiusa** | Una checklist di 10 passi su un portale di test Docker locale (`rest` 26.1100) il cui container PHP era isolato da internet: registrazione, creazione dell'app, pagina di installazione con token, REST come amministratore e non amministratore, `ONAPPINSTALL` con token, rinnovo e rinnovo ripetuto, eliminazione. Tutti i 10 passi sono riusciti. |
