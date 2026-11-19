@@ -118,3 +118,19 @@ The English `README.md` is the source. Keep these translations in the repository
 - The linked documents in `docs/` are English only. Link to them as they are.
 - Rule 1 allows these translated files. They are user-facing copies of the English source.
   English stays the source of truth if a translation differs.
+
+## 4. Skills for README text
+
+Use the Sepia skills for all prose in `README.md` and its translations. Sepia removes the marks of
+machine-written text. Rule 2 (STE) still applies to the result.
+
+| Task                                  | Skill            |
+| ------------------------------------- | ---------------- |
+| Write a new section or new text       | `sepia-write`    |
+| Change existing text with small edits | `sepia-refactor` |
+| Rewrite a section completely          | `sepia-recreate` |
+| Check text without changes            | `sepia-review`   |
+
+- Load the skill before you write the English text. Write the translations from the result.
+- Do not use Sepia for code blocks, commands, configuration keys or tables of values.
+- Sepia must not add facts. Take versions, numbers and limits from the code and the docs only.
