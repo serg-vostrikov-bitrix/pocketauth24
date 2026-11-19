@@ -2,7 +2,6 @@
 
 - review_mode: thorough
 - tdd_mode: tdd
-- Done: T1-T11 (… fb682f9); manual browser check done
+- Done: T1-T12 (… 01f7856); manual browser check done
 - Pending: manual TTY prompt check (Task 3)
-- Current task: "Task 12 complete: Documentation" (OpenSpec 7.1, 7.2)
-- Stage: implementing
+- Stage: final-review (round 0/2)

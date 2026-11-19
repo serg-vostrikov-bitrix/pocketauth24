@@ -3672,20 +3672,20 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ### Task 12: Documentation
 
-- [ ] Task 12 complete: Documentation
+- [x] Task 12 complete: Documentation
 
 **Covers tasks.md:** 7.1, 7.2
 
 **Files:**
 - Modify: `docs/deployment.md`, `README.md`
 
-- [ ] **Step 1: Add `TRUST_PROXY`** to the variable table in `docs/deployment.md` section 3
+- [x] **Step 1: Add `TRUST_PROXY`** to the variable table in `docs/deployment.md` section 3
 
 ```markdown
 | `TRUST_PROXY` | `true` | Optional, default `false`. Set `true` only when the proxy sets `X-Forwarded-For`. The admin login rate limit then uses the client IP from that header |
 ```
 
-- [ ] **Step 2: Restrict the admin paths at the proxy** — in `docs/deployment.md` section 4, after the first bullet, add:
+- [x] **Step 2: Restrict the admin paths at the proxy** — in `docs/deployment.md` section 4, after the first bullet, add:
 
 ```markdown
 - Allow `/admin`, `/admin/*` and `/api/admin/*` only from the network of the operators. The admin
@@ -3703,7 +3703,7 @@ In the nginx example, add before `location / {`:
     }
 ```
 
-- [ ] **Step 3: Add the admin panel section** to `docs/deployment.md` as section `## 8a. Admin panel` (after section 8)
+- [x] **Step 3: Add the admin panel section** to `docs/deployment.md` as section `## 8a. Admin panel` (after section 8)
 
 ```markdown
 ## 8a. Admin panel
@@ -3743,7 +3743,7 @@ Sessions:
 
 In section 9, add: `- Expired admin sessions are deleted hourly.`
 
-- [ ] **Step 4: Update `README.md`**
+- [x] **Step 4: Update `README.md`**
 
 1. In the features table, add a row after **Operations** (keep the table format; Prettier aligns it):
 
@@ -3765,17 +3765,17 @@ In section 9, add: `- Expired admin sessions are deleted hourly.`
 
 and remove "an admin page and" from the roadmap sentence that follows the list.
 
-- [ ] **Step 5: Format and check**
+- [x] **Step 5: Format and check**
 
 Run: `npx prettier --write README.md && npm run lint`
 Expected: no errors (Prettier ignores `docs/`; check the tables in `docs/deployment.md` by eye).
 
-- [ ] **Step 6: Final full check**
+- [x] **Step 6: Final full check**
 
 Run: `npm test && npm run typecheck && npm run lint && npm run build && npm run web:typecheck && npm run web:build`
 Expected: all pass.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add docs/deployment.md README.md

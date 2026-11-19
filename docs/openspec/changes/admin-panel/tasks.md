@@ -36,5 +36,5 @@
 
 ## 7. Docs
 
-- [ ] 7.1 `docs/deployment.md`: superuser setup, proxy restriction for `/admin` and `/api/admin`, `TRUST_PROXY`
-- [ ] 7.2 `README.md`: admin panel in the features table
+- [x] 7.1 `docs/deployment.md`: superuser setup, proxy restriction for `/admin` and `/api/admin`, `TRUST_PROXY`
+- [x] 7.2 `README.md`: admin panel in the features table
