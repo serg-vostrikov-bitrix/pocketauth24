@@ -20,7 +20,7 @@ release). An expired, unknown or pruned refresh token SHALL be rejected with `in
 - **WHEN** an application presents a refresh token that was already used, has not expired and was not pruned
 - **THEN** the server returns another new token pair for the same user and scope
 
-#### Scenario: Refresh token expired, unknown or pruned
+#### Scenario: Refresh token expired or unknown
 - **WHEN** an application presents a refresh token past its expiry, one that does not exist (including tokens of a deleted application), or one whose pair was pruned
 - **THEN** the server responds with `error` = `invalid_grant`
 
