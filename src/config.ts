@@ -27,6 +27,13 @@ export function requiredEnv(env: NodeJS.ProcessEnv, name: string): string {
   return value;
 }
 
+function parseTrustProxy(value: string | undefined): boolean {
+  const text = value?.trim() ?? '';
+  if (text === '' || text === 'false') return false;
+  if (text === 'true') return true;
+  throw new Error('TRUST_PROXY must be "true" or "false"');
+}
+
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
   const baseUrl = requiredEnv(env, 'BASE_URL').replace(/\/+$/, '');
   new URL(baseUrl); // throws on an invalid URL at boot
@@ -38,6 +45,6 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       .map((host) => host.trim().toLowerCase())
       .filter((host) => host.length > 0),
     // Set it only when the proxy sets X-Forwarded-For; request.ip then uses that header.
-    trustProxy: env.TRUST_PROXY?.trim() === 'true',
+    trustProxy: parseTrustProxy(env.TRUST_PROXY),
   };
 }

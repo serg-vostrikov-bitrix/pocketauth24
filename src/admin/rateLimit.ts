@@ -1,32 +1,42 @@
 export type LoginLimiter = {
-  blocked: (ip: string) => boolean;
-  fail: (ip: string) => void;
-  reset: (ip: string) => void;
+  // Reserves one attempt for the IP. It returns false, and reserves nothing, at the limit.
+  tryAttempt: (ip: string) => boolean;
+  // Gives back the latest reserved attempt of the IP.
+  refund: (ip: string) => void;
+  // The number of tracked IPs.
+  size: () => number;
 };
 
 // In memory, one instance per app: a restart resets it, and several instances do not share it.
+// tryAttempt has no await, so parallel requests cannot pass the limit together.
 export function createLoginLimiter(options: { max: number; windowMs: number }): LoginLimiter {
-  const failures = new Map<string, number[]>();
-  const recent = (ip: string, now: number): number[] =>
-    (failures.get(ip) ?? []).filter((time) => now - time < options.windowMs);
+  const attempts = new Map<string, number[]>();
+  let lastSweep = Date.now();
 
   return {
-    blocked: (ip) => {
-      const times = recent(ip, Date.now());
-      if (times.length === 0) failures.delete(ip);
-      else failures.set(ip, times);
-      return times.length >= options.max;
-    },
-    fail: (ip) => {
+    tryAttempt: (ip) => {
       const now = Date.now();
-      // The sweep keeps memory bounded by the IPs that failed within the window.
-      for (const [key, times] of failures) {
-        if (times.every((time) => now - time >= options.windowMs)) failures.delete(key);
+      // One sweep per window keeps memory bounded by the IPs seen in the last two windows.
+      if (now - lastSweep >= options.windowMs) {
+        lastSweep = now;
+        for (const [key, times] of attempts) {
+          if (times.every((time) => now - time >= options.windowMs)) attempts.delete(key);
+        }
       }
-      failures.set(ip, [...recent(ip, now), now]);
+      const times = (attempts.get(ip) ?? []).filter((time) => now - time < options.windowMs);
+      if (times.length >= options.max) {
+        attempts.set(ip, times);
+        return false;
+      }
+      times.push(now);
+      attempts.set(ip, times);
+      return true;
     },
-    reset: (ip) => {
-      failures.delete(ip);
+    refund: (ip) => {
+      const times = attempts.get(ip);
+      times?.pop();
+      if (times?.length === 0) attempts.delete(ip);
     },
+    size: () => attempts.size,
   };
 }

@@ -186,13 +186,29 @@ it('The sixth login after five failures gets 429 without a password check', asyn
   expect(res.json()).toEqual({ error: 'too_many_attempts' });
 });
 
-it('A successful login clears earlier failures', async () => {
+it('A successful login does not clear earlier failures', async () => {
   await createSuperuser(t.db);
   for (let i = 0; i < 4; i++) await login({ login: 'admin', password: `wrong-password-${i}` });
   await loginAs(t.app, SUPERUSER.login, SUPERUSER.password);
-  for (let i = 0; i < 4; i++) {
-    expect((await login({ login: 'admin', password: `wrong-password-${i}` })).statusCode).toBe(401);
-  }
+  expect((await login({ login: 'admin', password: 'wrong-password-x' })).statusCode).toBe(401);
+  expect((await login({ login: 'admin', password: 'wrong-password-y' })).statusCode).toBe(429);
+});
+
+it('A parallel burst of wrong logins gets at most 5 password checks', async () => {
+  await createSuperuser(t.db);
+  const results = await Promise.all(
+    Array.from({ length: 20 }, (_, i) =>
+      login({ login: 'admin', password: `wrong-password-${i}` }),
+    ),
+  );
+  const codes = results.map((res) => res.statusCode);
+  expect(codes.filter((code) => code === 401)).toHaveLength(5);
+  expect(codes.filter((code) => code === 429)).toHaveLength(15);
+});
+
+it('A login without a superuser does not use up attempts', async () => {
+  for (let i = 0; i < 8; i++)
+    expect((await login({ login: 'admin', password: 'x-password-1' })).statusCode).toBe(503);
 });
 
 it('deleteExpiredSessions deletes only expired sessions', async () => {

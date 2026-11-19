@@ -69,26 +69,32 @@ export function loginRoute(app: FastifyInstance, db: Db, limiter: LoginLimiter):
     { schema: loginSchema },
     async (request, reply) => {
       const ip = request.ip;
-      if (limiter.blocked(ip)) return reply.status(429).send({ error: 'too_many_attempts' });
-      if (!(await hasSuperuser(db))) {
-        return reply.status(503).send({ error: 'no_superuser', hint: NO_SUPERUSER_HINT });
+      // The reservation happens before any await, so a parallel burst cannot pass the limit.
+      // A failed password keeps it; every other outcome gives it back.
+      if (!limiter.tryAttempt(ip)) return reply.status(429).send({ error: 'too_many_attempts' });
+      let keep = false;
+      try {
+        if (!(await hasSuperuser(db))) {
+          return reply.status(503).send({ error: 'no_superuser', hint: NO_SUPERUSER_HINT });
+        }
+        const { login, password } = request.body;
+        const user = await findUserByLogin(db, login);
+        const valid = await verifyPassword(password, user?.passwordHash ?? DUMMY_HASH);
+        if (!user || !valid) {
+          keep = true;
+          request.log.info({ login, ip }, 'admin_login_failed');
+          return reply.status(401).send({ error: 'invalid_credentials' });
+        }
+        const sessionId = await createSession(db, user.id);
+        reply.setCookie(SESSION_COOKIE, sessionId, {
+          ...COOKIE_ATTRIBUTES,
+          maxAge: SESSION_TTL_SECONDS,
+        });
+        request.log.info({ login: user.login, ip }, 'admin_login_succeeded');
+        return { login: user.login, role: user.role };
+      } finally {
+        if (!keep) limiter.refund(ip);
       }
-      const { login, password } = request.body;
-      const user = await findUserByLogin(db, login);
-      const valid = await verifyPassword(password, user?.passwordHash ?? DUMMY_HASH);
-      if (!user || !valid) {
-        limiter.fail(ip);
-        request.log.info({ login, ip }, 'admin_login_failed');
-        return reply.status(401).send({ error: 'invalid_credentials' });
-      }
-      limiter.reset(ip);
-      const sessionId = await createSession(db, user.id);
-      reply.setCookie(SESSION_COOKIE, sessionId, {
-        ...COOKIE_ATTRIBUTES,
-        maxAge: SESSION_TTL_SECONDS,
-      });
-      request.log.info({ login: user.login, ip }, 'admin_login_succeeded');
-      return { login: user.login, role: user.role };
     },
   );
 }

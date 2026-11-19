@@ -11,25 +11,33 @@ afterEach(() => {
   vi.useRealTimers();
 });
 
-it('Blocks an IP after 5 failures and only that IP', () => {
+it('Allows 5 attempts per IP and refuses the sixth, only for that IP', () => {
   const limiter = createLoginLimiter({ max: 5, windowMs: WINDOW_MS });
-  for (let i = 0; i < 4; i++) limiter.fail('10.0.0.1');
-  expect(limiter.blocked('10.0.0.1')).toBe(false);
-  limiter.fail('10.0.0.1');
-  expect(limiter.blocked('10.0.0.1')).toBe(true);
-  expect(limiter.blocked('10.0.0.2')).toBe(false);
+  for (let i = 0; i < 5; i++) expect(limiter.tryAttempt('10.0.0.1')).toBe(true);
+  expect(limiter.tryAttempt('10.0.0.1')).toBe(false);
+  expect(limiter.tryAttempt('10.0.0.2')).toBe(true);
 });
 
-it('Forgets failures older than the window', () => {
+it('Forgets attempts older than the window', () => {
   const limiter = createLoginLimiter({ max: 5, windowMs: WINDOW_MS });
-  for (let i = 0; i < 5; i++) limiter.fail('10.0.0.1');
+  for (let i = 0; i < 5; i++) limiter.tryAttempt('10.0.0.1');
   vi.advanceTimersByTime(WINDOW_MS);
-  expect(limiter.blocked('10.0.0.1')).toBe(false);
+  expect(limiter.tryAttempt('10.0.0.1')).toBe(true);
 });
 
-it('reset clears the failures of an IP', () => {
+it('refund gives back one attempt', () => {
   const limiter = createLoginLimiter({ max: 5, windowMs: WINDOW_MS });
-  for (let i = 0; i < 5; i++) limiter.fail('10.0.0.1');
-  limiter.reset('10.0.0.1');
-  expect(limiter.blocked('10.0.0.1')).toBe(false);
+  for (let i = 0; i < 5; i++) limiter.tryAttempt('10.0.0.1');
+  limiter.refund('10.0.0.1');
+  expect(limiter.tryAttempt('10.0.0.1')).toBe(true);
+  expect(limiter.tryAttempt('10.0.0.1')).toBe(false);
+});
+
+it('Does not grow without bound: old IPs are dropped', () => {
+  const limiter = createLoginLimiter({ max: 5, windowMs: WINDOW_MS });
+  for (let i = 0; i < 1000; i++) limiter.tryAttempt(`10.1.${Math.floor(i / 250)}.${i % 250}`);
+  expect(limiter.size()).toBe(1000);
+  vi.advanceTimersByTime(WINDOW_MS);
+  limiter.tryAttempt('10.9.9.9');
+  expect(limiter.size()).toBe(1);
 });
