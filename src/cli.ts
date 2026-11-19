@@ -18,44 +18,72 @@ function parseCli(argv: string[]) {
 
 async function readStdinLine(): Promise<string> {
   let data = '';
+  // Without an encoding, each chunk is decoded alone and a split multibyte character breaks.
+  process.stdin.setEncoding('utf8');
   for await (const chunk of process.stdin) {
-    data += String(chunk);
+    data += chunk as string;
     const end = data.indexOf('\n');
     if (end >= 0) return data.slice(0, end).replace(/\r$/, '');
   }
   return data.replace(/\r$/, '');
 }
 
+// Input after Enter in one chunk (a paste of two lines) goes to the next prompt.
+let pendingInput = '';
+
 // Raw mode: the terminal echoes nothing. Enter ends the input, Backspace deletes one character,
-// Ctrl+C exits with 130.
+// Ctrl+C exits with 130. Escape sequences (arrows and other special keys) are ignored.
 function promptHidden(question: string): Promise<string> {
   return new Promise((resolve) => {
     const { stdin, stdout } = process;
     let value = '';
+    // none: normal input; esc: after ESC; seq: inside a CSI or SS3 sequence.
+    let escape: 'none' | 'esc' | 'seq' = 'none';
     stdout.write(question);
     stdin.setRawMode(true);
     stdin.setEncoding('utf8');
-    stdin.resume();
-    const onData = (chunk: string): void => {
-      for (const ch of chunk) {
+    const onData = (chunk: string): boolean => {
+      const chars = [...chunk];
+      for (const [i, ch] of chars.entries()) {
         if (ch === '\u0003') {
           stdin.setRawMode(false);
           stdout.write('\n');
           process.exit(130);
         }
+        if (escape === 'esc') {
+          escape = ch === '[' || ch === 'O' ? 'seq' : 'none';
+          continue;
+        }
+        if (escape === 'seq') {
+          // A final byte is in the range "@" to "~".
+          if (ch >= '@' && ch <= '~') escape = 'none';
+          continue;
+        }
+        if (ch === '\u001b') {
+          escape = 'esc';
+          continue;
+        }
         if (ch === '\r' || ch === '\n') {
+          let rest = chars.slice(i + 1).join('');
+          if (ch === '\r' && rest.startsWith('\n')) rest = rest.slice(1);
+          pendingInput = rest;
           stdin.off('data', onData);
           stdin.setRawMode(false);
           stdin.pause();
           stdout.write('\n');
           resolve(value);
-          return;
+          return true;
         }
         if (ch === '\u007f' || ch === '\b') value = [...value].slice(0, -1).join('');
         else if (ch >= ' ') value += ch;
       }
+      return false;
     };
+    const pending = pendingInput;
+    pendingInput = '';
+    if (pending && onData(pending)) return;
     stdin.on('data', onData);
+    stdin.resume();
   });
 }
 
@@ -107,6 +135,12 @@ async function main(argv: string[]): Promise<number> {
     }
     console.log(`Superuser "${result.login}" saved.`);
     return 0;
+  } catch (err) {
+    // Never print err.message or the stack: a Drizzle error holds the query parameters, and
+    // the parameters of the write hold the password hash.
+    const reason = ((err as Error).cause as Error | undefined)?.message ?? 'database error';
+    console.error(`The database operation failed: ${reason}. Nothing changed.`);
+    return 1;
   } finally {
     await pool.end();
   }
