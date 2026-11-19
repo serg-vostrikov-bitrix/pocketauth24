@@ -32,6 +32,9 @@ Create `.env` next to `docker-compose.yml`:
 | `BASE_URL` | `https://auth.corp.local` | Public URL behind the proxy; becomes `server_endpoint` |
 | `DATABASE_URL` | `postgres://b24auth:<password>@db:5432/b24auth` | Database connection |
 | `PORTAL_ALLOWLIST` | `portal.corp.local,crm.corp.local:8443` | Portal `host[:port]` allowed to register; exact, case-insensitive |
+| `TRUST_PROXY` | `true` | Optional, default `false`. Accepts only `true` or `false`. Set `true` only when the proxy overwrites `X-Forwarded-For` with the client IP (`proxy_set_header X-Forwarded-For $remote_addr;` in nginx). The admin login rate limit then uses the client IP from that header. If the proxy appends to the header, a client can send a false IP and bypass the limit |
+
+If `TRUST_PROXY` has any other value, the server stops at start.
 
 `PORTAL_ALLOWLIST` entries are matched against the host of the portal's `redirect_uri`,
 including any port (`host[:port]`), case-insensitively. A portal on a non-default port must
@@ -56,6 +59,9 @@ can rotate an allowlisted portal's credentials and lock the portal out:
   `/oauth/token` and `/health`, which application servers and monitoring may reach, and the
   public status page: `/`, `/assets/*` and `/api/status`. The status page shows aggregate counts
   only. If the counts must stay internal, restrict these paths like the others.
+- Allow `/admin`, `/admin/*` and `/api/admin/*` only from the network of the operators. The admin
+  panel has a login rate limit and no default password, but it must not be reachable from the
+  portal servers, the application servers or the internet.
 - Match paths with and without the trailing slash: the server accepts `/oauth/register` as well
   as `/oauth/register/` (and the same for `/rest/<method>` and `/oauth/token`). A rule written
   only for `/oauth/register/` is bypassed by `/oauth/register`.
@@ -69,6 +75,12 @@ Example for nginx:
         proxy_pass http://127.0.0.1:3000;
     }
     location /assets/ {
+        proxy_pass http://127.0.0.1:3000;
+    }
+    location ~ ^/(admin|api/admin)(/|$) {
+        allow 10.0.0.0/24; # operators
+        deny  all;
+        proxy_set_header X-Forwarded-For $remote_addr; # overwrite, never append
         proxy_pass http://127.0.0.1:3000;
     }
     location / {
@@ -131,10 +143,56 @@ The server counts delivered, failed and dropped deliveries per UTC day in the ta
 `event_counters`. The status page and `GET /api/status` show the counts for today and for the
 last 7 days. The counters store no event content, handler URL, portal or application.
 
+## 8a. Admin panel
+
+The admin panel at `/admin` shows read-only tables of portals, local applications, token
+metadata and event counters. Each table has a search field and 50 rows per page. The panel never
+shows tokens, token hashes, secrets or token parameters. The state of a token pair comes from the
+expiry of its access token.
+
+Set the superuser password before the first login. The server creates no default password:
+
+    docker compose exec app node dist/cli.js superuser set-password
+
+- The command asks for the password twice and shows nothing while you type.
+- The password must have at least 12 characters.
+- The default login is `admin`. To use another login, add `--login <name>`.
+- To set the password from a script, pipe it and add `--password-stdin`:
+
+      printf '%s\n' "$PASSWORD" | docker compose exec -T app node dist/cli.js superuser set-password --password-stdin
+
+- The command never accepts the password as an argument or an environment variable.
+- The command runs the database migrations first.
+- If you run the command again, it replaces the password and ends all sessions of the
+  superuser.
+
+The superuser creates viewers in the panel (Users page). The server generates a 20-character
+password for each new viewer and for each password reset, and shows it once. A viewer sees the
+data tables only. Only the CLI can change the superuser password.
+
+Sessions and login limit:
+
+- A session ends 12 hours after login. Log out ends it at once.
+- The session cookie `b24a_session` always has the `Secure` flag. Browsers accept it on
+  `http://localhost`. In production, serve the panel over HTTPS at the proxy.
+- The server allows 5 failed logins from one IP address in 15 minutes. After that, it rejects
+  logins from that address for the rest of the window. The limit is in memory: a restart resets it.
+- The server reserves the attempt before it checks the password. A successful login does not clear
+  earlier failures.
+- If `TRUST_PROXY` is `false`, or the proxy does not set `X-Forwarded-For`, all clients share the
+  proxy IP address for this limit. Set `TRUST_PROXY=true` only when the proxy sets the header.
+- If `TRUST_PROXY` is `true`, the proxy must overwrite `X-Forwarded-For` with the client IP. Do
+  not use `$proxy_add_x_forwarded_for` for `/api/admin`. That value appends to the header from
+  the client. The server then reads the left-most entry, which the client controls, and each
+  attempt can get a new limit key.
+- The log records each login success, login failure and logout with the login name and the IP
+  address. It never records passwords or session IDs.
+
 ## 9. Operations
 
 - Logs: JSON to stdout (`docker compose logs app`).
 - Expired token pairs are deleted hourly.
+- Expired admin sessions are deleted hourly.
 - Backup: standard PostgreSQL dumps of the `b24auth` database.
 
 ## 10. Rollback

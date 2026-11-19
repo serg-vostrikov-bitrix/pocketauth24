@@ -45,15 +45,15 @@ Equipes em redes corporativas fechadas e ambientes regulados ficam com duas opç
 
 ## 🧩 Funcionalidades disponíveis hoje
 
-| Área                       | O que você recebe                                                                                                                                                                                                                                                                                                                              |
-| -------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Registro do portal**     | O portal se registra sozinho na sua próxima chamada OAuth. O registro é limitado a uma lista de permissões (`PORTAL_ALLOWLIST`, comparada por host e porta). Toda chamada ao serviço é autenticada com as credenciais do próprio portal, e todos os dados ficam restritos ao portal que chama.                                                |
-| **Aplicações locais**      | Crie, atualize e exclua aplicações locais no portal como de costume. O servidor emite `client_id` (`local.<14 hex>.<8 digits>`) e `client_secret` e mantém o seu registro sincronizado. Excluir uma app remove todos os seus tokens.                                                                                                          |
-| **Tokens**                 | `rest.authorize` emite pares de tokens para o usuário correto, incluindo não administradores; as páginas de instalação abrem com tokens. `rest.check` valida tokens. O scope do token é a interseção entre o scope solicitado e o da aplicação.                                                                                              |
-| **Renovação**              | `/oauth/token/` (GET ou POST) com `grant_type=refresh_token`. Os refresh tokens são reutilizáveis até expirar, como observado no tráfego da nuvem capturado. Os access tokens duram 3600 s e os refresh tokens 180 dias; os pares expirados são excluídos a cada hora.                                                                       |
-| **Eventos**                | `rest.event.call` entrega cada evento ao manipulador da aplicação por HTTP POST, incluindo `ONAPPINSTALL` com tokens recém-emitidos. O portal recebe uma resposta imediata.                                                                                                                                                                   |
-| **Segurança**              | Armazenamento com hash de tokens e segredos, tokens de uma fonte aleatória criptograficamente segura, ocultação nos logs (sem query strings, URLs de manipuladores sem credenciais), porta da app vinculada ao loopback (`127.0.0.1:3000`) em `docker-compose.yml`.                                                                          |
-| **Operação**               | Uma página de status pública em `/` (estado do serviço e do banco de dados, contagens de portais, aplicações, pares de tokens ativos e entregas de eventos) e os mesmos dados em JSON em `/api/status`. `/health` retorna HTTP 503 quando o PostgreSQL não responde. Logs JSON, barra final aceita em todos os caminhos.                       |
+| Área                   | O que você recebe                                                                                                                                                                                                                                                                                                        |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Registro do portal** | O portal se registra sozinho na sua próxima chamada OAuth. O registro é limitado a uma lista de permissões (`PORTAL_ALLOWLIST`, comparada por host e porta). Toda chamada ao serviço é autenticada com as credenciais do próprio portal, e todos os dados ficam restritos ao portal que chama.                           |
+| **Aplicações locais**  | Crie, atualize e exclua aplicações locais no portal como de costume. O servidor emite `client_id` (`local.<14 hex>.<8 digits>`) e `client_secret` e mantém o seu registro sincronizado. Excluir uma app remove todos os seus tokens.                                                                                     |
+| **Tokens**             | `rest.authorize` emite pares de tokens para o usuário correto, incluindo não administradores; as páginas de instalação abrem com tokens. `rest.check` valida tokens. O scope do token é a interseção entre o scope solicitado e o da aplicação.                                                                          |
+| **Renovação**          | `/oauth/token/` (GET ou POST) com `grant_type=refresh_token`. Os refresh tokens são reutilizáveis até expirar, como observado no tráfego da nuvem capturado. Os access tokens duram 3600 s e os refresh tokens 180 dias; os pares expirados são excluídos a cada hora.                                                   |
+| **Eventos**            | `rest.event.call` entrega cada evento ao manipulador da aplicação por HTTP POST, incluindo `ONAPPINSTALL` com tokens recém-emitidos. O portal recebe uma resposta imediata.                                                                                                                                              |
+| **Segurança**          | Armazenamento com hash de tokens e segredos, tokens de uma fonte aleatória criptograficamente segura, ocultação nos logs (sem query strings, URLs de manipuladores sem credenciais), porta da app vinculada ao loopback (`127.0.0.1:3000`) em `docker-compose.yml`.                                                      |
+| **Operação**           | Uma página de status pública em `/` (estado do serviço e do banco de dados, contagens de portais, aplicações, pares de tokens ativos e entregas de eventos) e os mesmos dados em JSON em `/api/status`. `/health` retorna HTTP 503 quando o PostgreSQL não responde. Logs JSON, barra final aceita em todos os caminhos. |
 
 ## ⚙️ Como funciona
 
@@ -81,12 +81,12 @@ O tráfego OAuth entre o portal, as aplicações locais e o servidor permanece d
 
 ## ✅ Verificado
 
-| Verificação                                | O que cobre                                                                                                                                                                                                                                                                                                                                                      |
-| ------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **69 testes automatizados**                | Testes de integração com PostgreSQL real para registro do portal, registro de aplicações, serviço de tokens, entrega de eventos, roteamento e health, além de testes unitários.                                                                                                                                                                                  |
-| **Testes de contrato**                     | Formatos de resposta e códigos de erro comparados com o tráfego capturado entre um portal de teste (`rest` 26.1100) e `oauth.bitrix.info`.                                                                                                                                                                                                                       |
-| **Smoke test do contêiner (CI)**           | O contêiner inicia, `/health` responde, a página de status e `/api/status` respondem, um portal se registra, não há logs de nível error, o processo não roda como root.                                                                                                                                                                                         |
-| **Ponta a ponta em rede fechada**          | Uma checklist de 10 passos em um portal de teste Docker local (`rest` 26.1100) cujo contêiner PHP foi isolado da internet: registro, criação da app, página de instalação com tokens, REST como administrador e não administrador, `ONAPPINSTALL` com tokens, renovação e renovação repetida, exclusão. Todos os 10 passos foram aprovados.                    |
+| Verificação                       | O que cobre                                                                                                                                                                                                                                                                                                                                 |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **69 testes automatizados**       | Testes de integração com PostgreSQL real para registro do portal, registro de aplicações, serviço de tokens, entrega de eventos, roteamento e health, além de testes unitários.                                                                                                                                                             |
+| **Testes de contrato**            | Formatos de resposta e códigos de erro comparados com o tráfego capturado entre um portal de teste (`rest` 26.1100) e `oauth.bitrix.info`.                                                                                                                                                                                                  |
+| **Smoke test do contêiner (CI)**  | O contêiner inicia, `/health` responde, a página de status e `/api/status` respondem, um portal se registra, não há logs de nível error, o processo não roda como root.                                                                                                                                                                     |
+| **Ponta a ponta em rede fechada** | Uma checklist de 10 passos em um portal de teste Docker local (`rest` 26.1100) cujo contêiner PHP foi isolado da internet: registro, criação da app, página de instalação com tokens, REST como administrador e não administrador, `ONAPPINSTALL` com tokens, renovação e renovação repetida, exclusão. Todos os 10 passos foram aprovados. |
 
 Ainda não foi executado em produção em um cliente. Alguns detalhes foram inferidos em vez de capturados da nuvem: alguns códigos de status HTTP (`invalid_client`, método desconhecido, `expired_token`) e o formato exato de um bloco `auth` de um evento com tokens.
 
@@ -152,11 +152,11 @@ Encontrados durante a execução ponta a ponta. São comportamentos do portal, n
 
 **Limites.** Os valores estão fixados em [`src/config.ts`](src/config.ts).
 
-| Limite                                       | Valor | Quando é atingido                                                                         |
-| -------------------------------------------- | ----- | ----------------------------------------------------------------------------------------- |
-| Entregas simultâneas no total                | 200   | O evento é descartado e registrado como `event_dropped_overload`, `limit: global`         |
-| Entregas simultâneas para um host manipulador | 100   | O evento é descartado e registrado como `event_dropped_overload`, `limit: host`           |
-| Tempo limite de uma entrega                  | 10 s  | A entrega é interrompida e registrada como `event_delivery_failed`                        |
+| Limite                                        | Valor | Quando é atingido                                                                 |
+| --------------------------------------------- | ----- | --------------------------------------------------------------------------------- |
+| Entregas simultâneas no total                 | 200   | O evento é descartado e registrado como `event_dropped_overload`, `limit: global` |
+| Entregas simultâneas para um host manipulador | 100   | O evento é descartado e registrado como `event_dropped_overload`, `limit: host`   |
+| Tempo limite de uma entrega                   | 10 s  | A entrega é interrompida e registrada como `event_delivery_failed`                |
 
 Um host manipulador é o host e a porta da URL do manipulador. O limite por host é metade do limite total. Assim, um manipulador lento pode ocupar no máximo 100 slots, e os outros manipuladores sempre mantêm 100 slots. O limite por host não é menor porque um hit do portal pode enviar um lote grande a um único manipulador, por exemplo durante uma importação em massa.
 
@@ -189,11 +189,11 @@ Etapas posteriores propostas, sem datas: OAuth 2.0 completo e introspecção (in
 
 A CI roda nos pushes para `main` e nas pull requests ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)):
 
-| Job         | O que faz                                                                           |
-| ----------- | ----------------------------------------------------------------------------------- |
-| `test`      | Node.js 24 com um serviço PostgreSQL 17: `npm ci`, lint, typecheck, testes, build.  |
-| `container` | Constrói e inicia a stack do Docker Compose e executa o smoke test.                 |
-| `audit`     | `npm audit` para as dependências de produção com severidade alta.                   |
+| Job         | O que faz                                                                          |
+| ----------- | ---------------------------------------------------------------------------------- |
+| `test`      | Node.js 24 com um serviço PostgreSQL 17: `npm ci`, lint, typecheck, testes, build. |
+| `container` | Constrói e inicia a stack do Docker Compose e executa o smoke test.                |
+| `audit`     | `npm audit` para as dependências de produção com severidade alta.                  |
 
 O Dependabot verifica semanalmente os pacotes npm, as GitHub Actions e as imagens base do Docker.
 

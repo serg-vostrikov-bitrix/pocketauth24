@@ -5,7 +5,7 @@
 **Keep local applications working on a Bitrix24 on-premise portal that has no internet access.**
 
 [![CI](https://github.com/serg-vostrikov-bitrix/b24auth-server/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/serg-vostrikov-bitrix/b24auth-server/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/tests-69%20passing-brightgreen)
+![Tests](https://img.shields.io/badge/tests-153%20passing-brightgreen)
 ![Contract tests](https://img.shields.io/badge/contract--tested-captured%20cloud%20traffic-blue)
 ![Closed network](https://img.shields.io/badge/closed%20network-verified%20on%20test%20portal-blue)
 ![Dependabot](https://img.shields.io/badge/Dependabot-enabled-025E8C?logo=dependabot)
@@ -45,15 +45,16 @@ Teams in closed corporate networks and regulated environments are left with two 
 
 ## 🧩 Features available today
 
-| Area                    | What you get                                                                                                                                                                                                                                                                                  |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Portal registration** | The portal registers itself on its next OAuth call. Registration is limited to an allowlist (`PORTAL_ALLOWLIST`, matched on host and port). Every service call is authenticated with the portal's own credentials, and all data is scoped to the calling portal.                              |
-| **Local applications**  | Create, update and delete local applications on the portal as usual. The server issues `client_id` (`local.<14 hex>.<8 digits>`) and `client_secret` and keeps its registry in step. Deleting an app removes all its tokens.                                                                  |
-| **Tokens**              | `rest.authorize` issues token pairs for the correct user, including non-administrators; install pages open with tokens. `rest.check` validates tokens. Token scope is the intersection of requested and application scope.                                                                    |
-| **Renewal**             | `/oauth/token/` (GET or POST) with `grant_type=refresh_token`. Refresh tokens are reusable until expiry, matching behaviour seen in captured cloud traffic. Access tokens live 3600 s, refresh tokens 180 days; expired pairs are deleted hourly.                                             |
-| **Events**              | `rest.event.call` delivers each event to the application handler by HTTP POST, including `ONAPPINSTALL` with freshly issued tokens. The portal gets an immediate answer.                                                                                                                      |
-| **Security**            | Hashed storage of tokens and secrets, tokens from a cryptographically secure random source, log redaction (no query strings, handler URLs without credentials), app port bound to loopback (`127.0.0.1:3000`) in `docker-compose.yml`.                                                        |
-| **Operations**          | A public status page at `/` (service and database state, counts of portals, applications, active token pairs and event deliveries) and the same data as JSON at `/api/status`. `/health` returns HTTP 503 when PostgreSQL does not answer. JSON logs, trailing slashes accepted on all paths. |
+| Area                    | What you get                                                                                                                                                                                                                                                                                                    |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Portal registration** | The portal registers itself on its next OAuth call. Registration is limited to an allowlist (`PORTAL_ALLOWLIST`, matched on host and port). Every service call is authenticated with the portal's own credentials, and all data is scoped to the calling portal.                                                |
+| **Local applications**  | Create, update and delete local applications on the portal as usual. The server issues `client_id` (`local.<14 hex>.<8 digits>`) and `client_secret` and keeps its registry in step. Deleting an app removes all its tokens.                                                                                    |
+| **Tokens**              | `rest.authorize` issues token pairs for the correct user, including non-administrators; install pages open with tokens. `rest.check` validates tokens. Token scope is the intersection of requested and application scope.                                                                                      |
+| **Renewal**             | `/oauth/token/` (GET or POST) with `grant_type=refresh_token`. Refresh tokens are reusable until expiry, matching behaviour seen in captured cloud traffic. Access tokens live 3600 s, refresh tokens 180 days; expired pairs are deleted hourly.                                                               |
+| **Events**              | `rest.event.call` delivers each event to the application handler by HTTP POST, including `ONAPPINSTALL` with freshly issued tokens. The portal gets an immediate answer.                                                                                                                                        |
+| **Security**            | Hashed storage of tokens and secrets, tokens from a cryptographically secure random source, log redaction (no query strings, handler URLs without credentials), app port bound to loopback (`127.0.0.1:3000`) in `docker-compose.yml`.                                                                          |
+| **Operations**          | A public status page at `/` (service and database state, counts of portals, applications, active token pairs and event deliveries) and the same data as JSON at `/api/status`. `/health` returns HTTP 503 when PostgreSQL does not answer. JSON logs, trailing slashes accepted on all paths.                   |
+| **Admin panel**         | A multi-user admin panel at `/admin`: read-only, searchable tables of portals, local applications, token metadata (no tokens or hashes) and daily event counters. The superuser password is set only with the CLI; the superuser manages viewers in the panel. Sessions last 12 hours; logins are rate-limited. |
 
 ## ⚙️ How it works
 
@@ -83,7 +84,7 @@ OAuth traffic between the portal, local applications and the server stays inside
 
 | Check                              | What it covers                                                                                                                                                                                                                                                                                                    |
 | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **69 automated tests**             | Integration tests against real PostgreSQL for portal registration, application registry, token service, event delivery, routing and health, plus unit tests.                                                                                                                                                      |
+| **153 automated tests**            | Integration tests against real PostgreSQL for portal registration, application registry, token service, event delivery, routing and health, plus unit tests.                                                                                                                                                      |
 | **Contract tests**                 | Response shapes and error codes compared with traffic captured between a test portal (`rest` 26.1100) and `oauth.bitrix.info`.                                                                                                                                                                                    |
 | **Container smoke test (CI)**      | The container starts, `/health` answers, the status page and `/api/status` answer, a portal registers, no error-level logs, the process does not run as root.                                                                                                                                                     |
 | **End-to-end in a closed network** | A 10-step checklist on a local Docker test portal (`rest` 26.1100) whose PHP container was cut off from the internet: registration, app creation, install page with tokens, REST as administrator and non-administrator, `ONAPPINSTALL` with tokens, renewal and repeated renewal, deletion. All 10 steps passed. |
@@ -107,12 +108,13 @@ docker tag b24auth-server:<version> b24auth-server:local
 
 Create `.env` next to `docker-compose.yml`:
 
-| Variable            | Example                                         | Meaning                                                                      |
-| ------------------- | ----------------------------------------------- | ---------------------------------------------------------------------------- |
-| `BASE_URL`          | `https://auth.corp.local`                       | Public URL behind the proxy; becomes `server_endpoint`.                      |
-| `DATABASE_URL`      | `postgres://b24auth:<password>@db:5432/b24auth` | Database connection.                                                         |
-| `PORTAL_ALLOWLIST`  | `portal.corp.local,crm.corp.local:8443`         | Portal `host[:port]` allowed to register; list non-default ports explicitly. |
-| `POSTGRES_PASSWORD` | `<password>`                                    | Same password as in `DATABASE_URL`.                                          |
+| Variable            | Example                                         | Meaning                                                                                                                                                                             |
+| ------------------- | ----------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BASE_URL`          | `https://auth.corp.local`                       | Public URL behind the proxy; becomes `server_endpoint`.                                                                                                                             |
+| `DATABASE_URL`      | `postgres://b24auth:<password>@db:5432/b24auth` | Database connection.                                                                                                                                                                |
+| `PORTAL_ALLOWLIST`  | `portal.corp.local,crm.corp.local:8443`         | Portal `host[:port]` allowed to register; list non-default ports explicitly.                                                                                                        |
+| `POSTGRES_PASSWORD` | `<password>`                                    | Same password as in `DATABASE_URL`.                                                                                                                                                 |
+| `TRUST_PROXY`       | `true`                                          | Optional. Accepts only `true` or `false`. Set `true` only when the proxy overwrites `X-Forwarded-For` with the client IP (nginx: `$remote_addr`, not `$proxy_add_x_forwarded_for`). |
 
 `BASE_URL`, `DATABASE_URL` and `PORTAL_ALLOWLIST` are required; the server does not start without them. Then:
 
@@ -180,10 +182,10 @@ Know these before you deploy:
 - **Events are delivered once**, with a 10-second timeout. They are not stored or retried, are lost on restart and are dropped above 200 concurrent deliveries in total or 100 concurrent deliveries to one handler host. See [Event delivery performance](#-event-delivery-performance).
 - **Single instance.** Migrations run on start without a lock.
 - **Not supported:** licence checks, the `authorization_code` grant, server-side install/uninstall handling. Token lifetimes are fixed; request bodies are limited to 10 MB.
-- **Status page only.** The UI is a read-only status page at `/`. There is no admin interface yet.
+- **Read-only admin panel.** The admin panel shows data but cannot change portals, applications or tokens. It has no SSO, no two-factor authentication and no audit log. Restrict `/admin` and `/api/admin` at the proxy.
 - **Tested** with the portal `rest` module 26.1100.
 
-Proposed further stages, with no dates: full OAuth 2.0 and introspection (including revocation on uninstall and scope checks), a persistent event queue with retries, and operations features such as an admin page and migration of an already registered portal.
+Proposed further stages, with no dates: full OAuth 2.0 and introspection (including revocation on uninstall and scope checks), a persistent event queue with retries, and operations features such as migration of an already registered portal.
 
 ## 🔁 CI/CD
 

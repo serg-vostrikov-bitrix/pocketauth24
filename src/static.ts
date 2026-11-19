@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import { join, sep } from 'node:path';
 import fastifyStatic from '@fastify/static';
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 
 const CSP =
   "default-src 'self'; img-src 'self' data:; style-src 'self' 'unsafe-inline'; frame-ancestors 'none'";
@@ -26,5 +26,10 @@ export async function registerWeb(app: FastifyInstance, webRoot: string): Promis
       }
     },
   });
-  app.get('/', async (_request, reply) => reply.sendFile('index.html'));
+  const sendIndex = async (_request: FastifyRequest, reply: FastifyReply) =>
+    reply.sendFile('index.html');
+  app.get('/', sendIndex);
+  // React Router handles /admin/* in the browser.
+  app.get('/admin', sendIndex);
+  app.get('/admin/*', sendIndex);
 }
