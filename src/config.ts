@@ -19,6 +19,7 @@ export type Config = {
   databaseUrl: string;
   portalAllowlist: string[];
   trustProxy: boolean;
+  tokenPruningKeep: number | null; // null: pruning is off
 };
 
 export function requiredEnv(env: NodeJS.ProcessEnv, name: string): string {
@@ -34,7 +35,26 @@ function parseTrustProxy(value: string | undefined): boolean {
   throw new Error('TRUST_PROXY must be "true" or "false"');
 }
 
+function parseTokenPruning(value: string | undefined): boolean {
+  const text = value?.trim() ?? '';
+  if (text === '' || text === 'true') return true;
+  if (text === 'false') return false;
+  throw new Error('TOKEN_PRUNING must be "true" or "false"');
+}
+
+function parseTokenPruningKeep(value: string | undefined): number {
+  const text = value?.trim() ?? '';
+  if (text === '') return 5;
+  const keep = Number(text);
+  if (!/^[1-9]\d*$/.test(text) || !Number.isSafeInteger(keep)) {
+    throw new Error('TOKEN_PRUNING_KEEP must be a positive integer');
+  }
+  return keep;
+}
+
 export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
+  // Parsed also when pruning is off, so a bad value fails at start in both cases.
+  const pruningKeep = parseTokenPruningKeep(env.TOKEN_PRUNING_KEEP);
   const baseUrl = requiredEnv(env, 'BASE_URL').replace(/\/+$/, '');
   new URL(baseUrl); // throws on an invalid URL at boot
   return {
@@ -46,5 +66,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): Config {
       .filter((host) => host.length > 0),
     // Set it only when the proxy sets X-Forwarded-For; request.ip then uses that header.
     trustProxy: parseTrustProxy(env.TRUST_PROXY),
+    // Keep the newest pairs per application and user; see issuePair.
+    tokenPruningKeep: parseTokenPruning(env.TOKEN_PRUNING) ? pruningKeep : null,
   };
 }

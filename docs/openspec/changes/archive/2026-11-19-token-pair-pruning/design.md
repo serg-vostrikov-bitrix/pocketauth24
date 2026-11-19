@@ -1,0 +1,134 @@
+## Context
+
+All token pairs come from `issuePair` in `src/tokens.ts`. Three callers use it: `rest.authorize`
+(`src/methods/tokens.ts`), event auth (`src/methods/events.ts`) and `/oauth/token/` refresh
+(`refresh` in `src/tokens.ts`). A refresh does not delete the old pair, by design (spec D3 of
+`oauth-server-mvp`): the cloud also accepts a used refresh token again. The hourly cleanup
+(`deleteExpiredPairs`) deletes only pairs with an expired refresh token, so rows live for 180 days.
+
+`token_pairs` has unique indexes on `access_hash` and `refresh_hash` and one index on
+`refresh_expires_at`. The foreign key `application_id` and the admin sort column `created_at`
+have no index. `applications.portal_id` has no index either.
+
+## Goals / Non-Goals
+
+**Goals:**
+
+- Keep the number of rows per application and user small and bounded in normal use.
+- Never break an access token that is still live.
+- Let an operator turn pruning off to get the exact cloud behaviour.
+- Add the missing indexes.
+
+**Non-Goals:**
+
+- Admin list pagination (OFFSET) and `count(*)` optimization.
+- A hard upper bound on rows. Pairs with a live access token are never deleted, so a burst of
+  issues inside one hour can leave more than X rows for that hour.
+- Changes to the hourly cleanup.
+
+## Decisions
+
+### D1. Prune inside `issuePair`, after the insert
+
+One `DELETE` runs after the `INSERT`, for the same `application_id` and `user_id`:
+
+```sql
+delete from token_pairs
+where application_id = $app and user_id = $user
+  and refreshed_at is not null
+  and access_expires_at <= $now
+  and id not in (
+    select id from token_pairs
+    where application_id = $app and user_id = $user and refreshed_at is not null
+    order by created_at desc, id desc
+    limit $keep)
+```
+
+`$now` comes from app code (`Date.now()`), as the expiry does, so fake timers work in tests.
+
+Alternatives:
+
+- Prune in the hourly cleanup job. Rejected: a global sweep over all users needs a window
+  function over the whole table, and rows still grow between runs.
+- Delete the presented pair on refresh (single-use refresh tokens). Rejected: it breaks the
+  reuse that the cloud allows and that SDKs can depend on after a lost response.
+
+### D2. Only used pairs with an expired access token are deleted
+
+A refresh sets `refreshed_at` on the presented pair, if it is not set yet, in the transaction
+that issues the new pair. Only pairs with `refreshed_at` set can be deleted.
+
+Reason: the server cannot know which unused pair a backend keeps. A CRest backend keeps the
+refresh token from the install and refreshes it only when it calls the API. Page opens issue new
+pairs in the meantime. A "last X of all pairs" rule deleted the backend's pair after X page opens
+(found in code review). A used pair has a newer pair in its chain, so its owner has moved on.
+
+Event auth without `sendRefreshToken` does not deliver the refresh token, so nobody can use it.
+Such a pair is inserted with `refreshed_at` set and can be pruned like a used pair.
+
+Trade-off: pairs from page opens and from events with a delivered refresh token stay for 180
+days if nobody uses their refresh token, as before. Their count follows real use, not the
+refresh timer.
+
+A refresh marks the pair with `UPDATE ... SET refreshed_at = coalesce(refreshed_at, $now)
+RETURNING id` inside the issue transaction. If no row comes back, the pair was pruned after
+`refresh()` read it, and the server answers `invalid_grant`. The row lock also serializes two
+refreshes of the same token.
+
+The second condition, an expired access token:
+
+`rest.authorize` and event auth issue pairs often: each app page open, placement or business
+process action. A strict "last X" rule would delete a pair that another tab or process still
+uses. With the extra condition, a deleted pair has a dead access token. Only its refresh token
+stops working, and a client keeps the newest refresh token after each refresh.
+
+### D3. Two environment variables
+
+- `TOKEN_PRUNING`: `true` or `false`, default `true`. Parsed like `TRUST_PROXY`: any other
+  value stops the server at start.
+- `TOKEN_PRUNING_KEEP`: positive integer, default `5`. Other values stop the server.
+
+`Config` gets one field `tokenPruningKeep: number | null`. `null` means pruning is off. This
+keeps one value for `issuePair` to check. The server reads `TOKEN_PRUNING_KEEP` also when
+pruning is off, so a bad value fails at start in both cases.
+
+Alternative: one variable where `0` means off. Rejected: the user asked for a separate switch,
+and an explicit `false` is easier to read in `.env`.
+
+### D4. Indexes in one migration
+
+- `token_pairs_app_user_created_idx` on `(application_id, user_id, created_at)`: serves the
+  `ON DELETE CASCADE` from `applications` (prefix `application_id`).
+- `token_pairs_used_app_user_created_idx` on `(application_id, user_id, created_at)` where
+  `refreshed_at is not null`: serves the prune query (see D2).
+- `token_pairs_created_at_idx` on `(created_at)`: the admin token list sorts by it.
+- `applications_portal_id_idx` on `(portal_id)`: cascade from `portals`, the admin join and the
+  per-portal application count.
+
+Declared in `src/schema.ts`; `drizzle-kit generate` writes `drizzle/0003_*.sql`. Migrations run
+at start (existing behaviour). Plain `CREATE INDEX` locks writes to the table while it runs.
+
+## Risks / Trade-offs
+
+- [An SDK presents a refresh token that it already exchanged, after more than X newer used pairs
+  exist] → `invalid_grant`; the user must open the app again. CRest and the official SDKs store
+  the newest refresh token after each refresh.
+- [Pairs that nobody refreshes stay for 180 days] → accepted; see D2. Operators who need full cloud behaviour set
+  `TOKEN_PRUNING=false`. The README says this.
+- [Index creation on a large existing table blocks writes at start] → the table on current
+  installations is small (product is new). Not mitigated further.
+- [One extra `DELETE` per issue] → a partial index on used pairs,
+  `(application_id, user_id, created_at) WHERE refreshed_at IS NOT NULL`, keeps it small even
+  when an owner has many unused pairs.
+- [Existing installations have many old rows] → their `refreshed_at` is null, so pruning does
+  not touch them.
+  The rest go with the hourly cleanup after 180 days. No one-time backfill.
+
+## Migration Plan
+
+Deploy the new image. The migration adds the column and the indexes at start. Rollback: set
+`TOKEN_PRUNING=false`; the indexes are harmless with the old code.
+
+## Open Questions
+
+None.

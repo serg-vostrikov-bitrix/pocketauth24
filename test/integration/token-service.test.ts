@@ -10,6 +10,7 @@ import {
   registerPortal,
   rpc,
   startApp,
+  TEST_CONFIG,
   tokenRequest,
   truncateAll,
   type Credentials,
@@ -305,5 +306,139 @@ describe('token-service', () => {
 
     await deleteExpiredPairs(t.db, new Date(Date.now() + 365 * 24 * 3600 * 1000));
     expect(await t.db.select().from(tokenPairs)).toHaveLength(0);
+  });
+});
+
+// One rest.authorize, then `refreshes` renewals, each with the newest refresh token.
+// Returns the refresh token of each pair in issue order.
+async function chain(
+  app: TestApp,
+  portal: Credentials,
+  creds: Credentials,
+  refreshes: number,
+  localUser = '5',
+): Promise<string[]> {
+  const first = await authorize(app.app, portal, creds.client_id, {
+    PARAMS: { LOCAL_USER: localUser },
+  });
+  const tokens = [first.refresh_token];
+  for (let i = 0; i < refreshes; i++) {
+    tokens.push(await renew(app, creds, tokens[tokens.length - 1]));
+  }
+  return tokens;
+}
+
+async function renew(app: TestApp, creds: Credentials, refreshToken: string): Promise<string> {
+  const res = await tokenRequest(app.app, 'POST', refreshParams(creds, refreshToken));
+  if (res.statusCode !== 200) throw new Error(`refresh failed: ${res.body}`);
+  return res.json<RefreshResponse>().refresh_token;
+}
+
+async function refreshError(creds: Credentials, refreshToken: string): Promise<string | null> {
+  const res = await tokenRequest(t.app, 'POST', refreshParams(creds, refreshToken));
+  return res.statusCode === 200 ? null : res.json<{ error: string }>().error;
+}
+
+async function pairCounts(): Promise<Record<string, number>> {
+  const counts: Record<string, number> = {};
+  for (const row of await t.db.select().from(tokenPairs)) {
+    const key = `${row.applicationId}:${row.userId}`;
+    counts[key] = (counts[key] ?? 0) + 1;
+  }
+  return counts;
+}
+
+const HOUR = 3600 * 1000;
+
+describe('Pruning', () => {
+  it('Old used pairs are deleted', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    const portal = await registerPortal(t.app);
+    const app = await addApp(t.app, portal);
+    const tokens = await chain(t, portal, app, 6);
+
+    vi.setSystemTime(Date.now() + HOUR);
+    await renew(t, app, tokens[6]);
+
+    // 8 pairs, 7 used with an expired access token: the 2 oldest go.
+    expect(await pairCounts()).toEqual({ '1:5': 6 });
+    expect(await refreshError(app, tokens[0])).toBe('invalid_grant');
+    expect(await refreshError(app, tokens[2])).toBeNull();
+  });
+
+  it('Unused pairs are kept', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    const portal = await registerPortal(t.app);
+    const app = await addApp(t.app, portal);
+    const backend = await authorize(t.app, portal, app.client_id);
+    const tokens = await chain(t, portal, app, 10);
+
+    vi.setSystemTime(Date.now() + HOUR);
+    await renew(t, app, tokens[10]);
+
+    expect(await refreshError(app, backend.refresh_token)).toBeNull();
+  });
+
+  it('A repeat refresh keeps the time of the first use', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    const portal = await registerPortal(t.app);
+    const app = await addApp(t.app, portal);
+    const [first] = await chain(t, portal, app, 1);
+    const firstUse = Date.now();
+
+    vi.setSystemTime(firstUse + 60_000);
+    await renew(t, app, first);
+
+    const rows = await t.db.select().from(tokenPairs);
+    const used = rows.filter((row) => row.refreshedAt !== null);
+    expect(used.map((row) => row.refreshedAt?.getTime())).toEqual([firstUse]);
+  });
+
+  it('Live access tokens are kept', async () => {
+    const portal = await registerPortal(t.app);
+    const app = await addApp(t.app, portal);
+
+    await chain(t, portal, app, 7);
+
+    expect(await pairCounts()).toEqual({ '1:5': 8 });
+  });
+
+  it('Other users and applications are not touched', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    const portal = await registerPortal(t.app);
+    const appA = await addApp(t.app, portal);
+    const appB = await addApp(t.app, portal);
+    const tokens = await chain(t, portal, appA, 6, '5');
+    await chain(t, portal, appA, 6, '6');
+    await chain(t, portal, appB, 6, '5');
+
+    vi.setSystemTime(Date.now() + HOUR);
+    await renew(t, appA, tokens[6]);
+
+    // An unscoped DELETE would cut 1:6 and 2:5 too.
+    expect(await pairCounts()).toEqual({ '1:5': 6, '1:6': 7, '2:5': 7 });
+  });
+
+  describe('when TOKEN_PRUNING=false', () => {
+    let off: TestApp;
+    beforeAll(async () => {
+      off = await startApp({ config: { ...TEST_CONFIG, tokenPruningKeep: null } });
+    });
+    afterAll(async () => {
+      await off.close();
+    });
+
+    it('Pruning is off', async () => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      const portal = await registerPortal(off.app);
+      const app = await addApp(off.app, portal);
+      const tokens = await chain(off, portal, app, 6);
+
+      // Same setup as "Old used pairs are deleted", which deletes 2 pairs with pruning on.
+      vi.setSystemTime(Date.now() + HOUR);
+      await renew(off, app, tokens[6]);
+
+      expect(await pairCounts()).toEqual({ '1:5': 8 });
+    });
   });
 });

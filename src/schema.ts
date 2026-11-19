@@ -22,18 +22,22 @@ export const portals = pgTable('portals', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
-export const applications = pgTable('applications', {
-  id: bigserial('id', { mode: 'number' }).primaryKey(),
-  portalId: bigint('portal_id', { mode: 'number' })
-    .notNull()
-    .references(() => portals.id, { onDelete: 'cascade' }),
-  clientId: text('client_id').notNull().unique(),
-  secretHash: text('secret_hash').notNull(),
-  title: text('title').notNull(),
-  redirectUri: text('redirect_uri').notNull(),
-  scope: text('scope').notNull(),
-  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-});
+export const applications = pgTable(
+  'applications',
+  {
+    id: bigserial('id', { mode: 'number' }).primaryKey(),
+    portalId: bigint('portal_id', { mode: 'number' })
+      .notNull()
+      .references(() => portals.id, { onDelete: 'cascade' }),
+    clientId: text('client_id').notNull().unique(),
+    secretHash: text('secret_hash').notNull(),
+    title: text('title').notNull(),
+    redirectUri: text('redirect_uri').notNull(),
+    scope: text('scope').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [index('applications_portal_id_idx').on(table.portalId)],
+);
 
 export const tokenPairs = pgTable(
   'token_pairs',
@@ -49,9 +53,25 @@ export const tokenPairs = pgTable(
     params: jsonb('params').$type<Record<string, unknown>>().notNull(),
     accessExpiresAt: timestamp('access_expires_at', { withTimezone: true }).notNull(),
     refreshExpiresAt: timestamp('refresh_expires_at', { withTimezone: true }).notNull(),
+    // First successful refresh with this pair's refresh token; null: never used.
+    refreshedAt: timestamp('refreshed_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [index('token_pairs_refresh_expires_at_idx').on(table.refreshExpiresAt)],
+  (table) => [
+    index('token_pairs_refresh_expires_at_idx').on(table.refreshExpiresAt),
+    // ON DELETE CASCADE from applications.
+    index('token_pairs_app_user_created_idx').on(
+      table.applicationId,
+      table.userId,
+      table.createdAt,
+    ),
+    // Prune query in issuePair: only used pairs are candidates.
+    index('token_pairs_used_app_user_created_idx')
+      .on(table.applicationId, table.userId, table.createdAt)
+      .where(sql`refreshed_at is not null`),
+    // Admin token list sort.
+    index('token_pairs_created_at_idx').on(table.createdAt),
+  ],
 );
 
 export type Portal = typeof portals.$inferSelect;
