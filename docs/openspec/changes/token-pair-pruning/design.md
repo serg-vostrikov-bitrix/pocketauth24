@@ -98,7 +98,9 @@ and an explicit `false` is easier to read in `.env`.
 ### D4. Indexes in one migration
 
 - `token_pairs_app_user_created_idx` on `(application_id, user_id, created_at)`: serves the
-  prune query and the `ON DELETE CASCADE` from `applications` (prefix `application_id`).
+  `ON DELETE CASCADE` from `applications` (prefix `application_id`).
+- `token_pairs_used_app_user_created_idx` on `(application_id, user_id, created_at)` where
+  `refreshed_at is not null`: serves the prune query (see D2).
 - `token_pairs_created_at_idx` on `(created_at)`: the admin token list sorts by it.
 - `applications_portal_id_idx` on `(portal_id)`: cascade from `portals`, the admin join and the
   per-portal application count.

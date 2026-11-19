@@ -83,7 +83,8 @@ Declared in `src/schema.ts`:
 
 | Name | Table | Columns | Serves |
 |---|---|---|---|
-| `token_pairs_app_user_created_idx` | `token_pairs` | `application_id, user_id, created_at` | prune query; `ON DELETE CASCADE` from `applications` |
+| `token_pairs_app_user_created_idx` | `token_pairs` | `application_id, user_id, created_at` | `ON DELETE CASCADE` from `applications` |
+| `token_pairs_used_app_user_created_idx` | `token_pairs` | `application_id, user_id, created_at` where `refreshed_at is not null` | prune query |
 | `token_pairs_created_at_idx` | `token_pairs` | `created_at` | admin token list sort |
 | `applications_portal_id_idx` | `applications` | `portal_id` | `ON DELETE CASCADE` from `portals`; admin join and count |
 

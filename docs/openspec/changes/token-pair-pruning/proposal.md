@@ -20,7 +20,8 @@ Backlog issue: https://github.com/serg-vostrikov-bitrix/pocketauth24/issues/28
   Bitrix24 cloud does.
 - New environment variable `TOKEN_PRUNING_KEEP` (positive integer, default `5`) sets X.
 - The server stops at start if either variable has an invalid value.
-- New indexes: `token_pairs (application_id, user_id, created_at)`, `token_pairs (created_at)`,
+- New indexes: `token_pairs (application_id, user_id, created_at)`, the same columns as a partial
+  index on used pairs, `token_pairs (created_at)`,
   `applications (portal_id)`. A new Drizzle migration adds them and the column.
 - **BREAKING** (only with pruning on, the default): a refresh token that was already exchanged,
   is not in the last X used pairs, and whose access token has expired stops working. The application gets `invalid_grant`.
@@ -40,6 +41,6 @@ None.
 ## Impact
 
 - Code: `src/tokens.ts` (`issuePair`), `src/config.ts` (`Config`, `loadConfig`), `src/schema.ts`.
-- Database: new migration in `drizzle/` with three indexes. One new nullable column `token_pairs.refreshed_at`.
+- Database: new migration in `drizzle/` with four indexes. One new nullable column `token_pairs.refreshed_at`.
 - Docs: `README.md` and its five translations, `docs/deployment.md` (environment variables).
 - Out of scope: OFFSET pagination and `count(*)` in the admin lists.
