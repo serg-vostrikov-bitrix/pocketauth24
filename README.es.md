@@ -10,7 +10,7 @@
 ![Dependabot](https://img.shields.io/badge/Dependabot-enabled-025E8C?logo=dependabot)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
 <br>
-![Node.js 24](https://img.shields.io/badge/Node.js-24-339933?logo=nodedotjs&logoColor=white)
+![Node.js 26](https://img.shields.io/badge/Node.js-26-339933?logo=nodedotjs&logoColor=white)
 ![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![Fastify 5](https://img.shields.io/badge/Fastify-5-000000?logo=fastify&logoColor=white)
 ![PostgreSQL 17](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)
@@ -230,7 +230,7 @@ La CI se ejecuta en los push a `main` y en las pull requests ([`.github/workflow
 
 | Job         | Qué hace                                                                             |
 | ----------- | ------------------------------------------------------------------------------------ |
-| `test`      | Node.js 24 con un servicio PostgreSQL 17: `npm ci`, lint, typecheck, pruebas, build. |
+| `test`      | Node.js 26 con un servicio PostgreSQL 17: `npm ci`, lint, typecheck, pruebas, build. |
 | `container` | Construye e inicia el stack de Docker Compose y ejecuta la prueba de humo.           |
 | `audit`     | `npm audit` para las dependencias de producción con severidad alta.                  |
 
@@ -248,7 +248,7 @@ Todavía no hay ningún paso automático de release o publicación: ni pipeline 
 
 ## 🛠️ Desarrollo
 
-Stack: Node.js 24, TypeScript (strict), Fastify, Drizzle, PostgreSQL 17.
+Stack: Node.js 26, TypeScript (strict), Fastify, Drizzle, PostgreSQL 17.
 
 ```bash
 npm install

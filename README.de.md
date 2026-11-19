@@ -10,7 +10,7 @@
 ![Dependabot](https://img.shields.io/badge/Dependabot-enabled-025E8C?logo=dependabot)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
 <br>
-![Node.js 24](https://img.shields.io/badge/Node.js-24-339933?logo=nodedotjs&logoColor=white)
+![Node.js 26](https://img.shields.io/badge/Node.js-26-339933?logo=nodedotjs&logoColor=white)
 ![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![Fastify 5](https://img.shields.io/badge/Fastify-5-000000?logo=fastify&logoColor=white)
 ![PostgreSQL 17](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)
@@ -230,7 +230,7 @@ CI läuft bei Pushes auf `main` und bei Pull Requests ([`.github/workflows/ci.ym
 
 | Job         | Was er tut                                                                          |
 | ----------- | ----------------------------------------------------------------------------------- |
-| `test`      | Node.js 24 mit einem PostgreSQL-17-Dienst: `npm ci`, Lint, Typecheck, Tests, Build. |
+| `test`      | Node.js 26 mit einem PostgreSQL-17-Dienst: `npm ci`, Lint, Typecheck, Tests, Build. |
 | `container` | Baut und startet den Docker-Compose-Stack und führt den Smoke-Test aus.             |
 | `audit`     | `npm audit` für Produktionsabhängigkeiten bei hohem Schweregrad.                    |
 
@@ -248,7 +248,7 @@ Es gibt noch keinen automatischen Release- oder Publish-Schritt: keine CD-Pipeli
 
 ## 🛠️ Entwicklung
 
-Stack: Node.js 24, TypeScript (strict), Fastify, Drizzle, PostgreSQL 17.
+Stack: Node.js 26, TypeScript (strict), Fastify, Drizzle, PostgreSQL 17.
 
 ```bash
 npm install

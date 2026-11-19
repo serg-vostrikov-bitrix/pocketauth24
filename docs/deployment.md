@@ -8,7 +8,7 @@ portals.
 
 ## 2. Move the image into the closed network
 
-On a machine with internet access (base images: official `node:24-alpine` from Docker Hub):
+On a machine with internet access (base images: official `node:26-alpine` from Docker Hub):
 
     docker build -t pocketauth24:<version> .
     docker pull postgres:17
