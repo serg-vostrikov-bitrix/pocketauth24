@@ -16,7 +16,7 @@
 ![PostgreSQL 17](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-compose-2496ED?logo=docker&logoColor=white)
 
-PocketAuth24 es un servidor independiente y autoalojado. Responde a las llamadas OAuth que un portal Bitrix24 on-premise enviaría, de otro modo, al servidor OAuth en la nube (`oauth.bitrix.info` / `oauth.bitrix24.tech`). Se ejecuta como un solo contenedor con una base de datos PostgreSQL 17 dentro de tu red. Apunta el portal al servidor: las aplicaciones locales se abren, llaman a REST, renuevan tokens y reciben eventos sin conexión a la nube.
+Un portal Bitrix24 on-premise no gestiona por sí mismo el OAuth de sus aplicaciones locales. Envía cada inicio de aplicación, cada comprobación de token y cada renovación de token al servidor OAuth en la nube de Bitrix24 (`oauth.bitrix.info` / `oauth.bitrix24.tech`). Así que el portal está en tu sala de servidores, detrás de tu firewall, y aun así consulta a la nube antes de abrir tu propia aplicación. PocketAuth24 asume esta tarea dentro de tu red. Es un solo contenedor con una base de datos PostgreSQL 17. Apunta el portal a PocketAuth24: las aplicaciones locales se abren, llaman a REST, renuevan tokens y reciben eventos sin conexión a la nube.
 
 > Proyecto de código abierto independiente. No es un producto de Bitrix24. Consulta el [aviso legal](#aviso-legal).
 
@@ -26,46 +26,46 @@ _La página de estado en `/`. Muestra solo recuentos agregados._
 
 ## 🔒 Por qué
 
-Un portal Bitrix24 on-premise depende del servidor OAuth en la nube para sus aplicaciones locales. Cuando el portal no puede llegar a internet, las aplicaciones locales no se abren, no pueden llamar a REST con tokens, no pueden renovar tokens y no reciben eventos en línea.
+Un portal Bitrix24 on-premise necesita el servidor OAuth en la nube para sus aplicaciones locales. Si el portal pierde el acceso a internet, sus aplicaciones locales se detienen. No se abren, no pueden llamar a REST con tokens, no pueden renovar tokens y no reciben eventos en línea. El portal en sí sigue funcionando. Sus aplicaciones esperan a un servidor al que no pueden llegar.
 
-Los equipos de redes corporativas cerradas y entornos regulados se quedan con dos malas opciones: renunciar a las aplicaciones locales o abrir una ruta a internet que no quieren. PocketAuth24 les ofrece una tercera: ejecutar el lado OAuth de las aplicaciones locales dentro de su propia red.
+Los equipos de redes corporativas cerradas y entornos regulados se quedan entonces con dos malas opciones. Renuncian a las aplicaciones locales o abren una ruta a internet que no quieren, en una red que cerraron a propósito. PocketAuth24 es una tercera opción: el lado OAuth de las aplicaciones locales funciona dentro de su propia red.
 
-**Compensa también con acceso a internet.** Si los portales de tus clientes ejecutan solo tus propias aplicaciones locales, el servidor OAuth remoto en la nube aporta poco: los inicios de aplicación, las comprobaciones y las renovaciones de tokens siguen yendo a un servidor que no controlas, y su disponibilidad y la ruta de red hasta él quedan fuera de tus manos. Con PocketAuth24 junto al portal, esa dependencia pasa a una infraestructura que operas y supervisas tú. La contrapartida: tras el cambio, el portal deja de usar el servidor OAuth en la nube, por lo que las aplicaciones de Marketplace dejan de funcionar en él. Esta configuración es para portales que usan solo aplicaciones locales.
+**También es útil con acceso a internet.** Si los portales de tus clientes ejecutan solo tus propias aplicaciones locales, el servidor OAuth en la nube les aporta poco. Pero cada inicio de aplicación, cada comprobación de token y cada renovación siguen yendo a él. Tu aplicación, en el portal de tu cliente, pide permiso a un servidor remoto para arrancar. No controlas ni ese servidor ni la ruta de red hasta él. Pon PocketAuth24 junto al portal, y esta dependencia pasa a una infraestructura que operas y supervisas tú. La contrapartida: tras el cambio, el portal deja de usar el servidor OAuth en la nube, así que las aplicaciones de Marketplace dejan de funcionar en él. Usa esta configuración solo para portales que necesitan aplicaciones locales y nada más.
 
 ## ✨ Ventajas
 
-- **Las apps locales sobreviven al aislamiento de red.** Una red cerrada ya no excluye las integraciones a medida en el portal.
-- **Una dependencia externa menos.** Las aplicaciones locales no necesitan ninguna ruta de salida al servidor OAuth en la nube.
-- **Tu disponibilidad, no la de otros.** Incluso en un portal conectado a internet que ejecuta solo tus apps locales, los inicios de aplicación, las comprobaciones y las renovaciones de tokens ya no dependen de la disponibilidad de un servidor remoto. (Las apps de Marketplace necesitan la nube y no funcionan tras el cambio.)
-- **Limita el impacto de una fuga de base de datos o de logs.** Los tokens y secretos se guardan solo como hashes, y las query strings nunca llegan a los logs.
-- **Un servidor, varios portales.** Socios y operadores no necesitan una instancia por portal.
-- **Poco consumo.** Un contenedor, una base de datos, una comprobación `/health`, logs JSON en stdout y copias de seguridad estándar de PostgreSQL.
-- **Código abierto.** Con licencia MIT, para que los integradores puedan leerlo, auditarlo y adaptarlo.
+- **Las apps locales funcionan en una red aislada.** Una red cerrada ya no significa un portal sin integraciones a medida.
+- **Sin ruta a la nube.** Las aplicaciones locales no necesitan una conexión de salida al servidor OAuth en la nube.
+- **Tu disponibilidad, no la de otros.** En un portal conectado a internet que ejecuta solo tus propias apps locales, los inicios, las comprobaciones de tokens y las renovaciones dejan de depender de un servidor remoto. Las apps de Marketplace necesitan la nube y dejan de funcionar tras el cambio.
+- **Una fuga de la base de datos o de los logs revela menos.** PocketAuth24 guarda los tokens y los secretos solo como hashes y nunca escribe query strings en los logs.
+- **Un PocketAuth24 para varios portales.** Socios y operadores no necesitan una instancia separada para cada portal.
+- **Poco que operar.** Un contenedor, una base de datos, una comprobación `/health`, logs JSON en stdout y copias de seguridad normales de PostgreSQL.
+- **Código abierto.** La licencia MIT permite a los integradores leerlo, auditarlo y adaptarlo.
 
 ## 🧩 Funciones disponibles hoy
 
-| Área                        | Qué obtienes                                                                                                                                                                                                                                                                                                                                                                                                |
-| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Registro del portal**     | El portal se registra solo en su próxima llamada OAuth. El registro está limitado a una lista de permitidos (`PORTAL_ALLOWLIST`, comparada por host y puerto). Cada llamada al servicio se autentica con las credenciales propias del portal, y todos los datos quedan limitados al portal que llama.                                                                                                       |
-| **Aplicaciones locales**    | Crea, actualiza y elimina aplicaciones locales en el portal como de costumbre. El servidor emite `client_id` (`local.<14 hex>.<8 digits>`) y `client_secret` y mantiene su registro sincronizado. Al eliminar una app se eliminan todos sus tokens.                                                                                                                                                         |
-| **Tokens**                  | `rest.authorize` emite pares de tokens para el usuario correcto, incluidos los no administradores; las páginas de instalación se abren con tokens. `rest.check` valida los tokens. El scope del token es la intersección entre el scope solicitado y el de la aplicación.                                                                                                                                   |
-| **Renovación**              | `/oauth/token/` (GET o POST) con `grant_type=refresh_token`. Los refresh tokens se pueden reutilizar hasta que caducan, igual que en el tráfico de la nube capturado. Los access tokens duran 3600 s y los refresh tokens 180 días; los pares caducados se eliminan cada hora.                                                                                                                              |
-| **Eventos**                 | `rest.event.call` entrega cada evento al manejador de la aplicación mediante HTTP POST, incluido `ONAPPINSTALL` con tokens recién emitidos. El portal recibe una respuesta inmediata.                                                                                                                                                                                                                       |
-| **Seguridad**               | Almacenamiento con hash de tokens y secretos, tokens de una fuente aleatoria criptográficamente segura, ocultación en logs (sin query strings, URL de manejadores sin credenciales), puerto de la app enlazado a loopback (`127.0.0.1:3000`) en `docker-compose.yml`.                                                                                                                                       |
-| **Operación**               | Una página de estado pública en `/` (estado del servicio y de la base de datos, recuentos de portales, aplicaciones, pares de tokens activos y entregas de eventos) y los mismos datos en JSON en `/api/status`. `/health` devuelve HTTP 503 cuando PostgreSQL no responde. Logs JSON, barra final aceptada en todas las rutas.                                                                             |
-| **Panel de administración** | Un panel de administración multiusuario en `/admin`: tablas de solo lectura y con búsqueda de portales, aplicaciones locales, metadatos de tokens (sin tokens ni hashes) y contadores diarios de eventos. La contraseña del superusuario solo se establece con la CLI; el superusuario gestiona a los lectores en el panel. Las sesiones duran 12 horas; los inicios de sesión tienen límite de frecuencia. |
+| Área                        | Qué obtienes                                                                                                                                                                                                                                                                                                                                                                                                    |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Registro del portal**     | El portal se registra en PocketAuth24 en su próxima llamada OAuth. PocketAuth24 acepta solo portales de una lista de permitidos (`PORTAL_ALLOWLIST`, comparada por host y puerto). Cada llamada al servicio lleva las credenciales propias del portal, y cada portal ve solo sus propios datos.                                                                                                                 |
+| **Aplicaciones locales**    | Crea, cambia y elimina aplicaciones locales en el portal como antes. PocketAuth24 emite el `client_id` (`local.<14 hex>.<8 digits>`) y el `client_secret` y mantiene su lista de aplicaciones sincronizada con el portal. Cuando eliminas una app, PocketAuth24 elimina todos sus tokens.                                                                                                                       |
+| **Tokens**                  | `rest.authorize` emite un par de tokens para el usuario correcto, también para usuarios que no son administradores. Las páginas de instalación se abren con tokens. `rest.check` valida los tokens. Un token recibe solo los scopes que tienen a la vez la petición y la aplicación.                                                                                                                            |
+| **Renovación**              | `/oauth/token/` (GET o POST) con `grant_type=refresh_token`. Un refresh token se puede usar hasta que caduca, igual que en el tráfico de la nube capturado. Un access token dura 3600 s y un refresh token 180 días. Cada hora PocketAuth24 elimina los pares caducados.                                                                                                                                        |
+| **Eventos**                 | Para `rest.event.call`, PocketAuth24 envía cada evento al manejador de la aplicación mediante HTTP POST, incluido `ONAPPINSTALL` con tokens nuevos. El portal recibe su respuesta de inmediato y no espera a la entrega.                                                                                                                                                                                        |
+| **Seguridad**               | PocketAuth24 guarda los tokens y los secretos como hashes y toma los tokens de una fuente aleatoria criptográficamente segura. Los logs no contienen query strings ni credenciales en las URL de los manejadores. En `docker-compose.yml`, el puerto de la app escucha solo en loopback (`127.0.0.1:3000`).                                                                                                     |
+| **Operación**               | Una página de estado pública en `/` muestra el estado de PocketAuth24 y de su base de datos y cuenta portales, aplicaciones, pares de tokens activos y entregas de eventos. `/api/status` da los mismos datos en JSON. `/health` devuelve HTTP 503 cuando PostgreSQL no responde. Los logs son JSON, y todas las rutas aceptan una barra final.                                                                 |
+| **Panel de administración** | En `/admin`, varios usuarios pueden ver tablas con búsqueda de portales, aplicaciones locales, metadatos de tokens (sin tokens ni hashes) y contadores diarios de eventos. El panel es de solo lectura. Solo la CLI establece la contraseña del superusuario, y el superusuario gestiona a los lectores en el panel. Las sesiones duran 12 horas, y PocketAuth24 limita la frecuencia de los inicios de sesión. |
 
 ## 💡 Casos de uso
 
-El servidor también ayuda fuera de las redes cerradas: en cualquier lugar donde un portal no deba usar el servidor OAuth en la nube. Estos escenarios funcionan hoy.
+PocketAuth24 no es solo para redes cerradas. Ayuda en cualquier lugar donde un portal no deba usar el servidor OAuth en la nube. Todos estos escenarios funcionan hoy.
 
-| Escenario                                     | Cómo usar el servidor                                                                                                                                                                                                                                                                                                                                             |
-| --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Portal de desarrollo**                      | Ejecuta un portal on-premise local para desarrollar aplicaciones y conéctalo a su propia instancia del servidor. El portal no se registra en la nube, así que no entra en conflicto con un portal de producción con la misma clave de licencia.                                                                                                                   |
-| **Copias de staging, pruebas y formación**    | Restaura una copia de producción y conéctala a una instancia separada del servidor. Elimina las credenciales de servicio en la copia (consulta [Inicio rápido](#-inicio-rápido)) y vuelve a crear sus aplicaciones locales. No conectes la copia al servidor de producción: la copia trae las credenciales de servicio de producción desde la copia de seguridad. |
-| **Pruebas de extremo a extremo en CI**        | Inicia un contenedor del portal y el servidor en una misma pila de Compose. La instalación de aplicaciones, `ONAPPINSTALL`, las llamadas REST y la renovación de tokens funcionan sin la nube, así que los resultados de las pruebas no dependen de un servicio externo.                                                                                          |
-| **Un servidor para los portales de clientes** | Un integrador ejecuta una instancia para los portales on-premise de varios clientes. Añade cada portal a `PORTAL_ALLOWLIST`. El servidor mantiene separados los datos de cada portal.                                                                                                                                                                             |
-| **Inventario de aplicaciones locales**        | El panel de administración lista las aplicaciones locales de todos los portales y muestra cuáles tienen tokens activos. Obtienes esta vista sin iniciar sesión en cada portal.                                                                                                                                                                                    |
+| Escenario                                         | Cómo usar PocketAuth24                                                                                                                                                                                                                                                                                                                                             |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **Portal de desarrollo**                          | Ejecuta un portal on-premise local para desarrollar aplicaciones y dale su propia instancia de PocketAuth24. El portal nunca se registra en la nube, así que no entra en conflicto con un portal de producción con la misma clave de licencia.                                                                                                                     |
+| **Copias de staging, pruebas y formación**        | Restaura una copia de producción y conéctala a una instancia separada de PocketAuth24. En la copia, elimina las credenciales de servicio (consulta [Inicio rápido](#-inicio-rápido)) y vuelve a crear las aplicaciones locales. No conectes la copia al PocketAuth24 de producción: la copia de seguridad trae consigo las credenciales de servicio de producción. |
+| **Pruebas de extremo a extremo en CI**            | Pon un contenedor del portal y PocketAuth24 en una misma pila de Compose. La instalación de la app, `ONAPPINSTALL`, las llamadas REST y la renovación de tokens funcionan sin la nube, así que un servicio externo no puede romper los resultados de tus pruebas.                                                                                                  |
+| **Un PocketAuth24 para los portales de clientes** | Un integrador ejecuta un PocketAuth24 para los portales on-premise de varios clientes. Cada portal va en `PORTAL_ALLOWLIST`, y PocketAuth24 mantiene separados los datos de cada portal.                                                                                                                                                                           |
+| **Inventario de aplicaciones locales**            | El panel de administración lista las aplicaciones locales de todos los portales y muestra cuáles tienen tokens activos. Para esto no necesitas iniciar sesión en cada portal.                                                                                                                                                                                      |
 
 Está prevista una guía para las copias de desarrollo y de staging: [#22](https://github.com/serg-vostrikov-bitrix/b24auth-server/issues/22).
 
@@ -91,7 +91,7 @@ sequenceDiagram
     S->>A: HTTP POST to handler, with tokens
 ```
 
-El tráfico OAuth entre el portal, las aplicaciones locales y el servidor se queda dentro de tu red. El proxy inverso delante del servidor termina TLS y restringe quién puede llegar a cada ruta.
+El tráfico OAuth entre el portal, las aplicaciones locales y PocketAuth24 no sale de tu red. Un proxy inverso delante de PocketAuth24 termina TLS y decide quién puede llegar a cada ruta.
 
 ## ✅ Verificado
 
@@ -99,14 +99,14 @@ El tráfico OAuth entre el portal, las aplicaciones locales y el servidor se que
 | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | **Pruebas automatizadas**               | Pruebas de integración con PostgreSQL real para el registro del portal, el registro de aplicaciones, el servicio de tokens, la entrega de eventos, el enrutamiento y health, además de pruebas unitarias.                                                                                                                                                 |
 | **Pruebas de contrato**                 | Formas de respuesta y códigos de error comparados con el tráfico capturado entre un portal de prueba (`rest` 26.1100) y `oauth.bitrix.info`.                                                                                                                                                                                                              |
-| **Prueba de humo del contenedor (CI)**  | El contenedor arranca, `/health` responde, responden la página de estado y `/api/status`, un portal se registra, no hay logs de nivel error y el proceso no se ejecuta como root.                                                                                                                                                                         |
-| **De extremo a extremo en red cerrada** | Una lista de comprobación de 10 pasos en un portal de prueba local en Docker (`rest` 26.1100) cuyo contenedor PHP estaba aislado de internet: registro, creación de la app, página de instalación con tokens, REST como administrador y no administrador, `ONAPPINSTALL` con tokens, renovación y renovación repetida, eliminación. Los 10 pasos pasaron. |
+| **Prueba de humo del contenedor (CI)**  | El contenedor arranca. `/health`, la página de estado y `/api/status` responden. Un portal se registra. Los logs no tienen entradas de nivel error, y el proceso no se ejecuta como root.                                                                                                                                                                 |
+| **De extremo a extremo en red cerrada** | Una lista de comprobación de 10 pasos en un portal de prueba local en Docker (`rest` 26.1100) cuyo contenedor PHP no tenía acceso a internet: registro, creación de la app, página de instalación con tokens, REST como administrador y no administrador, `ONAPPINSTALL` con tokens, renovación y renovación repetida, eliminación. Los 10 pasos pasaron. |
 
-Aún no se ha ejecutado en producción en un cliente. Algunos detalles se dedujeron en lugar de capturarse de la nube: algunos códigos de estado HTTP (`invalid_client`, método desconocido, `expired_token`) y la forma exacta de un bloque `auth` de un evento con tokens.
+Nadie ha ejecutado aún PocketAuth24 en producción en un cliente. Algunos detalles vienen de una deducción, no del tráfico de la nube capturado: algunos códigos de estado HTTP (`invalid_client`, método desconocido, `expired_token`) y la forma exacta del bloque `auth` en un evento que lleva tokens.
 
 ## 🚀 Inicio rápido
 
-No hay una imagen publicada: constrúyela en una máquina con acceso a internet y llévala a la red cerrada.
+No hay una imagen publicada. Constrúyela en una máquina con acceso a internet y luego llévala a la red cerrada.
 
 ```bash
 # Outside the closed network
@@ -123,22 +123,22 @@ Crea `.env` junto a `docker-compose.yml`:
 
 | Variable            | Ejemplo                                         | Significado                                                                                                                                                                       |
 | ------------------- | ----------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `BASE_URL`          | `https://auth.corp.local`                       | URL pública detrás del proxy; se convierte en `server_endpoint`.                                                                                                                  |
+| `BASE_URL`          | `https://auth.corp.local`                       | La URL pública de PocketAuth24 detrás del proxy. Se convierte en `server_endpoint`.                                                                                               |
 | `DATABASE_URL`      | `postgres://b24auth:<password>@db:5432/b24auth` | Conexión a la base de datos.                                                                                                                                                      |
-| `PORTAL_ALLOWLIST`  | `portal.corp.local,crm.corp.local:8443`         | `host[:port]` de los portales que pueden registrarse; indica explícitamente los puertos no estándar.                                                                              |
+| `PORTAL_ALLOWLIST`  | `portal.corp.local,crm.corp.local:8443`         | Los portales (`host[:port]`) que pueden registrarse. Indica explícitamente los puertos no estándar.                                                                               |
 | `POSTGRES_PASSWORD` | `<password>`                                    | La misma contraseña que en `DATABASE_URL`.                                                                                                                                        |
 | `TRUST_PROXY`       | `true`                                          | Opcional. Solo acepta `true` o `false`. Pon `true` solo si el proxy sobrescribe `X-Forwarded-For` con la IP del cliente (nginx: `$remote_addr`, no `$proxy_add_x_forwarded_for`). |
 
-`BASE_URL`, `DATABASE_URL` y `PORTAL_ALLOWLIST` son obligatorias; el servidor no arranca sin ellas. Después:
+`BASE_URL`, `DATABASE_URL` y `PORTAL_ALLOWLIST` son obligatorias. Sin ellas, PocketAuth24 no arranca. Después:
 
 ```bash
 docker compose up -d                       # migrations run on start
 curl https://auth.corp.local/health        # {"status":"ok"}
 ```
 
-**Proxy inverso (obligatorio).** Redirige `https://<BASE_URL host>/` a `http://<app host>:3000/` con un certificado de tu CA interna. Deniega por defecto; permite cada ruta solo desde las IP de los servidores del portal, excepto `/oauth/token`, `/health` y, si lo deseas, la página de estado (`/`, `/assets/*`, `/api/status`). Haz coincidir las rutas con y sin la barra final.
+**Proxy inverso (obligatorio).** Redirige `https://<BASE_URL host>/` a `http://<app host>:3000/` con un certificado de tu CA interna. Deniega todo por defecto. Permite todas las rutas solo desde las direcciones IP de los servidores del portal. No apliques este límite a `/oauth/token`, `/health` y, si quieres, a la página de estado (`/`, `/assets/*`, `/api/status`). Haz coincidir cada ruta con y sin la barra final.
 
-**Apunta el portal al servidor.** En el panel de administración, "Línea de comandos PHP":
+**Apunta el portal a PocketAuth24.** En el panel de administración del portal, abre "Línea de comandos PHP" y ejecuta:
 
 ```php
 \Bitrix\Main\Config\Option::set('rest', 'oauth_server', 'https://auth.corp.local');
@@ -146,73 +146,73 @@ curl https://auth.corp.local/health        # {"status":"ok"}
 \Bitrix\Main\Config\Option::delete('rest', ['name' => 'service_client_secret']);
 ```
 
-También puedes definir `BITRIX_OAUTH_URL` en `local/php_interface/init.php` (anula la opción `oauth_server`; no edites `dbconn.php`). El portal se registra solo en su próxima llamada OAuth.
+También puedes definir `BITRIX_OAUTH_URL` en `local/php_interface/init.php`. Anula la opción `oauth_server`. No edites `dbconn.php`. El portal se registra en PocketAuth24 en su próxima llamada OAuth.
 
-**Después:** vuelve a crear las aplicaciones locales que se crearon cuando el portal usaba la nube y cambia las URL de token escritas en el código (`https://oauth.bitrix.info/oauth/token/`, usada por la mayoría de los SDK, incluido CRest) por `https://auth.corp.local/oauth/token/`, o apunta el DNS interno de los nombres de host de la nube al proxy con un certificado de la CA interna.
+**Después:** vuelve a crear las aplicaciones locales que creaste cuando el portal usaba la nube. La mayoría de los SDK, incluido CRest, tienen la URL de token `https://oauth.bitrix.info/oauth/token/` escrita en el código. Cámbiala por `https://auth.corp.local/oauth/token/`. O apunta el DNS interno de los nombres de host de la nube al proxy, con un certificado de tu CA interna.
 
 Pasos completos, operación y reversión: [docs/deployment.md](docs/deployment.md).
 
 ## 🖥️ Requisitos del lado del portal
 
-Encontrados durante la ejecución de extremo a extremo. Son comportamientos del portal, no defectos del servidor.
+Los encontramos durante la ejecución de extremo a extremo. Son manías del portal, no defectos de PocketAuth24.
 
-- El portal debe conocer su **URL pública y puerto reales**; de lo contrario, el marco de la app recibe un `DOMAIN` incorrecto y `BX24` no puede llegar al portal.
-- Las URL de aplicaciones y manejadores necesitan un **nombre de host con un punto** (un FQDN o una dirección IP); `localhost` se rechaza.
-- **Sirve el script `BX24` internamente.** Las apps suelen cargarlo desde `//api.bitrix24.com/api/v1/`, que es inalcanzable en una red cerrada.
+- El portal debe conocer su **URL pública y puerto reales**. Si no, el marco de la app recibe un `DOMAIN` incorrecto y `BX24` no puede llegar al portal.
+- Las URL de aplicaciones y manejadores necesitan un **nombre de host con un punto** (un FQDN o una dirección IP). El portal rechaza `localhost`.
+- **Sirve el script `BX24` dentro de tu red.** Las apps suelen cargarlo desde `//api.bitrix24.com/api/v1/`, y una red cerrada no puede llegar a esa dirección.
 - El portal rechaza las llamadas REST de un usuario que nunca ha iniciado sesión.
 
 ## ⚡ Rendimiento de la entrega de eventos
 
-**Cómo funciona la entrega.** El portal envía todos los eventos de una petición (hit) en un solo lote `rest.event.call`. El lote no tiene límite de tamaño y el portal no lo reintenta. El servidor responde `{"result":null}` de inmediato y entrega cada evento en segundo plano, en el mismo proceso. Cada evento recibe un intento de HTTP POST con un tiempo límite de 10 segundos.
+**Cómo funciona la entrega.** El portal pone todos los eventos de una petición (hit) en un solo lote `rest.event.call`. El lote no tiene límite de tamaño, y el portal nunca lo vuelve a enviar. PocketAuth24 responde `{"result":null}` de inmediato y luego entrega cada evento en segundo plano, en el mismo proceso. Cada evento recibe un intento de HTTP POST con un tiempo límite de 10 segundos.
 
 **Límites.** Los valores están fijados en [`src/config.ts`](src/config.ts).
 
-| Límite                                      | Valor | Cuándo se alcanza                                                                  |
-| ------------------------------------------- | ----- | ---------------------------------------------------------------------------------- |
-| Entregas simultáneas en total               | 200   | El evento se descarta y se registra como `event_dropped_overload`, `limit: global` |
-| Entregas simultáneas a un host de manejador | 100   | El evento se descarta y se registra como `event_dropped_overload`, `limit: host`   |
-| Tiempo límite de una entrega                | 10 s  | La entrega se detiene y se registra como `event_delivery_failed`                   |
+| Límite                                      | Valor | Qué pasa al alcanzar el límite                                                       |
+| ------------------------------------------- | ----- | ------------------------------------------------------------------------------------ |
+| Entregas simultáneas en total               | 200   | PocketAuth24 descarta el evento y registra `event_dropped_overload`, `limit: global` |
+| Entregas simultáneas a un host de manejador | 100   | PocketAuth24 descarta el evento y registra `event_dropped_overload`, `limit: host`   |
+| Tiempo límite de una entrega                | 10 s  | PocketAuth24 detiene la entrega y registra `event_delivery_failed`                   |
 
-Un host de manejador es el host y el puerto de la URL del manejador. El límite por host es la mitad del límite total. Así, un manejador lento puede ocupar como máximo 100 ranuras, y los demás manejadores conservan siempre 100 ranuras. El límite por host no es menor porque un hit del portal puede enviar un lote grande a un solo manejador, por ejemplo durante una importación masiva.
+Un host de manejador es el host y el puerto de la URL del manejador. El límite por host es la mitad del límite total. Así, un manejador lento ocupa como máximo 100 ranuras, y los demás manejadores conservan siempre 100. El límite por host no es menor porque un hit del portal puede enviar un lote grande a un solo manejador, por ejemplo en una importación masiva.
 
-**Qué le cuesta al servidor un manejador lento.** Una entrega que espera al manejador mantiene una conexión abierta y una pequeña cantidad de memoria. No mantiene una conexión a la base de datos: el servidor emite los tokens antes de enviar el POST. El bucle de eventos no se bloquea. Si todos los manejadores esperan hasta el tiempo límite, el servidor entrega como máximo 20 eventos por segundo en total y 10 eventos por segundo a un host. Los eventos siguientes se descartan.
+**Qué le cuesta a PocketAuth24 un manejador lento.** Mientras una entrega espera al manejador, mantiene una conexión abierta y un poco de memoria. No mantiene una conexión a la base de datos, porque PocketAuth24 emite los tokens antes de enviar el POST. El bucle de eventos no se bloquea. Si todos los manejadores esperan hasta el tiempo límite, PocketAuth24 entrega como máximo 20 eventos por segundo en total y 10 por segundo a un host. Descarta el resto.
 
 **Recomendaciones para los manejadores de las aplicaciones.**
 
 - Responde en menos de un segundo. Acepta el evento, ponlo en tu propia cola y luego procésalo.
 - Da a cada aplicación pesada su propio host de manejador. Así una aplicación lenta solo usa sus propias 100 ranuras.
-- Supervisa el log del servidor en busca de `event_dropped_overload`. El campo `limit` indica qué límite se alcanzó.
+- Supervisa el log de PocketAuth24 en busca de `event_dropped_overload`. Su campo `limit` indica qué límite se alcanzó.
 
-Los eventos descartados o fallidos no se reenvían. Una cola persistente con reintentos es una etapa posterior propuesta.
+PocketAuth24 no vuelve a enviar los eventos descartados o fallidos. Una cola persistente con reintentos es una etapa siguiente propuesta.
 
 ## 🧭 Limitaciones
 
-Conócelas antes de desplegar:
+Conócelas antes de desplegar, no después:
 
 - **Solo aplicaciones locales.** Las aplicaciones de Marketplace no funcionan, porque sus secretos están en la nube.
-- **Las apps existentes deben volver a crearse**, y las URL de token escritas en el código deben cambiarse o redirigirse.
-- **El proxy es el control de seguridad del registro.** El portal no envía ningún secreto compartido, así que quien llegue a `/oauth/register/` con la dirección de un portal permitido podría rotar las credenciales de ese portal. Restríngelo por IP.
-- **Los eventos se entregan una vez**, con un tiempo límite de 10 segundos. No se almacenan ni se reintentan, se pierden al reiniciar y se descartan por encima de 200 entregas simultáneas en total o 100 entregas simultáneas a un host de manejador. Consulta [Rendimiento de la entrega de eventos](#-rendimiento-de-la-entrega-de-eventos).
-- **Instancia única.** Las migraciones se ejecutan al arrancar sin bloqueo.
-- **No compatible:** comprobaciones de licencia, el grant `authorization_code`, tratamiento en el servidor de install/uninstall. Las duraciones de los tokens son fijas; los cuerpos de las peticiones están limitados a 10 MB.
-- **Panel de administración de solo lectura.** El panel muestra datos, pero no puede cambiar portales, aplicaciones ni tokens. No tiene SSO, autenticación de dos factores ni registro de auditoría. Restringe `/admin` y `/api/admin` en el proxy.
+- **Debes volver a crear las apps existentes** y cambiar o redirigir las URL de token escritas en el código.
+- **El proxy es lo que protege el registro.** El portal no envía ningún secreto compartido. Cualquiera que llegue a `/oauth/register/` con la dirección de un portal permitido puede rotar las credenciales de ese portal. Limita esta ruta por IP.
+- **Cada evento se entrega una vez**, con un tiempo límite de 10 segundos. PocketAuth24 no almacena ni reintenta los eventos. Los pierde al reiniciar y los descarta por encima de 200 entregas simultáneas en total o 100 a un host de manejador. Consulta [Rendimiento de la entrega de eventos](#-rendimiento-de-la-entrega-de-eventos).
+- **Solo una instancia.** Las migraciones se ejecutan al arrancar sin bloqueo.
+- **No compatible:** comprobaciones de licencia, el grant `authorization_code`, el tratamiento de la instalación y la desinstalación en el lado del servidor. Las duraciones de los tokens son fijas. El cuerpo de una petición puede tener como máximo 10 MB.
+- **El panel de administración es de solo lectura.** Muestra datos, pero no puede cambiar portales, aplicaciones ni tokens. No tiene SSO, autenticación de dos factores ni registro de auditoría. Limita `/admin` y `/api/admin` en el proxy.
 - **Probado** con el módulo `rest` del portal 26.1100.
 
 El trabajo planificado y los escenarios que hace posibles: consulta la [hoja de ruta](#-hoja-de-ruta).
 
 ## 🔭 Hoja de ruta
 
-Los elementos no tienen fechas. La primera tabla lista el trabajo planificado. La segunda tabla lista los escenarios que este trabajo hace posibles. Son ideas, no compromisos.
+Nada aquí tiene fecha, así que nada va con retraso. La primera tabla lista el trabajo planificado. La segunda lista los escenarios que este trabajo hace posibles. Son ideas, no compromisos.
 
 ### Trabajo planificado
 
-| Elemento                                                                                                                   | Qué añade                                                                                                                                                                                     |
-| -------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **OAuth 2.0 completo e introspection**                                                                                     | El grant `authorization_code`, la revocación de tokens al desinstalar, las comprobaciones de scope.                                                                                           |
-| **Cola persistente de eventos**                                                                                            | El servidor almacena los eventos, reintenta las entregas fallidas y conserva los eventos tras un reinicio.                                                                                    |
-| **Modo de respaldo upstream** ([#10](https://github.com/serg-vostrikov-bitrix/b24auth-server/issues/10))                   | El servidor reenvía las llamadas al servidor OAuth en la nube y las responde él mismo cuando la nube no responde. Las aplicaciones locales siguen funcionando durante una caída de la nube.   |
-| **Operaciones**                                                                                                            | Migración de un portal ya registrado. Un aviso cuando un nuevo registro sobrescribe las credenciales de un portal ([#23](https://github.com/serg-vostrikov-bitrix/b24auth-server/issues/23)). |
-| **Guía para copias de desarrollo y de staging** ([#22](https://github.com/serg-vostrikov-bitrix/b24auth-server/issues/22)) | Reglas para los escenarios de desarrollo y de staging de [Casos de uso](#-casos-de-uso).                                                                                                      |
+| Elemento                                                                                                                   | Qué añade                                                                                                                                                                                              |
+| -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **OAuth 2.0 completo e introspection**                                                                                     | El grant `authorization_code`, la revocación de tokens al desinstalar, las comprobaciones de scope.                                                                                                    |
+| **Cola persistente de eventos**                                                                                            | PocketAuth24 almacena los eventos, reintenta las entregas fallidas y conserva los eventos tras un reinicio.                                                                                            |
+| **Modo de respaldo upstream** ([#10](https://github.com/serg-vostrikov-bitrix/b24auth-server/issues/10))                   | PocketAuth24 reenvía las llamadas al servidor OAuth en la nube y las responde él mismo cuando la nube no responde. Las aplicaciones locales siguen funcionando mientras la nube está caída.            |
+| **Operaciones**                                                                                                            | Migración de un portal que ya está registrado. Un aviso cuando un nuevo registro sobrescribe las credenciales de un portal ([#23](https://github.com/serg-vostrikov-bitrix/b24auth-server/issues/23)). |
+| **Guía para copias de desarrollo y de staging** ([#22](https://github.com/serg-vostrikov-bitrix/b24auth-server/issues/22)) | Reglas para los escenarios de desarrollo y de staging de [Casos de uso](#-casos-de-uso).                                                                                                               |
 
 ### Escenarios que este trabajo hace posibles
 
@@ -236,13 +236,13 @@ La CI se ejecuta en los push a `main` y en las pull requests ([`.github/workflow
 
 Dependabot revisa cada semana los paquetes npm, las GitHub Actions y las imágenes base de Docker.
 
-Todavía no hay ningún paso automático de release o publicación: ni pipeline de CD ni imagen publicada. La imagen la construyes tú.
+La mitad CD de este título todavía no existe: no hay pipeline de release ni imagen publicada. La imagen la construyes tú.
 
 ## 📚 Documentación
 
 - [Guía de despliegue](docs/deployment.md): requisitos, pasos, reglas del proxy, operación, reversión.
 - [Lista de comprobación de extremo a extremo](docs/e2e-checklist.md): la verificación de 10 pasos en red cerrada.
-- [Captura de protocolo](docs/protocol-capture.md): cómo se grabó el tráfico de la nube para las pruebas de contrato.
+- [Captura de protocolo](docs/protocol-capture.md): cómo grabamos el tráfico de la nube para las pruebas de contrato.
 - [Investigación](docs/research/2026-11-18-oauth-server-analysis.md): análisis del protocolo y hoja de ruta propuesta.
 - [Manual de usuario](docs/launchkit/01-user-manual.en.md): escenarios, casos de error, límites.
 
