@@ -2,7 +2,7 @@
 
 - review_mode: thorough
 - tdd_mode: tdd
-- Done: T1-T10 (… b672910)
-- Pending: manual TTY prompt check (Task 3); manual browser check after Task 11
-- Current task: "Task 11 complete: Users page" (OpenSpec 6.4)
+- Done: T1-T11 (… fb682f9); manual browser check done
+- Pending: manual TTY prompt check (Task 3)
+- Current task: "Task 12 complete: Documentation" (OpenSpec 7.1, 7.2)
 - Stage: implementing

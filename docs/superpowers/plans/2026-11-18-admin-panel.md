@@ -3408,7 +3408,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ### Task 11: Users page
 
-- [ ] Task 11 complete: Users page
+- [x] Task 11 complete: Users page
 
 **Covers tasks.md:** 6.4 (user management page)
 
@@ -3420,7 +3420,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - Consumes: `apiGet`, `apiSend`, `ApiError`, `Role` (Task 9); `/api/admin/users` routes (Task 6).
 - Produces: `UsersPage` (named export), registered only for the superuser.
 
-- [ ] **Step 1: Write `web/src/admin/UsersPage.tsx`**
+- [x] **Step 1: Write `web/src/admin/UsersPage.tsx`**
 
 ```tsx
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
@@ -3577,7 +3577,7 @@ export function UsersPage() {
 }
 ```
 
-- [ ] **Step 2: Register the route for the superuser only** in `web/src/admin/AdminApp.tsx`
+- [x] **Step 2: Register the route for the superuser only** in `web/src/admin/AdminApp.tsx`
 
 Add `import { UsersPage } from './UsersPage';`. After the `events` route, add:
 
@@ -3587,7 +3587,7 @@ Add `import { UsersPage } from './UsersPage';`. After the `events` route, add:
 
 For a viewer, `/admin/users` matches `*` and goes to `/admin/portals`.
 
-- [ ] **Step 3: Add the dialog and form styles** — append to `web/src/admin/admin.css`
+- [x] **Step 3: Add the dialog and form styles** — append to `web/src/admin/admin.css`
 
 ```css
 .admin-inline-form {
@@ -3645,12 +3645,12 @@ For a viewer, `/admin/users` matches `*` and goes to `/admin/portals`.
 }
 ```
 
-- [ ] **Step 4: Check types, build and format**
+- [x] **Step 4: Check types, build and format**
 
 Run: `npm run web:typecheck && npm run web:build && npm run lint`
 Expected: no errors.
 
-- [ ] **Step 5: Manual browser check** (full UI pass from the Design Doc, section 8)
+- [x] **Step 5: Manual browser check** (full UI pass from the Design Doc, section 8)
 
 1. As the superuser, open Users: the superuser row has no action buttons.
 2. Create a viewer: the dialog shows a 20-character password, "This password is shown once." and Copy; Copy puts the password in the clipboard; Close removes it, and nothing shows it again.
@@ -3659,7 +3659,7 @@ Expected: no errors.
 5. As the superuser, reset the viewer password: the viewer's next action leads to the login page. Delete the viewer after the confirmation: the same happens.
 6. Repeat the narrow layout check below 720 px.
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 git add web/src/admin
