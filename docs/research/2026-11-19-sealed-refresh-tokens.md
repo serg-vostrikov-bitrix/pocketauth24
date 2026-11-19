@@ -57,6 +57,7 @@ Add a table `grants`. One row is one distinct combination of the data that a tok
 | `params` | jsonb, as stored today |
 | `params_hash` | sha256 of the canonical JSON of `params` |
 | `salt` | 16 random bytes, part of the HMAC input, never part of the token |
+| `revoked_before` | nullable timestamp; tokens with an earlier `iat` are rejected |
 | `created_at`, `last_issued_at` | |
 
 - Unique key: (`application_id`, `user_id`, `scope`, `params_hash`).
@@ -78,16 +79,32 @@ and alphabet as `randomHex(32)` today, so clients see no change.
 | `iat`, issue time in seconds | 4 |
 | HMAC-SHA256 over the fields above and the grant `salt`, truncated | 23 (184 bits) |
 
+The HMAC input has a fixed binary layout: the version and `key_id` byte, `grant_id` as a
+big-endian uint32, `iat` as a big-endian uint32, then the 16-byte `salt`. Thus the input has only
+one reading.
+
 Refresh procedure:
 
-1. Parse the token. If the HMAC does not match, look the token up in `token_pairs` (old format,
-   section 3.5). Never reject a token only because of its first byte: 1 old token in 256 has
-   a "valid" version byte by chance.
+1. Parse the token. If the `key_id` is unknown or the HMAC does not match, look the token up in
+   `token_pairs` (old format, section 3.5). Compare the MAC with `timingSafeEqual`. Never reject a
+   token only because of its first byte: 1 old token in 256 has a "valid" version byte by chance.
 2. Load the grant. If it does not exist, return `invalid_grant`. A deleted application deletes
    its grants, so its tokens stop working.
-3. If `iat + REFRESH_TTL_SECONDS` is in the past, return `invalid_grant`.
-4. Check `client_id` and `client_secret`, as today.
+3. If `iat + REFRESH_TTL_SECONDS` is in the past, or `iat` is earlier than `revoked_before`,
+   return `invalid_grant`.
+4. Load the application through `grant.application_id`, never through the presented `client_id`.
+   The presented `client_id` must be equal to the client ID of that application. Check
+   `client_secret` against its `secretHash` with `hashMatches`. Add a negative test: the
+   credentials of application B must not refresh a token of application A.
 5. Issue a new pair for the same grant.
+
+`grant_id` has 4 bytes in the token, but the column is `bigserial`. Refuse to issue a token for a
+grant with `id > 2^32 - 1`. Do not let the value wrap silently.
+
+**Revocation.** A sealed refresh token stays valid until its `iat` expires. The server cannot
+delete one token, as it can delete one row today. To revoke the tokens of a grant, set
+`revoked_before` to the current time. Set it on uninstall, on a revocation of the user or the
+application, and from the admin UI.
 
 The `grant_id` and `iat` are readable by the holder of the token. This is harmless: a holder
 cannot forge a token without the key, and a refresh also needs `client_secret`.
@@ -98,16 +115,22 @@ Keep the access token random (64 hex). Store it in a table `access_tokens`: `acc
 `grant_id`, `expires_at`. The hourly cleanup deletes expired rows.
 
 - The table holds about one to two hours of issued access tokens.
-- `rest.check` reads `scope` and `params` from the grant.
+- `rest.check` reads `scope` and `params` from the grant. The join `access_tokens` → `grants` →
+  `applications` must keep the filter `applications.portal_id = portal.id`, as today.
 - Do not seal the access token. `rest.check` does not need `client_secret`. If the key leaks,
   sealed access tokens let an attacker call portal REST as any user (section 5, risk 3).
 
 ### 3.4 Key
 
-- Add the env variable `TOKEN_KEY` (32 random bytes, hex). Keep old keys by `key_id` for
-  180 days after a rotation.
-- Store a key fingerprint in the database (HMAC of a fixed string). At start, compare it with
-  `TOKEN_KEY`. If they differ, stop with the log event `token_key_mismatch`.
+- Add the env variable `TOKEN_KEYS`: a keyring that maps each `key_id` to a key of 32 random
+  bytes, hex. The highest `key_id` signs new tokens. After a planned rotation, keep the old key
+  for 180 days.
+- If a key is compromised, remove it at once. All tokens that it signed become invalid on
+  purpose.
+- Derive two subkeys from each key with HKDF: `info = "refresh-token-v1"` for the token MAC and
+  `info = "key-fingerprint"` for the fingerprint.
+- Store a fingerprint of each key in the database (HMAC of a fixed string). At start, compare the
+  fingerprint of every `key_id`. If one differs, stop with the log event `token_key_mismatch`.
 - State in `README.md` (all six languages) and `docs/deployment.md`: the key is part of the
   backup. A database dump without the key cannot restore the tokens.
 
@@ -117,7 +140,8 @@ Keep the access token random (64 hex). Store it in a table `access_tokens`: `acc
 - New pairs use the new format only. `token_pairs` empties itself in 180 days. Then remove the
   table and the old code path.
 - Token pruning (#28) is not necessary for new tokens. Keep it for `token_pairs` until the table
-  is empty.
+  is empty. Note: pruning no longer limits how many refresh tokens of a grant are live. All
+  sealed refresh tokens of a grant stay valid until they expire or `revoked_before` stops them.
 
 ### 3.6 Places to change
 
@@ -139,8 +163,10 @@ Keep the access token random (64 hex). Store it in a table `access_tokens`: `acc
 - For the fallback state, store the hash of the latest upstream refresh token per grant. This
   keeps one row per grant instead of one row per refresh. A client can present an older upstream
   refresh token; then the fallback state rejects it. Check this on real traffic.
-- Local refresh tokens that the server issues in the fallback state are sealed. After recovery
-  the server accepts them until they expire. This costs no storage.
+- Local refresh tokens that the server issues in the fallback state are sealed. Mark them with a
+  version bit and give them a short TTL. The upstream can revoke the application or the user
+  during the outage, and a 180-day local token would not see this. After recovery, reject a
+  marked token or exchange it once through the upstream.
 
 ## 5. Risks (premortem 2026-11-19)
 
