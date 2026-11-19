@@ -1,7 +1,9 @@
+import { eq } from 'drizzle-orm';
 import { afterEach, beforeEach, expect, it } from 'vitest';
-import { applications, portals } from '../../src/schema.js';
+import { applications, eventCounters, portals, tokenPairs } from '../../src/schema.js';
 import {
   addApp,
+  authorize,
   createSuperuser,
   loginAs,
   OTHER_PORTAL,
@@ -190,4 +192,139 @@ it('A viewer session can read the data routes', async () => {
   const res = await list('portals', {}, viewerCookie);
   expect(res.status).toBe(200);
   expect(res.body).toMatchObject({ total: 1, page: 1, pageSize: 50 });
+});
+
+async function seedTokens() {
+  const first = await registerPortal(t.app);
+  const second = await registerPortal(t.app, `${OTHER_PORTAL}/`);
+  const firstApp = await addApp(t.app, first);
+  const secondApp = await addApp(t.app, second);
+  const issued = await authorize(t.app, first, firstApp.client_id); // LOCAL_USER 5
+  await authorize(t.app, first, firstApp.client_id, { PARAMS: { LOCAL_USER: '7' } });
+  await authorize(t.app, second, secondApp.client_id); // LOCAL_USER 5
+  return { issued, firstApp };
+}
+
+it('GET /tokens returns metadata and no token, hash or params', async () => {
+  const { issued, firstApp } = await seedTokens();
+  const res = await list('tokens', { 'filter[userId]': '7' });
+  expect(res.body.total).toBe(1);
+  const [row] = res.body.rows;
+  expect(Object.keys(row).sort()).toEqual([
+    'accessExpiresAt',
+    'application',
+    'clientId',
+    'createdAt',
+    'id',
+    'portal',
+    'refreshExpiresAt',
+    'scope',
+    'state',
+    'userId',
+  ]);
+  expect(row).toMatchObject({
+    portal: PORTAL,
+    application: 'Demo app',
+    clientId: firstApp.client_id,
+    userId: 7,
+    state: 'active',
+  });
+  const all = await list('tokens');
+  for (const word of [/hash/i, /params/i, /secret/i, /TZ_OFFSET/, /LOCAL_USER/]) {
+    expect(all.text).not.toMatch(word);
+  }
+  expect(all.text).not.toContain(issued.access_token);
+  expect(all.text).not.toContain(issued.refresh_token);
+  for (const pair of await t.db.select().from(tokenPairs)) {
+    expect(all.text).not.toContain(pair.accessHash);
+    expect(all.text).not.toContain(pair.refreshHash);
+  }
+});
+
+it('Tokens filter by portal origin and user ID together', async () => {
+  await seedTokens();
+  const res = await list('tokens', { 'filter[portal]': 'portal.test', 'filter[userId]': '5' });
+  expect(res.body.total).toBe(1);
+  expect(res.body.rows[0]).toMatchObject({ portal: PORTAL, userId: 5 });
+});
+
+it('The token state filter uses the access token expiry', async () => {
+  await seedTokens();
+  const [first] = await t.db.select({ id: tokenPairs.id }).from(tokenPairs).limit(1);
+  await t.db
+    .update(tokenPairs)
+    .set({ accessExpiresAt: new Date(Date.now() - 1000) })
+    .where(eq(tokenPairs.id, first.id));
+  const expired = await list('tokens', { 'filter[state]': 'expired' });
+  expect(expired.body.rows.map((r) => [r.id, r.state])).toEqual([[first.id, 'expired']]);
+  expect((await list('tokens', { 'filter[state]': 'active' })).body.total).toBe(2);
+  const bad = await list('tokens', { 'filter[state]': 'old' });
+  expect(bad.status).toBe(400);
+  expect(bad.body).toEqual({ error: 'invalid_filter', column: 'state' });
+});
+
+it('GET /events filters by outcome and day, newest day first', async () => {
+  await t.db.insert(eventCounters).values([
+    { day: '2026-01-01', outcome: 'delivered', count: 3 },
+    { day: '2026-01-02', outcome: 'delivered', count: 4 },
+    { day: '2026-01-02', outcome: 'failed', count: 1 },
+    { day: '2026-01-03', outcome: 'dropped', count: 2 },
+  ]);
+  const all = await list('events');
+  expect(Object.keys(all.body.rows[0]).sort()).toEqual(['count', 'day', 'outcome']);
+  expect(all.body.rows.map((r) => r.day)).toEqual([
+    '2026-01-03',
+    '2026-01-02',
+    '2026-01-02',
+    '2026-01-01',
+  ]);
+  const delivered = await list('events', {
+    'filter[outcome]': 'delivered',
+    'filter[day.from]': '2026-01-02',
+  });
+  expect(delivered.body.rows).toEqual([{ day: '2026-01-02', outcome: 'delivered', count: 4 }]);
+});
+
+it('A viewer reads the tokens table', async () => {
+  await seedTokens();
+  const created = await t.app.inject({
+    method: 'POST',
+    url: '/api/admin/users',
+    headers: { cookie },
+    payload: { login: 'viewer1' },
+  });
+  const viewer = created.json<{ login: string; password: string }>();
+  const viewerCookie = await loginAs(t.app, viewer.login, viewer.password);
+  const res = await list('tokens', {}, viewerCookie);
+  expect(res.status).toBe(200);
+  expect(res.body.total).toBe(3);
+});
+
+it('The data API has no write routes', async () => {
+  await seedTokens();
+  const res = await t.app.inject({
+    method: 'DELETE',
+    url: '/api/admin/tokens/1',
+    headers: { cookie },
+    payload: {},
+  });
+  expect(res.statusCode).toBe(404);
+  expect(await t.db.$count(tokenPairs)).toBe(3);
+});
+
+it('A user ID filter beyond the int4 range returns 400, not 500', async () => {
+  const res = await list('tokens', { 'filter[userId]': '9999999999' });
+  expect(res.status).toBe(400);
+  expect(res.body).toEqual({ error: 'invalid_filter', column: 'userId' });
+});
+
+it('A "to" bound on 9999-12-31 means no upper bound, not a 500', async () => {
+  await t.db.insert(eventCounters).values([{ day: '2026-01-01', outcome: 'delivered', count: 1 }]);
+  await registerPortal(t.app);
+  const portalsRes = await list('portals', { 'filter[createdAt.to]': '9999-12-31' });
+  expect(portalsRes.status).toBe(200);
+  expect(portalsRes.body.total).toBe(1);
+  const events = await list('events', { 'filter[day.to]': '9999-12-31' });
+  expect(events.status).toBe(200);
+  expect(events.body.total).toBe(1);
 });

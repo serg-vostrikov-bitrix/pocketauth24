@@ -44,7 +44,9 @@ function validDate(value: string): boolean {
 }
 
 // A date-only "to" includes the whole day: compare with the start of the next day.
-function upperBound(value: string): string {
+// 9999-12-31 has no next day that PostgreSQL accepts in this format, so it sets no upper bound.
+function upperBound(value: string): string | undefined {
+  if (value === '9999-12-31') return undefined;
   if (value.length !== 10) return value;
   const next = new Date(`${value}T00:00:00Z`);
   next.setUTCDate(next.getUTCDate() + 1);
@@ -79,7 +81,8 @@ export function parseQuery(
         return { ok: false, column: column.key };
       }
       if (from !== undefined) conditions.push(sql`${column.sql} >= ${from}`);
-      if (to !== undefined) conditions.push(sql`${column.sql} < ${upperBound(to)}`);
+      const bound = to === undefined ? undefined : upperBound(to);
+      if (bound !== undefined) conditions.push(sql`${column.sql} < ${bound}`);
     }
   }
   const rawPage = param(query, 'page') ?? '1';
