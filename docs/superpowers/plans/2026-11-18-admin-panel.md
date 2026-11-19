@@ -1173,7 +1173,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ### Task 5: Login rate limit, TRUST_PROXY and session cleanup
 
-- [ ] Task 5 complete: Login rate limit, TRUST_PROXY and session cleanup
+- [x] Task 5 complete: Login rate limit, TRUST_PROXY and session cleanup
 
 **Covers tasks.md:** 3.3 (rate limit, `TRUST_PROXY`), 3.4
 
@@ -1186,7 +1186,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - Consumes: `deleteExpiredSessions` (Task 4), `loginRoute` (Task 4).
 - Produces: `type LoginLimiter = { blocked(ip: string): boolean; fail(ip: string): void; reset(ip: string): void }`; `createLoginLimiter(options: { max: number; windowMs: number }): LoginLimiter`. `loginRoute(app: FastifyInstance, db: Db, limiter: LoginLimiter): void` (new third parameter). `Config.trustProxy: boolean`.
 
-- [ ] **Step 1: Write the failing unit test** `test/unit/rate-limit.test.ts`
+- [x] **Step 1: Write the failing unit test** `test/unit/rate-limit.test.ts`
 
 ```ts
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
@@ -1226,7 +1226,7 @@ it('reset clears the failures of an IP', () => {
 });
 ```
 
-- [ ] **Step 2: Add the failing integration tests** to `test/integration/admin-auth.test.ts`
+- [x] **Step 2: Add the failing integration tests** to `test/integration/admin-auth.test.ts`
 
 Add `import { deleteExpiredSessions } from '../../src/admin/sessions.js';` and `import { eq } from 'drizzle-orm';`, then append:
 
@@ -1264,12 +1264,12 @@ it('deleteExpiredSessions deletes only expired sessions', async () => {
 });
 ```
 
-- [ ] **Step 3: Run the tests to make sure they fail**
+- [x] **Step 3: Run the tests to make sure they fail**
 
 Run: `npm test -- test/unit/rate-limit.test.ts test/integration/admin-auth.test.ts`
 Expected: FAIL: `rateLimit.js` does not exist; the sixth login returns 200, not 429.
 
-- [ ] **Step 4: Write `src/admin/rateLimit.ts`**
+- [x] **Step 4: Write `src/admin/rateLimit.ts`**
 
 ```ts
 export type LoginLimiter = {
@@ -1306,7 +1306,7 @@ export function createLoginLimiter(options: { max: number; windowMs: number }): 
 }
 ```
 
-- [ ] **Step 5: Use the limiter in the login route** (`src/admin/auth.ts`)
+- [x] **Step 5: Use the limiter in the login route** (`src/admin/auth.ts`)
 
 Add `import type { LoginLimiter } from './rateLimit.js';`. Change the signature to `export function loginRoute(app: FastifyInstance, db: Db, limiter: LoginLimiter): void`. In the handler:
 
@@ -1318,7 +1318,7 @@ Add `import type { LoginLimiter } from './rateLimit.js';`. Change the signature 
 
 In the failure branch, call `limiter.fail(ip);` before the log line. In the success branch, call `limiter.reset(ip);` before `createSession`.
 
-- [ ] **Step 6: Create the limiter** in `src/admin/index.ts`
+- [x] **Step 6: Create the limiter** in `src/admin/index.ts`
 
 ```ts
 import { createLoginLimiter } from './rateLimit.js';
@@ -1329,7 +1329,7 @@ export async function registerAdmin(app: FastifyInstance, deps: { db: Db }): Pro
       loginRoute(admin, deps.db, limiter);
 ```
 
-- [ ] **Step 7: Add `TRUST_PROXY`**
+- [x] **Step 7: Add `TRUST_PROXY`**
 
 In `src/config.ts`, add `trustProxy: boolean;` to `Config`, and in `loadConfig` add:
 
@@ -1349,7 +1349,7 @@ In `.env.example`, append:
 TRUST_PROXY=false
 ```
 
-- [ ] **Step 8: Add the hourly session cleanup** in `src/server.ts`
+- [x] **Step 8: Add the hourly session cleanup** in `src/server.ts`
 
 Add `import { deleteExpiredSessions } from './admin/sessions.js';` and extend the interval body:
 
@@ -1365,12 +1365,12 @@ const cleanup = setInterval(() => {
 }, CLEANUP_INTERVAL_MS);
 ```
 
-- [ ] **Step 9: Run the tests to make sure they pass**
+- [x] **Step 9: Run the tests to make sure they pass**
 
 Run: `npm test -- test/unit/rate-limit.test.ts test/integration/admin-auth.test.ts`
 Expected: PASS (3 + 11 tests).
 
-- [ ] **Step 10: Full suite, types, lint, commit**
+- [x] **Step 10: Full suite, types, lint, commit**
 
 Run: `npm test && npm run typecheck && npm run lint`
 
