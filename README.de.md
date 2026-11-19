@@ -56,6 +56,20 @@ Teams in geschlossenen Firmennetzwerken und regulierten Umgebungen haben dann zw
 | **Betrieb**              | Eine öffentliche Statusseite unter `/` (Zustand von Dienst und Datenbank, Anzahl der Portale, Anwendungen, aktiven Token-Paare und Ereigniszustellungen) und dieselben Daten als JSON unter `/api/status`. `/health` liefert HTTP 503, wenn PostgreSQL nicht antwortet. JSON-Logs, abschließende Schrägstriche werden auf allen Pfaden akzeptiert.                                       |
 | **Admin-Bereich**        | Ein Admin-Bereich für mehrere Benutzer unter `/admin`: schreibgeschützte, durchsuchbare Tabellen mit Portalen, lokalen Anwendungen, Token-Metadaten (keine Tokens oder Hashes) und täglichen Ereigniszählern. Das Passwort des Superusers wird nur über die CLI gesetzt; der Superuser verwaltet die Betrachter im Bereich. Sitzungen dauern 12 Stunden; Anmeldungen sind ratenbegrenzt. |
 
+## 💡 Einsatzszenarien
+
+Der Server hilft auch außerhalb geschlossener Netze: überall dort, wo ein Portal den Cloud-OAuth-Server nicht verwenden darf. Diese Szenarien funktionieren schon heute.
+
+| Szenario                                | So setzen Sie den Server ein                                                                                                                                                                                                                                                                                                                                                          |
+| --------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Entwicklerportal**                    | Betreiben Sie ein lokales On-Premise-Portal für die Anwendungsentwicklung und verbinden Sie es mit einer eigenen Serverinstanz. Das Portal registriert sich nicht in der Cloud und kommt daher nicht mit einem Produktivportal mit demselben Lizenzschlüssel in Konflikt.                                                                                                             |
+| **Staging-, Test- und Schulungskopien** | Stellen Sie eine Kopie der Produktion wieder her und verbinden Sie sie mit einer separaten Serverinstanz. Löschen Sie die Service-Zugangsdaten in der Kopie (siehe [Schnellstart](#-schnellstart)) und legen Sie ihre lokalen Anwendungen neu an. Verbinden Sie die Kopie nicht mit dem Produktivserver: Die Kopie bringt die Service-Zugangsdaten der Produktion aus dem Backup mit. |
+| **End-to-End-Tests in CI**              | Starten Sie einen Portal-Container und den Server in einem Compose-Stack. Anwendungsinstallation, `ONAPPINSTALL`, REST-Aufrufe und Token-Erneuerung laufen ohne Cloud, daher hängen die Testergebnisse von keinem externen Dienst ab.                                                                                                                                                 |
+| **Ein Server für Kundenportale**        | Ein Integrator betreibt eine Instanz für die On-Premise-Portale mehrerer Kunden. Tragen Sie jedes Portal in `PORTAL_ALLOWLIST` ein. Der Server hält die Daten jedes Portals getrennt.                                                                                                                                                                                                 |
+| **Übersicht der lokalen Anwendungen**   | Das Admin-Panel listet die lokalen Anwendungen aller Portale auf und zeigt, welche davon aktive Tokens haben. Diese Übersicht erhalten Sie ohne Anmeldung an jedem Portal.                                                                                                                                                                                                            |
+
+Eine Anleitung für Entwickler- und Staging-Kopien ist geplant: [#22](https://github.com/serg-vostrikov-bitrix/b24auth-server/issues/22).
+
 ## ⚙️ So funktioniert es
 
 ```mermaid
@@ -172,7 +186,7 @@ Ein Handler-Host ist Host und Port der Handler-URL. Das Host-Limit ist die Hälf
 
 Verworfene oder fehlgeschlagene Ereignisse werden nicht erneut gesendet. Eine persistente Warteschlange mit Wiederholungen ist eine vorgeschlagene weitere Stufe.
 
-## 🧭 Einschränkungen und Roadmap
+## 🧭 Einschränkungen
 
 Kennen Sie diese Punkte vor dem Einsatz:
 
@@ -185,7 +199,31 @@ Kennen Sie diese Punkte vor dem Einsatz:
 - **Schreibgeschützter Admin-Bereich.** Der Admin-Bereich zeigt Daten an, kann aber Portale, Anwendungen oder Tokens nicht ändern. Er hat kein SSO, keine Zwei-Faktor-Authentifizierung und kein Audit-Log. Beschränken Sie `/admin` und `/api/admin` am Proxy.
 - **Getestet** mit dem Portal-Modul `rest` 26.1100.
 
-Vorgeschlagene weitere Stufen, ohne Termine: volles OAuth 2.0 und Introspection (einschließlich Widerruf bei Deinstallation und Scope-Prüfungen), eine persistente Ereigniswarteschlange mit Wiederholungen und Betriebsfunktionen wie die Migration eines bereits registrierten Portals.
+Geplante Arbeiten und die Szenarien, die sie ermöglichen: siehe [Roadmap](#-roadmap).
+
+## 🔭 Roadmap
+
+Die Punkte haben keine Termine. Die erste Tabelle listet geplante Arbeiten auf. Die zweite Tabelle listet Szenarien auf, die diese Arbeiten möglich machen. Das sind Ideen, keine Zusagen.
+
+### Geplante Arbeiten
+
+| Punkt                                                                                                                       | Was er bringt                                                                                                                                                                                                        |
+| --------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Vollständiges OAuth 2.0 und Introspection**                                                                               | Den Grant `authorization_code`, den Widerruf von Tokens bei der Deinstallation, Scope-Prüfungen.                                                                                                                     |
+| **Persistente Ereigniswarteschlange**                                                                                       | Der Server speichert Ereignisse, wiederholt fehlgeschlagene Zustellungen und behält Ereignisse über einen Neustart hinweg.                                                                                           |
+| **Upstream-Fallback-Modus** ([#10](https://github.com/serg-vostrikov-bitrix/b24auth-server/issues/10))                      | Der Server leitet Aufrufe an den Cloud-OAuth-Server weiter und beantwortet sie selbst, wenn die Cloud nicht antwortet. Lokale Anwendungen arbeiten bei einem Cloud-Ausfall weiter.                                   |
+| **Betrieb**                                                                                                                 | Migration eines bereits registrierten Portals. Eine Warnung, wenn eine erneute Registrierung die Zugangsdaten eines Portals überschreibt ([#23](https://github.com/serg-vostrikov-bitrix/b24auth-server/issues/23)). |
+| **Anleitung für Entwickler- und Staging-Kopien** ([#22](https://github.com/serg-vostrikov-bitrix/b24auth-server/issues/22)) | Regeln für die Entwickler- und Staging-Szenarien in [Einsatzszenarien](#-einsatzszenarien).                                                                                                                          |
+
+### Szenarien, die diese Arbeiten ermöglichen
+
+| Szenario                                                                                                                          | Was es braucht                                              |
+| --------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| **Ereignis-Inspektor.** Ereignisse aufzeichnen, im Admin-Panel anzeigen und erneut an den Handler senden, um Handler zu debuggen. | Die persistente Ereigniswarteschlange.                      |
+| **Notfall-Widerruf.** Alle Tokens einer Anwendung oder eines Portals nach einem Leck widerrufen.                                  | Den Widerruf von Tokens und Schreibaktionen im Admin-Panel. |
+| **Fehlertests.** Kurze Token-Laufzeiten, ein erzwungenes `expired_token`, langsame Handler, Test-Tokens aus der CLI.              | Konfigurierbare Token-Laufzeiten. Heute sind sie fest.      |
+| **Ereignisbus.** Portal-Ereignisse an einen Message Broker für interne Systeme senden.                                            | Die persistente Ereigniswarteschlange.                      |
+| **Zugriffsaudit.** Ein Protokoll, wer wann ein Token für welche Anwendung erhalten hat.                                           | Ein Audit-Log.                                              |
 
 ## 🔁 CI/CD
 
