@@ -374,6 +374,21 @@ describe('Pruning', () => {
     expect(await refreshError(app, backend.refresh_token)).toBeNull();
   });
 
+  it('A repeat refresh keeps the time of the first use', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    const portal = await registerPortal(t.app);
+    const app = await addApp(t.app, portal);
+    const [first] = await chain(t, portal, app, 1);
+    const firstUse = Date.now();
+
+    vi.setSystemTime(firstUse + 60_000);
+    await renew(t, app, first);
+
+    const rows = await t.db.select().from(tokenPairs);
+    const used = rows.filter((row) => row.refreshedAt !== null);
+    expect(used.map((row) => row.refreshedAt?.getTime())).toEqual([firstUse]);
+  });
+
   it('Live access tokens are kept', async () => {
     const portal = await registerPortal(t.app);
     const app = await addApp(t.app, portal);

@@ -62,6 +62,7 @@ async function buildAuth(ctx: MethodContext, item: EventItem): Promise<Record<st
     scope: app.scope,
     userId: localUser,
     params: item.auth ?? {},
+    markUsed: additional.sendRefreshToken !== '1',
   });
   return {
     ...tokens,

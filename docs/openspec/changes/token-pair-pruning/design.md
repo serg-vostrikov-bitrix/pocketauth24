@@ -63,8 +63,17 @@ refresh token from the install and refreshes it only when it calls the API. Page
 pairs in the meantime. A "last X of all pairs" rule deleted the backend's pair after X page opens
 (found in code review). A used pair has a newer pair in its chain, so its owner has moved on.
 
-Trade-off: pairs from page opens and events whose refresh token nobody uses stay for 180 days,
-as before. Their count follows real use, not the refresh timer.
+Event auth without `sendRefreshToken` does not deliver the refresh token, so nobody can use it.
+Such a pair is inserted with `refreshed_at` set and can be pruned like a used pair.
+
+Trade-off: pairs from page opens and from events with a delivered refresh token stay for 180
+days if nobody uses their refresh token, as before. Their count follows real use, not the
+refresh timer.
+
+A refresh marks the pair with `UPDATE ... SET refreshed_at = coalesce(refreshed_at, $now)
+RETURNING id` inside the issue transaction. If no row comes back, the pair was pruned after
+`refresh()` read it, and the server answers `invalid_grant`. The row lock also serializes two
+refreshes of the same token.
 
 The second condition, an expired access token:
 
@@ -106,7 +115,9 @@ at start (existing behaviour). Plain `CREATE INDEX` locks writes to the table wh
   `TOKEN_PRUNING=false`. The README says this.
 - [Index creation on a large existing table blocks writes at start] → the table on current
   installations is small (product is new). Not mitigated further.
-- [One extra `DELETE` per issue] → it uses the new composite index and touches few rows.
+- [One extra `DELETE` per issue] → a partial index on used pairs,
+  `(application_id, user_id, created_at) WHERE refreshed_at IS NOT NULL`, keeps it small even
+  when an owner has many unused pairs.
 - [Existing installations have many old rows] → their `refreshed_at` is null, so pruning does
   not touch them.
   The rest go with the hourly cleanup after 180 days. No one-time backfill.

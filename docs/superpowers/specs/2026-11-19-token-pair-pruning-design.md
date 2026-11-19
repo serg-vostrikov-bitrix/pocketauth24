@@ -67,6 +67,16 @@ more used pair than `keep`, never fewer.
 
 `rest.authorize` and event auth do not pass `refreshedPairId`.
 
+Review follow-ups (second code review):
+
+- `IssueInput.markUsed`: event auth sets it when it does not deliver the refresh token
+  (`sendRefreshToken` is not `1`). The pair is inserted with `refreshed_at = $now`.
+- Step 1 is `update ... set refreshed_at = coalesce(refreshed_at, $now) where id = $id returning
+  id`. No row back means the pair was pruned after `refresh()` read it: `fail('invalid_grant')`
+  rolls back the transaction.
+- Partial index `token_pairs_used_app_user_created_idx` on `(application_id, user_id,
+  created_at) where refreshed_at is not null` serves the prune query.
+
 ## 3. Indexes
 
 Declared in `src/schema.ts`:

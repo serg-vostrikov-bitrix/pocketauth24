@@ -1,5 +1,5 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
-import { and, desc, eq, isNotNull, isNull, lt, lte, notInArray } from 'drizzle-orm';
+import { and, desc, eq, isNotNull, lt, lte, notInArray, sql } from 'drizzle-orm';
 import { fail } from './bitrix.js';
 import { ACCESS_TTL_SECONDS, REFRESH_TTL_SECONDS, type Config } from './config.js';
 import type { Db } from './db.js';
@@ -68,6 +68,9 @@ export type IssueInput = {
   params: Record<string, unknown>;
   // Set by a refresh: the presented pair becomes "used" and can be pruned later.
   refreshedPairId?: number;
+  // The caller does not deliver the refresh token, so nobody can use it: the new pair is "used"
+  // from the start.
+  markUsed?: boolean;
 };
 
 export function tokenResponse(
@@ -108,10 +111,16 @@ export async function issuePair(
   const refreshExpiresAt = new Date(now + REFRESH_TTL_SECONDS * 1000);
   await db.transaction(async (tx) => {
     if (input.refreshedPairId !== undefined) {
-      await tx
+      // Keeps the time of the first use. The row lock also serializes refreshes of one token, and
+      // a pair pruned since refresh() read it gets invalid_grant (the throw rolls back).
+      const marked = await tx
         .update(tokenPairs)
-        .set({ refreshedAt: new Date(now) })
-        .where(and(eq(tokenPairs.id, input.refreshedPairId), isNull(tokenPairs.refreshedAt)));
+        .set({
+          refreshedAt: sql`coalesce(${tokenPairs.refreshedAt}, ${new Date(now).toISOString()}::timestamptz)`,
+        })
+        .where(eq(tokenPairs.id, input.refreshedPairId))
+        .returning({ id: tokenPairs.id });
+      if (marked.length === 0) fail('invalid_grant', '');
     }
     await tx.insert(tokenPairs).values({
       applicationId: app.id,
@@ -122,6 +131,7 @@ export async function issuePair(
       params: input.params,
       accessExpiresAt,
       refreshExpiresAt,
+      refreshedAt: input.markUsed ? new Date(now) : null,
     });
     const keep = config.tokenPruningKeep;
     if (keep === null) return;

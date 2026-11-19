@@ -59,12 +59,16 @@ export const tokenPairs = pgTable(
   },
   (table) => [
     index('token_pairs_refresh_expires_at_idx').on(table.refreshExpiresAt),
-    // Prune query in issuePair; ON DELETE CASCADE from applications.
+    // ON DELETE CASCADE from applications.
     index('token_pairs_app_user_created_idx').on(
       table.applicationId,
       table.userId,
       table.createdAt,
     ),
+    // Prune query in issuePair: only used pairs are candidates.
+    index('token_pairs_used_app_user_created_idx')
+      .on(table.applicationId, table.userId, table.createdAt)
+      .where(sql`refreshed_at is not null`),
     // Admin token list sort.
     index('token_pairs_created_at_idx').on(table.createdAt),
   ],

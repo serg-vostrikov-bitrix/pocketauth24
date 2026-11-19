@@ -1,5 +1,5 @@
 {
-  "id": "0027c966-eee3-409c-af38-30bba7861f3d",
+  "id": "77d887e5-e389-48af-bd77-30d294a242df",
   "prevId": "ff981e03-8728-4315-81dd-3af31d65ae79",
   "version": "7",
   "dialect": "postgresql",
@@ -454,6 +454,34 @@
             }
           ],
           "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "token_pairs_used_app_user_created_idx": {
+          "name": "token_pairs_used_app_user_created_idx",
+          "columns": [
+            {
+              "expression": "application_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "refreshed_at is not null",
           "concurrently": false,
           "method": "btree",
           "with": {}

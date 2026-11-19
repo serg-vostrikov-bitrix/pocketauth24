@@ -12,7 +12,9 @@ import {
   truncateAll,
   type TestApp,
 } from '../helpers.js';
-import { eventCounters } from '../../src/schema.js';
+import { eventCounters, tokenPairs } from '../../src/schema.js';
+import { sha256 } from '../../src/tokens.js';
+import { eq } from 'drizzle-orm';
 import { utcDay } from '../../src/eventCounters.js';
 
 let t: TestApp;
@@ -161,6 +163,18 @@ describe('event-delivery', () => {
         client_id: app.client_id,
         parameters: { LOCAL_USER: 1 },
       });
+
+      // Nobody holds the refresh token of the second pair, so it is "used" from the start and
+      // pruning can delete it. The first pair is unused: its handler keeps the refresh token.
+      const refreshedAt = async (accessToken: unknown) => {
+        const [pair] = await t.db
+          .select({ refreshedAt: tokenPairs.refreshedAt })
+          .from(tokenPairs)
+          .where(eq(tokenPairs.accessHash, sha256(String(accessToken))));
+        return pair.refreshedAt;
+      };
+      expect(await refreshedAt(install.access_token)).toBeNull();
+      expect(await refreshedAt(byEvent.ONCRMDEALADD.access_token)).toBeInstanceOf(Date);
     } finally {
       await handler.close();
     }

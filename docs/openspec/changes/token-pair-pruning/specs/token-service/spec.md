@@ -37,7 +37,9 @@ release). An expired, unknown or pruned refresh token SHALL be rejected with `in
 ### Requirement: Pruning of old token pairs
 A pair is "used" when the server has accepted its refresh token in a successful renewal at
 least once. The server SHALL record the time of the first such renewal on the pair, in the same
-transaction that issues the new pair. When `TOKEN_PRUNING` is `true` (the default), each time
+transaction that issues the new pair. If the pair was deleted after the server read it, the
+renewal SHALL fail with `invalid_grant`. A pair whose refresh token the server does not deliver
+(event auth without `sendRefreshToken`) is used from the start. When `TOKEN_PRUNING` is `true` (the default), each time
 the server issues a token pair it SHALL delete the used pairs of the same application and user
 that are older than the newest `TOKEN_PRUNING_KEEP` used pairs (default 5) and whose access token
 has expired. The server SHALL NOT delete a pair that is not used, or a pair whose access token
@@ -52,6 +54,14 @@ refresh token expires. The server SHALL stop at start if `TOKEN_PRUNING` is not 
 #### Scenario: Unused pairs are kept
 - **WHEN** pruning is on with keep 5, a backend keeps the refresh token of an unused pair whose access token has expired, and the server issues 10 newer pairs for the same user of the application
 - **THEN** the unused pair stays and its refresh token gets a new pair
+
+#### Scenario: Event pairs without a refresh token are used
+- **WHEN** the server delivers an event with `sendAuth` and without `sendRefreshToken`
+- **THEN** the pair it issues for the event is used from the start, and the pair of an event with `sendRefreshToken` is not used
+
+#### Scenario: A repeat renewal keeps the first use
+- **WHEN** an application presents the same refresh token a second time
+- **THEN** the pair keeps the time of the first renewal
 
 #### Scenario: Live access tokens are kept
 - **WHEN** pruning is on with keep 5, a user of an application has 7 used pairs with a live access token, and the server issues a new pair for them
