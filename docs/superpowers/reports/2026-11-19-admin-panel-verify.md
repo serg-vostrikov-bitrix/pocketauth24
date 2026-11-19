@@ -54,3 +54,7 @@
 | WARNING | Design Doc and OpenSpec design D5/D6 describe the earlier plan | Option A: Design Doc section 10 |
 | WARNING | Dark theme and row fade-in verified by code only; Ctrl+C not checked by hand | Accepted; issue #17 |
 | SUGGESTION | `--password-stdin` echoes on a TTY; date bounds rely on DB time zone UTC; test-only `size()`; nginx example note; weak injection test; case-sensitive logins | Accepted; issue #17 |
+
+## Version
+
+The user asked for a minor version bump before archive (2026-11-19): `package.json` 0.1.0 → 0.2.0. After the bump: `npm test` 153/153, `npm run build` and `npm run lint` exit 0.
