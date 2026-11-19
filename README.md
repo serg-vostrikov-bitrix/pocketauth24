@@ -158,7 +158,7 @@ Found during the end-to-end run. These are portal behaviours, not server defects
 
 - The portal must know its **real public URL and port**; otherwise the app frame gets a wrong `DOMAIN` and `BX24` cannot reach the portal.
 - Application and handler URLs need a **host name with a dot** (an FQDN or an IP address); `localhost` is rejected.
-- **Serve the `BX24` script internally.** Apps usually load it from `//api.bitrix24.com/api/v1/`, which is unreachable in a closed network.
+- **Serve the `BX24` script internally.** `BX24` is the old JS SDK; for new apps we recommend [b24jssdk](https://github.com/bitrix24/b24jssdk). Existing apps that still use `BX24` usually load it from `//api.bitrix24.com/api/v1/`, which is unreachable in a closed network.
 - The portal refuses REST calls for a user who has never logged in.
 
 ## ⚡ Event delivery performance

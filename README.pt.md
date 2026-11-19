@@ -158,7 +158,7 @@ Encontrados durante a execução ponta a ponta. São comportamentos do portal, n
 
 - O portal deve conhecer a sua **URL pública e porta reais**; caso contrário, o frame da app recebe um `DOMAIN` errado e o `BX24` não alcança o portal.
 - As URLs de aplicações e manipuladores precisam de um **nome de host com ponto** (um FQDN ou um endereço IP); `localhost` é rejeitado.
-- **Sirva o script `BX24` internamente.** As apps costumam carregá-lo de `//api.bitrix24.com/api/v1/`, que é inacessível em uma rede fechada.
+- **Sirva o script `BX24` internamente.** O `BX24` é o SDK JS antigo; para apps novas recomendamos o [b24jssdk](https://github.com/bitrix24/b24jssdk). As apps existentes que ainda usam o `BX24` costumam carregá-lo de `//api.bitrix24.com/api/v1/`, que é inacessível em uma rede fechada.
 - O portal recusa chamadas REST de um usuário que nunca fez login.
 
 ## ⚡ Desempenho da entrega de eventos
