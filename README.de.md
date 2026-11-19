@@ -45,15 +45,15 @@ Teams in geschlossenen Firmennetzwerken und regulierten Umgebungen haben dann zw
 
 ## 🧩 Heute verfügbare Funktionen
 
-| Bereich                   | Was Sie bekommen                                                                                                                                                                                                                                                                                                         |
-| ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Portal-Registrierung**  | Das Portal registriert sich beim nächsten OAuth-Aufruf selbst. Die Registrierung ist auf eine Allowlist beschränkt (`PORTAL_ALLOWLIST`, geprüft nach Host und Port). Jeder Dienstaufruf wird mit den eigenen Zugangsdaten des Portals authentifiziert, und alle Daten sind auf das aufrufende Portal begrenzt.          |
-| **Lokale Anwendungen**    | Lokale Anwendungen auf dem Portal wie gewohnt anlegen, ändern und löschen. Der Server vergibt `client_id` (`local.<14 hex>.<8 digits>`) und `client_secret` und hält sein Register synchron. Beim Löschen einer App werden alle ihre Tokens entfernt.                                                                     |
-| **Tokens**                | `rest.authorize` stellt Token-Paare für den richtigen Benutzer aus, auch für Nicht-Administratoren; Installationsseiten öffnen mit Tokens. `rest.check` prüft Tokens. Der Token-Scope ist die Schnittmenge aus angefordertem Scope und Scope der Anwendung.                                                              |
-| **Erneuerung**            | `/oauth/token/` (GET oder POST) mit `grant_type=refresh_token`. Refresh-Tokens sind bis zum Ablauf wiederverwendbar, wie im aufgezeichneten Cloud-Verkehr beobachtet. Access-Tokens gelten 3600 s, Refresh-Tokens 180 Tage; abgelaufene Paare werden stündlich gelöscht.                                                  |
-| **Ereignisse**            | `rest.event.call` stellt jedes Ereignis per HTTP-POST an den Handler der Anwendung zu, auch `ONAPPINSTALL` mit frisch ausgestellten Tokens. Das Portal erhält sofort eine Antwort.                                                                                                                                       |
-| **Sicherheit**            | Gehashte Speicherung von Tokens und Secrets, Tokens aus einer kryptografisch sicheren Zufallsquelle, Log-Schwärzung (keine Query-Strings, Handler-URLs ohne Zugangsdaten), App-Port in `docker-compose.yml` an Loopback gebunden (`127.0.0.1:3000`).                                                                    |
-| **Betrieb**               | Eine öffentliche Statusseite unter `/` (Zustand von Dienst und Datenbank, Anzahl der Portale, Anwendungen, aktiven Token-Paare und Ereigniszustellungen) und dieselben Daten als JSON unter `/api/status`. `/health` liefert HTTP 503, wenn PostgreSQL nicht antwortet. JSON-Logs, abschließende Schrägstriche werden auf allen Pfaden akzeptiert. |
+| Bereich                  | Was Sie bekommen                                                                                                                                                                                                                                                                                                                                   |
+| ------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Portal-Registrierung** | Das Portal registriert sich beim nächsten OAuth-Aufruf selbst. Die Registrierung ist auf eine Allowlist beschränkt (`PORTAL_ALLOWLIST`, geprüft nach Host und Port). Jeder Dienstaufruf wird mit den eigenen Zugangsdaten des Portals authentifiziert, und alle Daten sind auf das aufrufende Portal begrenzt.                                     |
+| **Lokale Anwendungen**   | Lokale Anwendungen auf dem Portal wie gewohnt anlegen, ändern und löschen. Der Server vergibt `client_id` (`local.<14 hex>.<8 digits>`) und `client_secret` und hält sein Register synchron. Beim Löschen einer App werden alle ihre Tokens entfernt.                                                                                              |
+| **Tokens**               | `rest.authorize` stellt Token-Paare für den richtigen Benutzer aus, auch für Nicht-Administratoren; Installationsseiten öffnen mit Tokens. `rest.check` prüft Tokens. Der Token-Scope ist die Schnittmenge aus angefordertem Scope und Scope der Anwendung.                                                                                        |
+| **Erneuerung**           | `/oauth/token/` (GET oder POST) mit `grant_type=refresh_token`. Refresh-Tokens sind bis zum Ablauf wiederverwendbar, wie im aufgezeichneten Cloud-Verkehr beobachtet. Access-Tokens gelten 3600 s, Refresh-Tokens 180 Tage; abgelaufene Paare werden stündlich gelöscht.                                                                           |
+| **Ereignisse**           | `rest.event.call` stellt jedes Ereignis per HTTP-POST an den Handler der Anwendung zu, auch `ONAPPINSTALL` mit frisch ausgestellten Tokens. Das Portal erhält sofort eine Antwort.                                                                                                                                                                 |
+| **Sicherheit**           | Gehashte Speicherung von Tokens und Secrets, Tokens aus einer kryptografisch sicheren Zufallsquelle, Log-Schwärzung (keine Query-Strings, Handler-URLs ohne Zugangsdaten), App-Port in `docker-compose.yml` an Loopback gebunden (`127.0.0.1:3000`).                                                                                               |
+| **Betrieb**              | Eine öffentliche Statusseite unter `/` (Zustand von Dienst und Datenbank, Anzahl der Portale, Anwendungen, aktiven Token-Paare und Ereigniszustellungen) und dieselben Daten als JSON unter `/api/status`. `/health` liefert HTTP 503, wenn PostgreSQL nicht antwortet. JSON-Logs, abschließende Schrägstriche werden auf allen Pfaden akzeptiert. |
 
 ## ⚙️ So funktioniert es
 
@@ -81,11 +81,11 @@ Der OAuth-Verkehr zwischen Portal, lokalen Anwendungen und Server bleibt in Ihre
 
 ## ✅ Verifiziert
 
-| Prüfung                              | Was sie abdeckt                                                                                                                                                                                                                                                                                                                                    |
-| ------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **69 automatisierte Tests**          | Integrationstests gegen echtes PostgreSQL für Portal-Registrierung, Anwendungsregister, Token-Dienst, Ereigniszustellung, Routing und Health sowie Unit-Tests.                                                                                                                                                                                    |
-| **Vertragstests**                    | Antwortformate und Fehlercodes verglichen mit dem Verkehr, der zwischen einem Testportal (`rest` 26.1100) und `oauth.bitrix.info` aufgezeichnet wurde.                                                                                                                                                                                              |
-| **Container-Smoke-Test (CI)**        | Der Container startet, `/health` antwortet, Statusseite und `/api/status` antworten, ein Portal registriert sich, keine Logs auf Fehlerebene, der Prozess läuft nicht als root.                                                                                                                                                                     |
+| Prüfung                                | Was sie abdeckt                                                                                                                                                                                                                                                                                                                                              |
+| -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **69 automatisierte Tests**            | Integrationstests gegen echtes PostgreSQL für Portal-Registrierung, Anwendungsregister, Token-Dienst, Ereigniszustellung, Routing und Health sowie Unit-Tests.                                                                                                                                                                                               |
+| **Vertragstests**                      | Antwortformate und Fehlercodes verglichen mit dem Verkehr, der zwischen einem Testportal (`rest` 26.1100) und `oauth.bitrix.info` aufgezeichnet wurde.                                                                                                                                                                                                       |
+| **Container-Smoke-Test (CI)**          | Der Container startet, `/health` antwortet, Statusseite und `/api/status` antworten, ein Portal registriert sich, keine Logs auf Fehlerebene, der Prozess läuft nicht als root.                                                                                                                                                                              |
 | **Ende-zu-Ende im geschlossenen Netz** | Eine Checkliste mit 10 Schritten auf einem lokalen Docker-Testportal (`rest` 26.1100), dessen PHP-Container vom Internet getrennt war: Registrierung, App-Erstellung, Installationsseite mit Tokens, REST als Administrator und Nicht-Administrator, `ONAPPINSTALL` mit Tokens, Erneuerung und wiederholte Erneuerung, Löschung. Alle 10 Schritte bestanden. |
 
 Es wurde noch nicht produktiv bei einem Kunden betrieben. Einige Details wurden abgeleitet und nicht aus der Cloud aufgezeichnet: einige HTTP-Statuscodes (`invalid_client`, unbekannte Methode, `expired_token`) und die genaue Form eines `auth`-Blocks in einem Ereignis mit Tokens.
@@ -107,12 +107,12 @@ docker tag b24auth-server:<version> b24auth-server:local
 
 Legen Sie `.env` neben `docker-compose.yml` an:
 
-| Variable            | Beispiel                                        | Bedeutung                                                                                |
-| ------------------- | ----------------------------------------------- | ---------------------------------------------------------------------------------------- |
-| `BASE_URL`          | `https://auth.corp.local`                       | Öffentliche URL hinter dem Proxy; wird zu `server_endpoint`.                             |
-| `DATABASE_URL`      | `postgres://b24auth:<password>@db:5432/b24auth` | Datenbankverbindung.                                                                     |
+| Variable            | Beispiel                                        | Bedeutung                                                                                      |
+| ------------------- | ----------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| `BASE_URL`          | `https://auth.corp.local`                       | Öffentliche URL hinter dem Proxy; wird zu `server_endpoint`.                                   |
+| `DATABASE_URL`      | `postgres://b24auth:<password>@db:5432/b24auth` | Datenbankverbindung.                                                                           |
 | `PORTAL_ALLOWLIST`  | `portal.corp.local,crm.corp.local:8443`         | Portal-`host[:port]`, die sich registrieren dürfen; Nicht-Standard-Ports ausdrücklich angeben. |
-| `POSTGRES_PASSWORD` | `<password>`                                    | Dasselbe Passwort wie in `DATABASE_URL`.                                                 |
+| `POSTGRES_PASSWORD` | `<password>`                                    | Dasselbe Passwort wie in `DATABASE_URL`.                                                       |
 
 `BASE_URL`, `DATABASE_URL` und `PORTAL_ALLOWLIST` sind Pflicht; ohne sie startet der Server nicht. Dann:
 
@@ -152,11 +152,11 @@ Beim End-to-End-Lauf gefunden. Das ist Verhalten des Portals, kein Fehler des Se
 
 **Limits.** Die Werte sind in [`src/config.ts`](src/config.ts) festgelegt.
 
-| Limit                                      | Wert  | Wann es erreicht wird                                                              |
-| ------------------------------------------ | ----- | ---------------------------------------------------------------------------------- |
-| Gleichzeitige Zustellungen insgesamt       | 200   | Das Ereignis wird verworfen und als `event_dropped_overload`, `limit: global` protokolliert |
-| Gleichzeitige Zustellungen an einen Handler-Host | 100   | Das Ereignis wird verworfen und als `event_dropped_overload`, `limit: host` protokolliert |
-| Timeout einer Zustellung                   | 10 s  | Die Zustellung wird abgebrochen und als `event_delivery_failed` protokolliert      |
+| Limit                                            | Wert | Wann es erreicht wird                                                                       |
+| ------------------------------------------------ | ---- | ------------------------------------------------------------------------------------------- |
+| Gleichzeitige Zustellungen insgesamt             | 200  | Das Ereignis wird verworfen und als `event_dropped_overload`, `limit: global` protokolliert |
+| Gleichzeitige Zustellungen an einen Handler-Host | 100  | Das Ereignis wird verworfen und als `event_dropped_overload`, `limit: host` protokolliert   |
+| Timeout einer Zustellung                         | 10 s | Die Zustellung wird abgebrochen und als `event_delivery_failed` protokolliert               |
 
 Ein Handler-Host ist Host und Port der Handler-URL. Das Host-Limit ist die Hälfte des Gesamtlimits. Daher kann ein langsamer Handler höchstens 100 Slots belegen, und andere Handler behalten immer 100 Slots. Das Host-Limit ist nicht niedriger, weil ein Portal-Hit einen großen Batch an einen Handler senden kann, zum Beispiel bei einem Massenimport.
 
@@ -189,11 +189,11 @@ Vorgeschlagene weitere Stufen, ohne Termine: volles OAuth 2.0 und Introspection 
 
 CI läuft bei Pushes auf `main` und bei Pull Requests ([`.github/workflows/ci.yml`](.github/workflows/ci.yml)):
 
-| Job         | Was er tut                                                                                    |
-| ----------- | --------------------------------------------------------------------------------------------- |
-| `test`      | Node.js 24 mit einem PostgreSQL-17-Dienst: `npm ci`, Lint, Typecheck, Tests, Build.           |
-| `container` | Baut und startet den Docker-Compose-Stack und führt den Smoke-Test aus.                       |
-| `audit`     | `npm audit` für Produktionsabhängigkeiten bei hohem Schweregrad.                              |
+| Job         | Was er tut                                                                          |
+| ----------- | ----------------------------------------------------------------------------------- |
+| `test`      | Node.js 24 mit einem PostgreSQL-17-Dienst: `npm ci`, Lint, Typecheck, Tests, Build. |
+| `container` | Baut und startet den Docker-Compose-Stack und führt den Smoke-Test aus.             |
+| `audit`     | `npm audit` für Produktionsabhängigkeiten bei hohem Schweregrad.                    |
 
 Dependabot prüft npm-Pakete, GitHub Actions und Docker-Basisimages wöchentlich.
 
