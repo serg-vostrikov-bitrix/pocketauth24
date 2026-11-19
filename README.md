@@ -5,9 +5,8 @@
 **Keep local applications working on a Bitrix24 on-premise portal that has no internet access.**
 
 [![CI](https://github.com/serg-vostrikov-bitrix/b24auth-server/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/serg-vostrikov-bitrix/b24auth-server/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/tests-153%20passing-brightgreen)
 ![Contract tests](https://img.shields.io/badge/contract--tested-captured%20cloud%20traffic-blue)
-![Closed network](https://img.shields.io/badge/closed%20network-verified%20on%20test%20portal-blue)
+![Closed network](https://img.shields.io/badge/closed%20network-verified-blue)
 ![Dependabot](https://img.shields.io/badge/Dependabot-enabled-025E8C?logo=dependabot)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
 <br>
@@ -98,7 +97,7 @@ OAuth traffic between the portal, local applications and the server stays inside
 
 | Check                              | What it covers                                                                                                                                                                                                                                                                                                    |
 | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **153 automated tests**            | Integration tests against real PostgreSQL for portal registration, application registry, token service, event delivery, routing and health, plus unit tests.                                                                                                                                                      |
+| **Automated tests**                | Integration tests against real PostgreSQL for portal registration, application registry, token service, event delivery, routing and health, plus unit tests.                                                                                                                                                      |
 | **Contract tests**                 | Response shapes and error codes compared with traffic captured between a test portal (`rest` 26.1100) and `oauth.bitrix.info`.                                                                                                                                                                                    |
 | **Container smoke test (CI)**      | The container starts, `/health` answers, the status page and `/api/status` answer, a portal registers, no error-level logs, the process does not run as root.                                                                                                                                                     |
 | **End-to-end in a closed network** | A 10-step checklist on a local Docker test portal (`rest` 26.1100) whose PHP container was cut off from the internet: registration, app creation, install page with tokens, REST as administrator and non-administrator, `ONAPPINSTALL` with tokens, renewal and repeated renewal, deletion. All 10 steps passed. |
