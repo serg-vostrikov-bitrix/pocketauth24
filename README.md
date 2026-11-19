@@ -10,7 +10,7 @@
 ![Dependabot](https://img.shields.io/badge/Dependabot-enabled-025E8C?logo=dependabot)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
 <br>
-![Node.js 24](https://img.shields.io/badge/Node.js-24-339933?logo=nodedotjs&logoColor=white)
+![Node.js 26](https://img.shields.io/badge/Node.js-26-339933?logo=nodedotjs&logoColor=white)
 ![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![Fastify 5](https://img.shields.io/badge/Fastify-5-000000?logo=fastify&logoColor=white)
 ![PostgreSQL 17](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)
@@ -230,7 +230,7 @@ CI runs on pushes to `main` and on pull requests ([`.github/workflows/ci.yml`](.
 
 | Job         | What it does                                                                      |
 | ----------- | --------------------------------------------------------------------------------- |
-| `test`      | Node.js 24 with a PostgreSQL 17 service: `npm ci`, lint, typecheck, tests, build. |
+| `test`      | Node.js 26 with a PostgreSQL 17 service: `npm ci`, lint, typecheck, tests, build. |
 | `container` | Builds and starts the Docker Compose stack and runs the smoke test.               |
 | `audit`     | `npm audit` for production dependencies at high severity.                         |
 
@@ -248,7 +248,7 @@ There is no automated release or publish step yet: no CD pipeline and no publish
 
 ## 🛠️ Development
 
-Stack: Node.js 24, TypeScript (strict), Fastify, Drizzle, PostgreSQL 17.
+Stack: Node.js 26, TypeScript (strict), Fastify, Drizzle, PostgreSQL 17.
 
 ```bash
 npm install

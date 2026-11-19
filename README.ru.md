@@ -10,7 +10,7 @@
 ![Dependabot](https://img.shields.io/badge/Dependabot-enabled-025E8C?logo=dependabot)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
 <br>
-![Node.js 24](https://img.shields.io/badge/Node.js-24-339933?logo=nodedotjs&logoColor=white)
+![Node.js 26](https://img.shields.io/badge/Node.js-26-339933?logo=nodedotjs&logoColor=white)
 ![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)
 ![Fastify 5](https://img.shields.io/badge/Fastify-5-000000?logo=fastify&logoColor=white)
 ![PostgreSQL 17](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)
@@ -230,7 +230,7 @@ CI запускается при push в `main` и для pull request ([`.githu
 
 | Задача      | Что делает                                                                     |
 | ----------- | ------------------------------------------------------------------------------ |
-| `test`      | Node.js 24 с сервисом PostgreSQL 17: `npm ci`, lint, typecheck, тесты, сборка. |
+| `test`      | Node.js 26 с сервисом PostgreSQL 17: `npm ci`, lint, typecheck, тесты, сборка. |
 | `container` | Собирает и запускает стек Docker Compose и выполняет дымовой тест.             |
 | `audit`     | `npm audit` для зависимостей production с высоким уровнем серьёзности.         |
 
@@ -248,7 +248,7 @@ Dependabot раз в неделю проверяет пакеты npm, GitHub Ac
 
 ## 🛠️ Разработка
 
-Стек: Node.js 24, TypeScript (strict), Fastify, Drizzle, PostgreSQL 17.
+Стек: Node.js 26, TypeScript (strict), Fastify, Drizzle, PostgreSQL 17.
 
 ```bash
 npm install
