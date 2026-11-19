@@ -53,6 +53,8 @@ export const tokenPairs = pgTable(
     params: jsonb('params').$type<Record<string, unknown>>().notNull(),
     accessExpiresAt: timestamp('access_expires_at', { withTimezone: true }).notNull(),
     refreshExpiresAt: timestamp('refresh_expires_at', { withTimezone: true }).notNull(),
+    // First successful refresh with this pair's refresh token; null: never used.
+    refreshedAt: timestamp('refreshed_at', { withTimezone: true }),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [

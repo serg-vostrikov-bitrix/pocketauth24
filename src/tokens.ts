@@ -1,5 +1,5 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
-import { and, desc, eq, lt, lte, notInArray } from 'drizzle-orm';
+import { and, desc, eq, isNotNull, isNull, lt, lte, notInArray } from 'drizzle-orm';
 import { fail } from './bitrix.js';
 import { ACCESS_TTL_SECONDS, REFRESH_TTL_SECONDS, type Config } from './config.js';
 import type { Db } from './db.js';
@@ -62,7 +62,13 @@ export type TokenResponse = {
 
 export type RefreshResponse = TokenResponse & { user_id: number };
 
-export type IssueInput = { scope: string; userId: number; params: Record<string, unknown> };
+export type IssueInput = {
+  scope: string;
+  userId: number;
+  params: Record<string, unknown>;
+  // Set by a refresh: the presented pair becomes "used" and can be pruned later.
+  refreshedPairId?: number;
+};
 
 export function tokenResponse(
   config: Config,
@@ -101,6 +107,12 @@ export async function issuePair(
   const accessExpiresAt = new Date(now + ACCESS_TTL_SECONDS * 1000);
   const refreshExpiresAt = new Date(now + REFRESH_TTL_SECONDS * 1000);
   await db.transaction(async (tx) => {
+    if (input.refreshedPairId !== undefined) {
+      await tx
+        .update(tokenPairs)
+        .set({ refreshedAt: new Date(now) })
+        .where(and(eq(tokenPairs.id, input.refreshedPairId), isNull(tokenPairs.refreshedAt)));
+    }
     await tx.insert(tokenPairs).values({
       applicationId: app.id,
       accessHash: sha256(accessToken),
@@ -113,24 +125,26 @@ export async function issuePair(
     });
     const keep = config.tokenPruningKeep;
     if (keep === null) return;
-    const sameOwner = and(
+    // Only used pairs can go: the server cannot know which unused pair a backend keeps (for
+    // example the refresh token from the install). Keep the newest `keep` used pairs and every
+    // pair with a live access token.
+    const usedOfOwner = and(
       eq(tokenPairs.applicationId, app.id),
       eq(tokenPairs.userId, input.userId),
+      isNotNull(tokenPairs.refreshedAt),
     );
-    // Keep the newest `keep` pairs and every pair with a live access token. The subquery sees the
-    // new row (same transaction); created_at is the transaction start, so id breaks ties.
     await tx
       .delete(tokenPairs)
       .where(
         and(
-          sameOwner,
+          usedOfOwner,
           lte(tokenPairs.accessExpiresAt, new Date(now)),
           notInArray(
             tokenPairs.id,
             tx
               .select({ id: tokenPairs.id })
               .from(tokenPairs)
-              .where(sameOwner)
+              .where(usedOfOwner)
               .orderBy(desc(tokenPairs.createdAt), desc(tokenPairs.id))
               .limit(keep),
           ),
@@ -214,6 +228,7 @@ export async function refresh(
     scope: row.pair.scope,
     userId: row.pair.userId,
     params: row.pair.params,
+    refreshedPairId: row.pair.id,
   });
   // The cloud answers a refresh with the literal scope "app" and its own (OAuth server) host;
   // the pair keeps the real scope internally.
