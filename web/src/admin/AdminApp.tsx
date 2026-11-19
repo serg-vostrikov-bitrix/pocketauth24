@@ -4,6 +4,7 @@ import { apiGet, setUnauthorizedHandler, type AdminUser } from './api';
 import { Layout } from './Layout';
 import { LoginPage } from './LoginPage';
 import { ApplicationsPage, EventsPage, PortalsPage, TokensPage } from './pages';
+import { UsersPage } from './UsersPage';
 import './admin.css';
 
 export function AdminApp() {
@@ -35,6 +36,7 @@ export function AdminApp() {
         <Route path="applications" element={<ApplicationsPage />} />
         <Route path="tokens" element={<TokensPage />} />
         <Route path="events" element={<EventsPage />} />
+        {user.role === 'superuser' && <Route path="users" element={<UsersPage />} />}
         <Route path="*" element={<Navigate to="/admin/portals" replace />} />
       </Route>
     </Routes>
