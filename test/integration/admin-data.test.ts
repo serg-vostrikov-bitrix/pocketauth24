@@ -166,3 +166,28 @@ it('An id filter beyond the integer range returns 400, not 500', async () => {
   expect(res.status).toBe(400);
   expect(res.body).toEqual({ error: 'invalid_filter', column: 'id' });
 });
+
+it('A date that does not exist returns 400, not 500', async () => {
+  const res = await list('portals', { 'filter[createdAt.from]': '2026-02-30' });
+  expect(res.status).toBe(400);
+  expect(res.body).toEqual({ error: 'invalid_filter', column: 'createdAt' });
+});
+
+it('A viewer session can read the data routes', async () => {
+  const created = await t.app.inject({
+    method: 'POST',
+    url: '/api/admin/users',
+    payload: { login: 'viewer1' },
+    headers: { cookie },
+  });
+  expect(created.statusCode).toBe(201);
+  const viewerCookie = await loginAs(
+    t.app,
+    'viewer1',
+    created.json<{ password: string }>().password,
+  );
+  await registerPortal(t.app);
+  const res = await list('portals', {}, viewerCookie);
+  expect(res.status).toBe(200);
+  expect(res.body).toMatchObject({ total: 1, page: 1, pageSize: 50 });
+});

@@ -63,3 +63,37 @@ it('A page beyond the safe integer range falls back to 1', () => {
   });
   expect(parseQuery(COLUMNS, { page: '-2' })).toMatchObject({ page: 1, offset: 0 });
 });
+
+it('Dates that do not exist name the column', () => {
+  for (const value of ['2026-02-30', '2026-02-31', '2026-04-31', '0000-01-01']) {
+    expect(parseQuery(COLUMNS, { 'filter[createdAt.from]': value })).toEqual({
+      ok: false,
+      column: 'createdAt',
+    });
+  }
+  expect(parseQuery(COLUMNS, { 'filter[createdAt.to]': '2026-02-30T10:00:00Z' })).toEqual({
+    ok: false,
+    column: 'createdAt',
+  });
+  expect(parseQuery(COLUMNS, { 'filter[createdAt.from]': '2028-02-29' })).toMatchObject({
+    ok: true,
+  });
+});
+
+it('Only plain digits count as a page number', () => {
+  for (const page of ['1e1', '0x10', ' 3 ', '+3', '3.0']) {
+    expect(parseQuery(COLUMNS, { page })).toMatchObject({ page: 1, offset: 0 });
+  }
+});
+
+it('Time zone offsets beyond 15:59 name the column', () => {
+  expect(parseQuery(COLUMNS, { 'filter[createdAt.from]': '2026-01-01T10:00+16:00' })).toEqual({
+    ok: false,
+    column: 'createdAt',
+  });
+  expect(parseQuery(COLUMNS, { 'filter[createdAt.from]': '2026-01-01T10:00+14:00' })).toMatchObject(
+    {
+      ok: true,
+    },
+  );
+});
