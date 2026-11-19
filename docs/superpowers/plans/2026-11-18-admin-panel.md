@@ -1710,7 +1710,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ### Task 7: Filter helper, portals and applications
 
-- [ ] Task 7 complete: Filter helper, portals and applications
+- [x] Task 7 complete: Filter helper, portals and applications
 
 **Covers tasks.md:** 5.1, 5.2 (portals, applications), 5.3
 
@@ -1725,7 +1725,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   - `src/admin/filters.ts`: `PAGE_SIZE = 50`; `type FilterType = 'text' | 'id' | 'date' | 'enum' | 'none'`; `type Column = { key: string; sql: SQL | AnyColumn; filter: FilterType; values?: readonly string[] }`; `type ParsedQuery = { ok: true; where: SQL | undefined; page: number; offset: number } | { ok: false; column: string }`; `escapeLike(value: string): string`; `parseQuery(columns: readonly Column[], query: Record<string, unknown>): ParsedQuery`; `selection(columns: readonly Column[]): Record<string, SQL | AnyColumn>`.
   - `src/admin/dataRoutes.ts`: `dataRoutes(app: FastifyInstance, db: Db): void` with `GET /portals` and `GET /applications` (Task 8 adds `/tokens` and `/events`).
 
-- [ ] **Step 1: Write the failing unit test** `test/unit/filters.test.ts`
+- [x] **Step 1: Write the failing unit test** `test/unit/filters.test.ts`
 
 ```ts
 import { sql } from 'drizzle-orm';
@@ -1781,7 +1781,7 @@ it('The page is 1-based and invalid pages fall back to 1', () => {
 });
 ```
 
-- [ ] **Step 2: Write the failing integration test** `test/integration/admin-data.test.ts`
+- [x] **Step 2: Write the failing integration test** `test/integration/admin-data.test.ts`
 
 ```ts
 import { afterEach, beforeEach, expect, it } from 'vitest';
@@ -1939,12 +1939,12 @@ it('Pages hold 50 rows, newest first, with the total', async () => {
 });
 ```
 
-- [ ] **Step 3: Run the tests to make sure they fail**
+- [x] **Step 3: Run the tests to make sure they fail**
 
 Run: `npm test -- test/unit/filters.test.ts test/integration/admin-data.test.ts`
 Expected: FAIL: `filters.js` does not exist; `/api/admin/portals` returns 404.
 
-- [ ] **Step 4: Write `src/admin/filters.ts`**
+- [x] **Step 4: Write `src/admin/filters.ts`**
 
 ```ts
 import { and, ilike, sql, type AnyColumn, type SQL } from 'drizzle-orm';
@@ -2033,7 +2033,7 @@ export function selection(columns: readonly Column[]): Record<string, SQL | AnyC
 }
 ```
 
-- [ ] **Step 5: Write `src/admin/dataRoutes.ts`** (portals and applications)
+- [x] **Step 5: Write `src/admin/dataRoutes.ts`** (portals and applications)
 
 ```ts
 import { count, desc, eq, sql } from 'drizzle-orm';
@@ -2115,7 +2115,7 @@ export function dataRoutes(app: FastifyInstance, db: Db): void {
 
 If TypeScript rejects `db.select(selection(...))`, type the return of `selection` as `SelectedFields` imported from `drizzle-orm/pg-core` (do not add a cast to `any`).
 
-- [ ] **Step 6: Register the routes** in `src/admin/index.ts`
+- [x] **Step 6: Register the routes** in `src/admin/index.ts`
 
 Add `import { dataRoutes } from './dataRoutes.js';` and, in the `authed` scope after `sessionRoutes(authed, deps.db);`:
 
@@ -2123,12 +2123,12 @@ Add `import { dataRoutes } from './dataRoutes.js';` and, in the `authed` scope a
         dataRoutes(authed, deps.db);
 ```
 
-- [ ] **Step 7: Run the tests to make sure they pass**
+- [x] **Step 7: Run the tests to make sure they pass**
 
 Run: `npm test -- test/unit/filters.test.ts test/integration/admin-data.test.ts`
 Expected: PASS (6 + 9 tests).
 
-- [ ] **Step 8: Full suite, types, lint, commit**
+- [x] **Step 8: Full suite, types, lint, commit**
 
 Run: `npm test && npm run typecheck && npm run lint`
 
