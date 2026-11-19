@@ -35,20 +35,26 @@ release). An expired, unknown or pruned refresh token SHALL be rejected with `in
 ## ADDED Requirements
 
 ### Requirement: Pruning of old token pairs
-When `TOKEN_PRUNING` is `true` (the default), each time the server issues a token pair it SHALL
-delete the pairs of the same application and user that are older than the newest
-`TOKEN_PRUNING_KEEP` pairs (default 5) and whose access token has expired. The server SHALL NOT
-delete a pair whose access token has not expired. When `TOKEN_PRUNING` is `false`, the server
-SHALL keep each pair until its refresh token expires. The server SHALL stop at start if
-`TOKEN_PRUNING` is not `true` or `false`, or if `TOKEN_PRUNING_KEEP` is not a positive
-integer.
+A pair is "used" when the server has accepted its refresh token in a successful renewal at
+least once. The server SHALL record the time of the first such renewal on the pair, in the same
+transaction that issues the new pair. When `TOKEN_PRUNING` is `true` (the default), each time
+the server issues a token pair it SHALL delete the used pairs of the same application and user
+that are older than the newest `TOKEN_PRUNING_KEEP` used pairs (default 5) and whose access token
+has expired. The server SHALL NOT delete a pair that is not used, or a pair whose access token
+has not expired. When `TOKEN_PRUNING` is `false`, the server SHALL keep each pair until its
+refresh token expires. The server SHALL stop at start if `TOKEN_PRUNING` is not `true` or
+`false`, or if `TOKEN_PRUNING_KEEP` is not a positive integer.
 
-#### Scenario: Old expired pairs are deleted
-- **WHEN** pruning is on with keep 5, a user of an application has 5 pairs with an expired access token, and the server issues a new pair for them
-- **THEN** the oldest pair is deleted and its refresh token gets `invalid_grant`
+#### Scenario: Old used pairs are deleted
+- **WHEN** pruning is on with keep 5, and after an issue a user of an application has 6 used pairs whose access token has expired
+- **THEN** the oldest used pair is deleted and its refresh token gets `invalid_grant`
+
+#### Scenario: Unused pairs are kept
+- **WHEN** pruning is on with keep 5, a backend keeps the refresh token of an unused pair whose access token has expired, and the server issues 10 newer pairs for the same user of the application
+- **THEN** the unused pair stays and its refresh token gets a new pair
 
 #### Scenario: Live access tokens are kept
-- **WHEN** pruning is on with keep 5, a user of an application has 7 pairs with a live access token, and the server issues a new pair for them
+- **WHEN** pruning is on with keep 5, a user of an application has 7 used pairs with a live access token, and the server issues a new pair for them
 - **THEN** all 8 pairs stay
 
 #### Scenario: Other users and applications are not touched

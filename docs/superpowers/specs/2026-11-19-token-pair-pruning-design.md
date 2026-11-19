@@ -27,20 +27,27 @@ tokenPruningKeep: number | null; // null: pruning is off
 The server parses `TOKEN_PRUNING_KEEP` also when pruning is off, so a bad value fails at start in
 both cases. `server.ts` already calls `loadConfig` at start; no change is necessary there.
 
-## 2. Pruning in `issuePair`
+## 2. Used pairs and pruning in `issuePair`
 
-`issuePair` runs in one transaction:
+New nullable column `token_pairs.refreshed_at timestamptz`. A pair is "used" when it is not
+null.
 
-1. Insert the new pair (unchanged).
-2. If `config.tokenPruningKeep` is not `null`, run:
+`IssueInput` gets an optional `refreshedPairId?: number`. `refresh()` passes the id of the
+presented pair. `issuePair` runs in one transaction:
+
+1. If `refreshedPairId` is set: `update token_pairs set refreshed_at = $now where id = $id and
+   refreshed_at is null`. A second use of the same refresh token keeps the first time.
+2. Insert the new pair.
+3. If `config.tokenPruningKeep` is not `null`, run:
 
 ```sql
 delete from token_pairs
 where application_id = $app and user_id = $user
+  and refreshed_at is not null
   and access_expires_at <= $now
   and id not in (
     select id from token_pairs
-    where application_id = $app and user_id = $user
+    where application_id = $app and user_id = $user and refreshed_at is not null
     order by created_at desc, id desc
     limit $keep)
 ```
@@ -48,14 +55,17 @@ where application_id = $app and user_id = $user
 `$now` is `new Date(Date.now())`, the same clock that sets the expiry. Fake timers in tests then
 control both values.
 
-The subquery sees the new row, because it runs in the same transaction after the insert. The new
-row has a live access token, so the `DELETE` never removes it.
+The update runs before the delete, so the pair that was just refreshed counts as used in the same
+transaction. The new pair is not used, so the `DELETE` never removes it.
 
-`created_at` uses the database default `now()`, which is the transaction start time in
-PostgreSQL. Two pairs from one transaction can have the same `created_at`; `id desc` breaks the
-tie, and `id` grows with each insert.
+`created_at` uses the database default `now()`, the transaction start time. Within one owner the
+order of used pairs by `created_at, id` is the issue order, except for transactions that run at
+the same moment; those pairs still have a live access token, so the order does not matter.
 
-Callers (`rest.authorize`, event auth, refresh) do not change.
+Two issues at the same moment for one owner each see their own snapshot. The worst case is one
+more used pair than `keep`, never fewer.
+
+`rest.authorize` and event auth do not pass `refreshedPairId`.
 
 ## 3. Indexes
 
@@ -67,7 +77,9 @@ Declared in `src/schema.ts`:
 | `token_pairs_created_at_idx` | `token_pairs` | `created_at` | admin token list sort |
 | `applications_portal_id_idx` | `applications` | `portal_id` | `ON DELETE CASCADE` from `portals`; admin join and count |
 
-`npm run db:generate` writes `drizzle/0003_<name>.sql` and its snapshot. Migrations run at start.
+`npm run db:generate` writes `drizzle/0003_<name>.sql` and its snapshot. The column goes in the
+same migration: `ALTER TABLE token_pairs ADD COLUMN refreshed_at timestamptz` (nullable, no
+default, so PostgreSQL does not rewrite the table). Migrations run at start.
 
 ## 4. Error handling
 
@@ -85,18 +97,19 @@ Unit, `test/unit/config.test.ts`:
 - `TOKEN_PRUNING` in `TRUE`, `yes`, `1`: throws with the variable name;
 - `TOKEN_PRUNING_KEEP` in `0`, `-1`, `abc`, `1.5`: throws with the variable name.
 
-Integration, `test/integration/token-service.test.ts`, fake `Date`:
+Integration, `test/integration/token-service.test.ts`, fake `Date`. A "chain" is one
+`rest.authorize` followed by refreshes, each refresh with the newest refresh token.
 
-- keep 5: issue 5 pairs, move time past one hour, issue one more. The first pair is gone and its
-  refresh token gets `invalid_grant`; 5 pairs remain.
-- keep 5: issue 7 pairs inside one hour, issue one more. All 8 stay.
-- other user (other `LOCAL_USER`) and other application keep their expired pairs. Each of them
-  has more than 5 expired pairs before the new issue, so an unscoped `DELETE` would remove them.
-- pruning off (`tokenPruningKeep: null`): the same setup as the first test (5 expired pairs, then
-  one more issue) deletes no pair. The setup must be one that deletes with pruning on, so the test
-  cannot pass for an unrelated reason.
-
-The invalid-value cases are one `it.each` table per variable, not one test per value.
+- Old used pairs are deleted: a chain of 6 refreshes, move time past one hour, one more refresh.
+  7 used pairs exist; the 2 oldest are gone; the first refresh token gets `invalid_grant`; the
+  third still works.
+- Unused pairs are kept: one `rest.authorize` (the backend pair), then a chain of 10 refreshes
+  from a second `rest.authorize`, time moved past one hour before the last refresh. The backend
+  pair stays and its refresh token works.
+- Live access tokens are kept: a chain of 7 refreshes inside one hour. All 8 pairs stay.
+- Other users and applications: each other owner has a chain with more than 5 expired used
+  pairs. One refresh for the first owner leaves them as they are.
+- Pruning off: the setup of the first test deletes no pair.
 
 `startApp` gets an optional `config` that replaces `TEST_CONFIG`. `TEST_CONFIG` gets
 `tokenPruningKeep: 5`.

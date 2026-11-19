@@ -35,10 +35,11 @@ One `DELETE` runs after the `INSERT`, for the same `application_id` and `user_id
 ```sql
 delete from token_pairs
 where application_id = $app and user_id = $user
+  and refreshed_at is not null
   and access_expires_at <= $now
   and id not in (
     select id from token_pairs
-    where application_id = $app and user_id = $user
+    where application_id = $app and user_id = $user and refreshed_at is not null
     order by created_at desc, id desc
     limit $keep)
 ```
@@ -52,7 +53,20 @@ Alternatives:
 - Delete the presented pair on refresh (single-use refresh tokens). Rejected: it breaks the
   reuse that the cloud allows and that SDKs can depend on after a lost response.
 
-### D2. Only pairs with an expired access token are deleted
+### D2. Only used pairs with an expired access token are deleted
+
+A refresh sets `refreshed_at` on the presented pair, if it is not set yet, in the transaction
+that issues the new pair. Only pairs with `refreshed_at` set can be deleted.
+
+Reason: the server cannot know which unused pair a backend keeps. A CRest backend keeps the
+refresh token from the install and refreshes it only when it calls the API. Page opens issue new
+pairs in the meantime. A "last X of all pairs" rule deleted the backend's pair after X page opens
+(found in code review). A used pair has a newer pair in its chain, so its owner has moved on.
+
+Trade-off: pairs from page opens and events whose refresh token nobody uses stay for 180 days,
+as before. Their count follows real use, not the refresh timer.
+
+The second condition, an expired access token:
 
 `rest.authorize` and event auth issue pairs often: each app page open, placement or business
 process action. A strict "last X" rule would delete a pair that another tab or process still
@@ -85,19 +99,21 @@ at start (existing behaviour). Plain `CREATE INDEX` locks writes to the table wh
 
 ## Risks / Trade-offs
 
-- [An SDK keeps an old refresh token and uses it after more than X newer pairs exist] →
-  `invalid_grant`; the user must open the app again. CRest and the official SDKs store the newest
-  refresh token after each refresh. Operators who need full cloud behaviour set
+- [An SDK presents a refresh token that it already exchanged, after more than X newer used pairs
+  exist] → `invalid_grant`; the user must open the app again. CRest and the official SDKs store
+  the newest refresh token after each refresh.
+- [Pairs that nobody refreshes stay for 180 days] → accepted; see D2. Operators who need full cloud behaviour set
   `TOKEN_PRUNING=false`. The README says this.
 - [Index creation on a large existing table blocks writes at start] → the table on current
   installations is small (product is new). Not mitigated further.
 - [One extra `DELETE` per issue] → it uses the new composite index and touches few rows.
-- [Existing installations have many old rows] → pruning cleans a user's rows at their next issue.
+- [Existing installations have many old rows] → their `refreshed_at` is null, so pruning does
+  not touch them.
   The rest go with the hourly cleanup after 180 days. No one-time backfill.
 
 ## Migration Plan
 
-Deploy the new image. The migration adds the indexes at start. Rollback: set
+Deploy the new image. The migration adds the column and the indexes at start. Rollback: set
 `TOKEN_PRUNING=false`; the indexes are harmless with the old code.
 
 ## Open Questions
