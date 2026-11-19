@@ -139,6 +139,8 @@ Event handlers receive one POST per event with a 10 s timeout; no retries. Faile
 deliveries appear in the container log as `event_delivery_failed` / `event_dropped_overload`.
 Pending deliveries are lost on restart.
 
+For the full list of error log events and their fields, see [logging.md](logging.md).
+
 The server counts delivered, failed and dropped deliveries per UTC day in the table
 `event_counters`. The status page and `GET /api/status` show the counts for today and for the
 last 7 days. The counters store no event content, handler URL, portal or application.

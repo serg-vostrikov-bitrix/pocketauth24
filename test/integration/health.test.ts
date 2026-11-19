@@ -17,6 +17,11 @@ it('GET /health returns 503 when the database is down', async () => {
     expect(Date.now() - started).toBeLessThan(3000);
     expect(res.statusCode).toBe(503);
     expect(res.json()).toEqual({ status: 'error', database: 'down' });
+    expect(t.logs.find((l) => l.msg === 'database_probe_failed')).toBeDefined();
+    expect(t.logs.find((l) => l.msg === 'request_failed')).toMatchObject({
+      status: 503,
+      level: 40,
+    });
   } finally {
     await t.close();
   }
