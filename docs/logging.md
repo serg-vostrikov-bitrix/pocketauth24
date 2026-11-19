@@ -55,6 +55,7 @@ The server writes JSON logs to stdout. Search them by `msg`. Every error respons
 | `admin_login_failed` | info | A failed admin login. `reason` is `unknown_login` or `wrong_password` |
 
 Some error responses have no description, to match the Bitrix24 cloud. For these, `reason` gives
-the cause: `refresh_token_unknown`, `refresh_token_expired`, `client_id_mismatch`,
+the cause: `refresh_token_unknown`, `refresh_token_expired`, `refresh_token_pruned` (a parallel
+request deleted the token pair during the refresh), `client_id_mismatch`,
 `client_secret_mismatch`, `client_id_unknown`, `authorization_code_not_supported` or
 `host_not_allowed: <host>`.
