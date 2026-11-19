@@ -10,6 +10,7 @@ import {
   registerPortal,
   rpc,
   startApp,
+  TEST_CONFIG,
   tokenRequest,
   truncateAll,
   type Credentials,
@@ -300,5 +301,94 @@ describe('token-service', () => {
 
     await deleteExpiredPairs(t.db, new Date(Date.now() + 365 * 24 * 3600 * 1000));
     expect(await t.db.select().from(tokenPairs)).toHaveLength(0);
+  });
+});
+
+async function authorizeTimes(
+  app: TestApp,
+  portal: Credentials,
+  clientId: string,
+  times: number,
+  localUser = '5',
+): Promise<TokenResponse[]> {
+  const tokens: TokenResponse[] = [];
+  for (let i = 0; i < times; i++) {
+    tokens.push(await authorize(app.app, portal, clientId, { PARAMS: { LOCAL_USER: localUser } }));
+  }
+  return tokens;
+}
+
+async function pairCounts(): Promise<Record<string, number>> {
+  const counts: Record<string, number> = {};
+  for (const row of await t.db.select().from(tokenPairs)) {
+    const key = `${row.applicationId}:${row.userId}`;
+    counts[key] = (counts[key] ?? 0) + 1;
+  }
+  return counts;
+}
+
+describe('Pruning', () => {
+  it('Old expired pairs are deleted', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    const portal = await registerPortal(t.app);
+    const app = await addApp(t.app, portal);
+    const [oldest] = await authorizeTimes(t, portal, app.client_id, 5);
+
+    vi.setSystemTime(Date.now() + 3600 * 1000);
+    await authorizeTimes(t, portal, app.client_id, 1);
+
+    expect(await pairCounts()).toEqual({ '1:5': 5 });
+    const res = await tokenRequest(t.app, 'POST', refreshParams(app, oldest.refresh_token));
+    expect(res.statusCode).toBe(400);
+    expect(res.json<{ error: string }>().error).toBe('invalid_grant');
+  });
+
+  it('Live access tokens are kept', async () => {
+    const portal = await registerPortal(t.app);
+    const app = await addApp(t.app, portal);
+    await authorizeTimes(t, portal, app.client_id, 7);
+
+    await authorizeTimes(t, portal, app.client_id, 1);
+
+    expect(await pairCounts()).toEqual({ '1:5': 8 });
+  });
+
+  it('Other users and applications are not touched', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    const portal = await registerPortal(t.app);
+    const appA = await addApp(t.app, portal);
+    const appB = await addApp(t.app, portal);
+    await authorizeTimes(t, portal, appA.client_id, 6, '5');
+    await authorizeTimes(t, portal, appA.client_id, 6, '6');
+    await authorizeTimes(t, portal, appB.client_id, 6, '5');
+
+    vi.setSystemTime(Date.now() + 3600 * 1000);
+    await authorizeTimes(t, portal, appA.client_id, 1, '5');
+
+    // An unscoped DELETE would cut 1:6 and 2:5 to 4 or fewer.
+    expect(await pairCounts()).toEqual({ '1:5': 5, '1:6': 6, '2:5': 6 });
+  });
+
+  describe('when TOKEN_PRUNING=false', () => {
+    let off: TestApp;
+    beforeAll(async () => {
+      off = await startApp({ config: { ...TEST_CONFIG, tokenPruningKeep: null } });
+    });
+    afterAll(async () => {
+      await off.close();
+    });
+
+    it('Pruning is off', async () => {
+      vi.useFakeTimers({ toFake: ['Date'] });
+      const portal = await registerPortal(off.app);
+      const app = await addApp(off.app, portal);
+      await authorizeTimes(off, portal, app.client_id, 5);
+
+      // Same setup as "Old expired pairs are deleted", which deletes one pair with pruning on.
+      vi.setSystemTime(Date.now() + 3600 * 1000);
+      await authorizeTimes(off, portal, app.client_id, 1);
+
+      expect(await pairCounts()).toEqual({ '1:5': 6 });
+    });
   });
 });

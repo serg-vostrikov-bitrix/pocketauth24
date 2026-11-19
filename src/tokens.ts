@@ -1,5 +1,5 @@
 import { createHash, randomBytes, timingSafeEqual } from 'node:crypto';
-import { and, eq, lt } from 'drizzle-orm';
+import { and, desc, eq, lt, lte, notInArray } from 'drizzle-orm';
 import { fail } from './bitrix.js';
 import { ACCESS_TTL_SECONDS, REFRESH_TTL_SECONDS, type Config } from './config.js';
 import type { Db } from './db.js';
@@ -100,15 +100,42 @@ export async function issuePair(
   const refreshToken = randomHex(32);
   const accessExpiresAt = new Date(now + ACCESS_TTL_SECONDS * 1000);
   const refreshExpiresAt = new Date(now + REFRESH_TTL_SECONDS * 1000);
-  await db.insert(tokenPairs).values({
-    applicationId: app.id,
-    accessHash: sha256(accessToken),
-    refreshHash: sha256(refreshToken),
-    userId: input.userId,
-    scope: input.scope,
-    params: input.params,
-    accessExpiresAt,
-    refreshExpiresAt,
+  await db.transaction(async (tx) => {
+    await tx.insert(tokenPairs).values({
+      applicationId: app.id,
+      accessHash: sha256(accessToken),
+      refreshHash: sha256(refreshToken),
+      userId: input.userId,
+      scope: input.scope,
+      params: input.params,
+      accessExpiresAt,
+      refreshExpiresAt,
+    });
+    const keep = config.tokenPruningKeep;
+    if (keep === null) return;
+    const sameOwner = and(
+      eq(tokenPairs.applicationId, app.id),
+      eq(tokenPairs.userId, input.userId),
+    );
+    // Keep the newest `keep` pairs and every pair with a live access token. The subquery sees the
+    // new row (same transaction); created_at is the transaction start, so id breaks ties.
+    await tx
+      .delete(tokenPairs)
+      .where(
+        and(
+          sameOwner,
+          lte(tokenPairs.accessExpiresAt, new Date(now)),
+          notInArray(
+            tokenPairs.id,
+            tx
+              .select({ id: tokenPairs.id })
+              .from(tokenPairs)
+              .where(sameOwner)
+              .orderBy(desc(tokenPairs.createdAt), desc(tokenPairs.id))
+              .limit(keep),
+          ),
+        ),
+      );
   });
   return tokenResponse(config, portal, {
     accessToken,

@@ -36,7 +36,7 @@ export type TestApp = {
 };
 
 export async function startApp(
-  options: { databaseUrl?: string; webRoot?: string } = {},
+  options: { databaseUrl?: string; webRoot?: string; config?: Config } = {},
 ): Promise<TestApp> {
   const { db, pool } = createDb(options.databaseUrl ?? TEST_DATABASE_URL);
   const logs: LogLine[] = [];
@@ -48,7 +48,12 @@ export async function startApp(
       callback();
     },
   });
-  const app = await buildApp({ config: TEST_CONFIG, db, logStream, webRoot: options.webRoot });
+  const app = await buildApp({
+    config: options.config ?? TEST_CONFIG,
+    db,
+    logStream,
+    webRoot: options.webRoot,
+  });
   return {
     app,
     db,

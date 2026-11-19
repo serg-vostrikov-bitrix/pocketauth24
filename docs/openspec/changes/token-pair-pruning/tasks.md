@@ -4,8 +4,8 @@
 
 ## 2. Pruning
 
-- [ ] 2.1 Delete old pairs with an expired access token in `issuePair` after the insert, when `tokenPruningKeep` is not `null`
-- [ ] 2.2 Add integration tests: old expired pairs deleted and their refresh token gets `invalid_grant`; live pairs kept; other users and applications untouched; pruning off deletes nothing
+- [x] 2.1 Delete old pairs with an expired access token in `issuePair` after the insert, when `tokenPruningKeep` is not `null`
+- [x] 2.2 Add integration tests: old expired pairs deleted and their refresh token gets `invalid_grant`; live pairs kept; other users and applications untouched; pruning off deletes nothing
 
 ## 3. Indexes
 
