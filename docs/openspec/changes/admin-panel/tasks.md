@@ -24,8 +24,8 @@
 ## 5. Data browser API
 
 - [x] 5.1 Filter whitelist helper: text, id, date range, enum; pagination
-- [ ] 5.2 GET endpoints for portals, applications, tokens and event counters without secret fields
-- [ ] 5.3 Integration tests, including filter combinations and an injection attempt
+- [x] 5.2 GET endpoints for portals, applications, tokens and event counters without secret fields
+- [x] 5.3 Integration tests, including filter combinations and an injection attempt
 
 ## 6. Admin UI
 

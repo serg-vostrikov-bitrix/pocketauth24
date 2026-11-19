@@ -2143,7 +2143,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ### Task 8: Tokens and event counters endpoints
 
-- [ ] Task 8 complete: Tokens and event counters endpoints
+- [x] Task 8 complete: Tokens and event counters endpoints
 
 **Covers tasks.md:** 5.2 (tokens, events), 5.3
 
@@ -2155,7 +2155,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 - Consumes: `parseQuery`, `selection`, `PAGE_SIZE`, `Column` (Task 7); `authorize`, `utcDay` (helpers / `src/eventCounters.ts`).
 - Produces: `GET /api/admin/tokens` and `GET /api/admin/events`.
 
-- [ ] **Step 1: Write the failing tests** — append to `test/integration/admin-data.test.ts`
+- [x] **Step 1: Write the failing tests** — append to `test/integration/admin-data.test.ts`
 
 Add to the imports: `eq` from `drizzle-orm`; `eventCounters`, `tokenPairs` from `../../src/schema.js`; `authorize` from `../helpers.js`. Append:
 
@@ -2279,12 +2279,12 @@ it('The data API has no write routes', async () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to make sure they fail**
+- [x] **Step 2: Run the tests to make sure they fail**
 
 Run: `npm test -- test/integration/admin-data.test.ts`
 Expected: FAIL, `/api/admin/tokens` and `/api/admin/events` return 404.
 
-- [ ] **Step 3: Add the endpoints** to `src/admin/dataRoutes.ts`
+- [x] **Step 3: Add the endpoints** to `src/admin/dataRoutes.ts`
 
 Change the imports to `import { asc, count, desc, eq, sql } from 'drizzle-orm';` and `import { applications, eventCounters, portals, tokenPairs } from '../schema.js';`. Add the column lists:
 
@@ -2365,12 +2365,12 @@ Add inside `dataRoutes`:
   });
 ```
 
-- [ ] **Step 4: Run the tests to make sure they pass**
+- [x] **Step 4: Run the tests to make sure they pass**
 
 Run: `npm test -- test/integration/admin-data.test.ts`
 Expected: PASS (15 tests).
 
-- [ ] **Step 5: Full suite, types, lint, commit**
+- [x] **Step 5: Full suite, types, lint, commit**
 
 Run: `npm test && npm run typecheck && npm run lint`
 
