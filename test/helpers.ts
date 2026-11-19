@@ -24,6 +24,7 @@ export const TEST_CONFIG: Config = {
   databaseUrl: TEST_DATABASE_URL,
   portalAllowlist: ['portal.test', 'other.test'],
   trustProxy: false,
+  tokenPruningKeep: 5,
 };
 
 export type LogLine = { level: number; msg: string; [key: string]: unknown };

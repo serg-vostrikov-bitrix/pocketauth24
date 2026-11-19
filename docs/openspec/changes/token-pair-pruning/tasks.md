@@ -1,6 +1,6 @@
 ## 1. Configuration
 
-- [ ] 1.1 Add `TOKEN_PRUNING` and `TOKEN_PRUNING_KEEP` parsing to `loadConfig` (`Config.tokenPruningKeep: number | null`), with unit tests for defaults, `false`, and invalid values
+- [x] 1.1 Add `TOKEN_PRUNING` and `TOKEN_PRUNING_KEEP` parsing to `loadConfig` (`Config.tokenPruningKeep: number | null`), with unit tests for defaults, `false`, and invalid values
 
 ## 2. Pruning
 
