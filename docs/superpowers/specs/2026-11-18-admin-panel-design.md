@@ -198,3 +198,16 @@ The delta specs are frozen after the design handoff. These two user decisions re
 
 1. **Viewer passwords (`admin-users`, "Superuser manages viewers").** On create and on password reset, the server generates the new password (20 characters from `[A-Za-z0-9]`) and returns it once in the response. The superuser does not type a password. This satisfies "A new password SHALL have at least 12 characters". The scenario "Create a viewer … with a unique login and a valid password" is met by the generated password.
 2. **Token state (`admin-data-browser`, "Search by fields").** The state of a token pair uses the access token expiry: `active` when `access_expires_at > now()`, else `expired`. Pairs with an expired refresh token are deleted by the hourly cleanup and do not appear for long.
+
+## 10. Implementation Divergence
+
+Recorded in the verify phase on 2026-11-19. The delta specs are unchanged and satisfied. The OpenSpec `design.md` is frozen after the design handoff; items 1 and 7 also supersede its D6 and D5.
+
+1. **Session cookie `Secure` (section 5.1; OpenSpec design D6).** The cookie always has `Secure`. The `admin-auth` spec requires it. Browsers accept a `Secure` cookie on `http://localhost`, so local development still works.
+2. **Login rate limit (sections 5.1 and 5.2).** The limiter API is `tryAttempt(ip)` / `refund(ip)`. The login handler reserves the attempt before any `await` and refunds it on success, on 503 and on a thrown error. Only a wrong password keeps it. A successful login does not clear earlier failures. Reason: a check-then-act race let a parallel burst bypass the limit; user decision on 2026-11-19.
+3. **Guard phase (sections 1, 5.1, 5.3).** The session check and the superuser check are `onRequest` hooks, not `preHandler`. Reason: the `admin-auth` spec requires 401 on every protected route; with `preHandler`, schema validation answered first with 400.
+4. **CLI login (section 4).** Without `--login`, the CLI keeps the current superuser login. It uses `admin` only for the first superuser. Reason: the `admin-auth` spec text.
+5. **Event counters order (section 5.4).** Events sort by `day desc, outcome asc`. The table has no `id` column.
+6. **Input bounds (sections 5.3, 5.4).** `id` filters accept at most 9 digits. Path ids accept safe integers only. Impossible calendar dates and time-zone offsets of 16 hours or more get 400. A date-only `to` of `9999-12-31` means no upper bound. Reason: these inputs reached PostgreSQL and caused HTTP 500.
+7. **`TRUST_PROXY` (section 5.1; OpenSpec design D5).** The variable accepts only `true` or `false`; any other value stops the server at boot. The proxy must overwrite `X-Forwarded-For` with `$remote_addr`, because Fastify `trustProxy: true` takes the left-most entry, which a client controls.
+8. **Additions.** The admin scope has its own 404 handler with `no-store`. The JSON guard compares the content type case-insensitively. The CLI prints a fixed message plus the database cause on a failure, never the query parameters.
