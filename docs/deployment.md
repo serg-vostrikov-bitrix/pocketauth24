@@ -157,8 +157,9 @@ Set the superuser password before the first login. The server creates no default
 - The password must have at least 12 characters.
 - The default login is `admin`. To use another login, add `--login <name>`.
 - To set the password from a script, pipe it and add `--password-stdin`:
-  `printf '%s
-' "$PASSWORD" | docker compose exec -T app node dist/cli.js superuser set-password --password-stdin`.
+
+      printf '%s\n' "$PASSWORD" | docker compose exec -T app node dist/cli.js superuser set-password --password-stdin
+
 - The command never accepts the password as an argument or an environment variable.
 - The command runs the database migrations first.
 - If you run the command again, it replaces the password and ends all sessions of the
