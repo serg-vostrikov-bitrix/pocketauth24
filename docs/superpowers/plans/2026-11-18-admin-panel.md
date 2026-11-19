@@ -1385,7 +1385,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
 
 ### Task 6: User management API
 
-- [ ] Task 6 complete: User management API
+- [x] Task 6 complete: User management API
 
 **Covers tasks.md:** 4.1, 4.2, 4.3
 
@@ -1400,7 +1400,7 @@ Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>"
   - `src/admin/users.ts`: `type UserRow = { id: number; login: string; role: AdminRole; createdAt: Date }`; `listUsers(db: Db): Promise<UserRow[]>`; `createViewer(db: Db, login: string, passwordHash: string): Promise<{ id: number; login: string } | null>` (`null` if the login exists); `type ViewerChange = 'ok' | 'not_found' | 'superuser'`; `resetViewerPassword(db: Db, id: number, passwordHash: string): Promise<ViewerChange>`; `deleteViewer(db: Db, id: number): Promise<ViewerChange>`.
   - `src/admin/usersRoutes.ts`: `usersRoutes(app: FastifyInstance, db: Db): Promise<void>`.
 
-- [ ] **Step 1: Write the failing tests** — append to `test/integration/admin-users.test.ts`
+- [x] **Step 1: Write the failing tests** — append to `test/integration/admin-users.test.ts`
 
 Extend the helpers import with `createSuperuser, loginAs, SUPERUSER`. Append:
 
@@ -1523,12 +1523,12 @@ it('A form-encoded POST /users gets 415 and creates nothing', async () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests to make sure they fail**
+- [x] **Step 2: Run the tests to make sure they fail**
 
 Run: `npm test -- test/integration/admin-users.test.ts`
 Expected: FAIL, `/api/admin/users` returns 404.
 
-- [ ] **Step 3: Add the data access** to `src/admin/users.ts`
+- [x] **Step 3: Add the data access** to `src/admin/users.ts`
 
 Change the drizzle import to `import { asc, eq } from 'drizzle-orm';` and the schema import to `import { adminUsers, type AdminRole } from '../schema.js';`. Append:
 
@@ -1597,7 +1597,7 @@ export async function deleteViewer(db: Db, id: number): Promise<ViewerChange> {
 }
 ```
 
-- [ ] **Step 4: Write `src/admin/usersRoutes.ts`**
+- [x] **Step 4: Write `src/admin/usersRoutes.ts`**
 
 ```ts
 import type { FastifyInstance, FastifyReply } from 'fastify';
@@ -1682,7 +1682,7 @@ export async function usersRoutes(app: FastifyInstance, db: Db): Promise<void> {
 }
 ```
 
-- [ ] **Step 5: Register the routes** in `src/admin/index.ts`
+- [x] **Step 5: Register the routes** in `src/admin/index.ts`
 
 Add `import { usersRoutes } from './usersRoutes.js';` and, in the `authed` scope after `sessionRoutes(authed, deps.db);`:
 
@@ -1690,12 +1690,12 @@ Add `import { usersRoutes } from './usersRoutes.js';` and, in the `authed` scope
         await usersRoutes(authed, deps.db);
 ```
 
-- [ ] **Step 6: Run the tests to make sure they pass**
+- [x] **Step 6: Run the tests to make sure they pass**
 
 Run: `npm test -- test/integration/admin-users.test.ts`
 Expected: PASS (9 tests).
 
-- [ ] **Step 7: Full suite, types, lint, commit**
+- [x] **Step 7: Full suite, types, lint, commit**
 
 Run: `npm test && npm run typecheck && npm run lint`
 

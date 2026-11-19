@@ -17,9 +17,9 @@
 
 ## 4. User management API
 
-- [ ] 4.1 List, create, delete viewers and reset a viewer password (superuser only)
-- [ ] 4.2 HTTP 403 rules for superuser changes and for viewers
-- [ ] 4.3 Integration tests
+- [x] 4.1 List, create, delete viewers and reset a viewer password (superuser only)
+- [x] 4.2 HTTP 403 rules for superuser changes and for viewers
+- [x] 4.3 Integration tests
 
 ## 5. Data browser API
 
