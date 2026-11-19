@@ -5,6 +5,8 @@ type UserRow = { id: number; login: string; role: Role; createdAt: string };
 type Shown = { login: string; password: string };
 
 const ERRORS: Record<string, string> = {
+  not_found: 'This user no longer exists.',
+  forbidden: 'This action is not allowed.',
   invalid_login: 'Use 3 to 64 characters: letters, digits, ".", "_" or "-".',
   login_taken: 'This login already exists.',
 };
@@ -19,6 +21,8 @@ export function UsersPage() {
   const [error, setError] = useState<string | null>(null);
   const [shown, setShown] = useState<Shown | null>(null);
   const [copied, setCopied] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [hint, setHint] = useState(false);
   const passwordRef = useRef<HTMLElement>(null);
 
   const load = useCallback(() => {
@@ -30,50 +34,65 @@ export function UsersPage() {
 
   const create = (event: FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
+    if (busy) return;
     setError(null);
-    apiSend<{ id: number; login: string; password: string }>('POST', '/users', {
-      login: newLogin,
-    }).then(
-      (created) => {
-        setShown({ login: created.login, password: created.password });
-        setNewLogin('');
-        load();
-      },
-      (err: unknown) => setError(message(err)),
-    );
+    setBusy(true);
+    apiSend<{ id: number; login: string; password: string }>('POST', '/users', { login: newLogin })
+      .then(
+        (created) => {
+          setShown({ login: created.login, password: created.password });
+          setNewLogin('');
+          load();
+        },
+        (err: unknown) => setError(message(err)),
+      )
+      .finally(() => setBusy(false));
   };
 
   const reset = (user: UserRow): void => {
+    if (busy) return;
     setError(null);
-    apiSend<{ password: string }>('POST', `/users/${user.id}/password`).then(
-      ({ password }) => setShown({ login: user.login, password }),
-      (err: unknown) => setError(message(err)),
-    );
+    setBusy(true);
+    apiSend<{ password: string }>('POST', `/users/${user.id}/password`)
+      .then(
+        ({ password }) => setShown({ login: user.login, password }),
+        (err: unknown) => setError(message(err)),
+      )
+      .finally(() => setBusy(false));
   };
 
   const remove = (user: UserRow): void => {
+    if (busy) return;
     if (!window.confirm(`Delete the viewer "${user.login}"? The viewer is logged out at once.`))
       return;
     setError(null);
-    apiSend('DELETE', `/users/${user.id}`).then(load, (err: unknown) => setError(message(err)));
+    setBusy(true);
+    apiSend('DELETE', `/users/${user.id}`)
+      .then(load, (err: unknown) => {
+        setError(message(err));
+        load();
+      })
+      .finally(() => setBusy(false));
   };
 
   const copy = (): void => {
     if (!shown) return;
-    const selectText = (): void => {
+    const selectManually = (): void => {
       // Fallback for a non-secure context: select the text so the user can copy it by hand.
       if (passwordRef.current) window.getSelection()?.selectAllChildren(passwordRef.current);
+      setHint(true);
     };
     if (!navigator.clipboard) {
-      selectText();
+      selectManually();
       return;
     }
-    navigator.clipboard.writeText(shown.password).then(() => setCopied(true), selectText);
+    navigator.clipboard.writeText(shown.password).then(() => setCopied(true), selectManually);
   };
 
   const close = (): void => {
     setShown(null);
     setCopied(false);
+    setHint(false);
   };
 
   return (
@@ -87,7 +106,7 @@ export function UsersPage() {
           onChange={(e) => setNewLogin(e.target.value)}
           required
         />
-        <button type="submit" className="admin-button">
+        <button type="submit" className="admin-button" disabled={busy}>
           New viewer
         </button>
       </form>
@@ -119,6 +138,7 @@ export function UsersPage() {
                         <button
                           type="button"
                           className="admin-button admin-button--ghost"
+                          disabled={busy}
                           onClick={() => reset(user)}
                         >
                           Reset password
@@ -126,6 +146,7 @@ export function UsersPage() {
                         <button
                           type="button"
                           className="admin-button admin-button--ghost"
+                          disabled={busy}
                           onClick={() => remove(user)}
                         >
                           Delete
@@ -156,6 +177,7 @@ export function UsersPage() {
               <button type="button" className="admin-button" onClick={copy}>
                 {copied ? 'Copied' : 'Copy'}
               </button>
+              {hint && <span className="admin-hint">Press Ctrl+C to copy.</span>}
               <button type="button" className="admin-button admin-button--ghost" onClick={close}>
                 Close
               </button>

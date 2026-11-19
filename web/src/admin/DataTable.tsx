@@ -211,7 +211,10 @@ export function DataTable({
       </div>
       <div className="admin-table-footer">
         <span role="status">
-          {error ?? (loading ? 'Loading…' : `${data?.total ?? 0} rows · page ${page} of ${pages}`)}
+          {error ??
+            (loading
+              ? 'Loading…'
+              : `${data?.total ?? 0} ${data?.total === 1 ? 'row' : 'rows'} · page ${page} of ${pages}`)}
         </span>
         <div className="admin-pager">
           <button

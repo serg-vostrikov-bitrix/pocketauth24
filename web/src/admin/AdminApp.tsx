@@ -13,6 +13,14 @@ export function AdminApp() {
   const [user, setUser] = useState<AdminUser | null | undefined>(undefined);
 
   useEffect(() => {
+    const previous = document.title;
+    document.title = 'b24auth-server admin';
+    return () => {
+      document.title = previous;
+    };
+  }, []);
+
+  useEffect(() => {
     setUnauthorizedHandler(() => {
       setUser(null);
       navigate('/admin/login', { replace: true });
