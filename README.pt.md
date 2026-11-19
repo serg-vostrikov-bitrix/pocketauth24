@@ -1,10 +1,10 @@
-# b24auth-server
+# PocketAuth24
 
 [English](README.md) · [Deutsch](README.de.md) · [Italiano](README.it.md) · [Español](README.es.md) · **Português** · [Русский](README.ru.md)
 
 **Mantenha as aplicações locais funcionando em um portal Bitrix24 on-premise sem acesso à internet.**
 
-[![CI](https://github.com/serg-vostrikov-bitrix/b24auth-server/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/serg-vostrikov-bitrix/b24auth-server/actions/workflows/ci.yml)
+[![CI](https://github.com/serg-vostrikov-bitrix/pocketauth24/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/serg-vostrikov-bitrix/pocketauth24/actions/workflows/ci.yml)
 ![Tests](https://img.shields.io/badge/tests-69%20passing-brightgreen)
 ![Contract tests](https://img.shields.io/badge/contract--tested-captured%20cloud%20traffic-blue)
 ![Closed network](https://img.shields.io/badge/closed%20network-verified%20on%20test%20portal-blue)
@@ -17,11 +17,11 @@
 ![PostgreSQL 17](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-compose-2496ED?logo=docker&logoColor=white)
 
-O b24auth-server é um servidor independente e auto-hospedado. Ele responde às chamadas OAuth que um portal Bitrix24 on-premise enviaria, de outra forma, ao servidor OAuth na nuvem (`oauth.bitrix.info` / `oauth.bitrix24.tech`). Ele roda como um único contêiner com um banco de dados PostgreSQL 17 dentro da sua rede. Aponte o portal para o servidor: as aplicações locais abrem, chamam REST, renovam tokens e recebem eventos sem conexão com a nuvem.
+O PocketAuth24 é um servidor independente e auto-hospedado. Ele responde às chamadas OAuth que um portal Bitrix24 on-premise enviaria, de outra forma, ao servidor OAuth na nuvem (`oauth.bitrix.info` / `oauth.bitrix24.tech`). Ele roda como um único contêiner com um banco de dados PostgreSQL 17 dentro da sua rede. Aponte o portal para o servidor: as aplicações locais abrem, chamam REST, renovam tokens e recebem eventos sem conexão com a nuvem.
 
 > Projeto de código aberto independente. Não é um produto da Bitrix24. Veja o [aviso legal](#aviso-legal).
 
-![A página de status pública do b24auth-server: estado do serviço e do banco de dados, portais, aplicações locais, pares de tokens ativos e entregas de eventos](docs/images/status-page.png)
+![A página de status pública do pocketauth24: estado do serviço e do banco de dados, portais, aplicações locais, pares de tokens ativos e entregas de eventos](docs/images/status-page.png)
 
 _A página de status em `/`. Ela mostra apenas contagens agregadas._
 
@@ -29,9 +29,9 @@ _A página de status em `/`. Ela mostra apenas contagens agregadas._
 
 Um portal Bitrix24 on-premise depende do servidor OAuth na nuvem para as suas aplicações locais. Quando o portal não alcança a internet, as aplicações locais não abrem, não podem chamar REST com tokens, não podem renovar tokens e não recebem eventos online.
 
-Equipes em redes corporativas fechadas e ambientes regulados ficam com duas opções ruins: abrir mão das aplicações locais ou abrir uma rota para a internet que não querem. O b24auth-server oferece uma terceira: executar o lado OAuth das aplicações locais dentro da própria rede.
+Equipes em redes corporativas fechadas e ambientes regulados ficam com duas opções ruins: abrir mão das aplicações locais ou abrir uma rota para a internet que não querem. O PocketAuth24 oferece uma terceira: executar o lado OAuth das aplicações locais dentro da própria rede.
 
-**Compensa também com acesso à internet.** Se os portais dos seus clientes executam apenas as suas próprias aplicações locais, o servidor OAuth remoto na nuvem agrega pouco: inicializações de aplicações, verificações e renovações de tokens ainda vão para um servidor que você não controla, e a sua disponibilidade e o caminho de rede até ele estão fora do seu alcance. Com o b24auth-server ao lado do portal, essa dependência passa para uma infraestrutura que você mesmo opera e monitora. A contrapartida: depois da troca, o portal deixa de usar o servidor OAuth na nuvem, e por isso as aplicações do Marketplace param de funcionar nele. Esta configuração é para portais que usam apenas aplicações locais.
+**Compensa também com acesso à internet.** Se os portais dos seus clientes executam apenas as suas próprias aplicações locais, o servidor OAuth remoto na nuvem agrega pouco: inicializações de aplicações, verificações e renovações de tokens ainda vão para um servidor que você não controla, e a sua disponibilidade e o caminho de rede até ele estão fora do seu alcance. Com o PocketAuth24 ao lado do portal, essa dependência passa para uma infraestrutura que você mesmo opera e monitora. A contrapartida: depois da troca, o portal deixa de usar o servidor OAuth na nuvem, e por isso as aplicações do Marketplace param de funcionar nele. Esta configuração é para portais que usam apenas aplicações locais.
 
 ## ✨ Benefícios
 
@@ -60,7 +60,7 @@ Equipes em redes corporativas fechadas e ambientes regulados ficam com duas opç
 ```mermaid
 sequenceDiagram
     participant P as Bitrix24 on-premise portal
-    participant S as b24auth-server
+    participant S as PocketAuth24
     participant A as Local application
     P->>S: Register (allowlisted host)
     S-->>P: Service credentials
@@ -96,13 +96,13 @@ Não há imagem publicada: construa-a em uma máquina com acesso à internet e l
 
 ```bash
 # Outside the closed network
-docker build -t b24auth-server:<version> .
+docker build -t pocketauth24:<version> .
 docker pull postgres:17
-docker save b24auth-server:<version> postgres:17 -o b24auth-server-<version>.tar
+docker save pocketauth24:<version> postgres:17 -o pocketauth24-<version>.tar
 
 # Inside the closed network (copy the tar and docker-compose.yml first)
-docker load -i b24auth-server-<version>.tar
-docker tag b24auth-server:<version> b24auth-server:local
+docker load -i pocketauth24-<version>.tar
+docker tag pocketauth24:<version> pocketauth24:local
 ```
 
 Crie `.env` ao lado de `docker-compose.yml`:
@@ -227,4 +227,4 @@ Configuração: `BASE_URL`, `DATABASE_URL`, `PORTAL_ALLOWLIST` (veja [`.env.exam
 
 ## Aviso legal
 
-O b24auth-server é um projeto independente. Não é afiliado à Bitrix24, nem endossado ou certificado por ela. "Substituto do servidor OAuth na nuvem" descreve o que o software faz, não um relacionamento com um fornecedor. Bitrix24 e outras marcas pertencem aos seus respectivos proprietários.
+O PocketAuth24 é um projeto independente. Não é afiliado à Bitrix24, nem endossado ou certificado por ela. "Substituto do servidor OAuth na nuvem" descreve o que o software faz, não um relacionamento com um fornecedor. Bitrix24 e outras marcas pertencem aos seus respectivos proprietários.

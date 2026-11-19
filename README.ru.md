@@ -1,10 +1,10 @@
-# b24auth-server
+# PocketAuth24
 
 [English](README.md) · [Deutsch](README.de.md) · [Italiano](README.it.md) · [Español](README.es.md) · [Português](README.pt.md) · **Русский**
 
 **Локальные приложения продолжают работать на коробочном портале Bitrix24 без доступа в интернет.**
 
-[![CI](https://github.com/serg-vostrikov-bitrix/b24auth-server/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/serg-vostrikov-bitrix/b24auth-server/actions/workflows/ci.yml)
+[![CI](https://github.com/serg-vostrikov-bitrix/pocketauth24/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/serg-vostrikov-bitrix/pocketauth24/actions/workflows/ci.yml)
 ![Tests](https://img.shields.io/badge/tests-69%20passing-brightgreen)
 ![Contract tests](https://img.shields.io/badge/contract--tested-captured%20cloud%20traffic-blue)
 ![Closed network](https://img.shields.io/badge/closed%20network-verified%20on%20test%20portal-blue)
@@ -17,11 +17,11 @@
 ![PostgreSQL 17](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-compose-2496ED?logo=docker&logoColor=white)
 
-b24auth-server — независимый сервер для самостоятельного размещения. Он отвечает на OAuth-вызовы, которые коробочный портал Bitrix24 иначе отправил бы на облачный OAuth-сервер (`oauth.bitrix.info` / `oauth.bitrix24.tech`). Он работает как один контейнер с одной базой PostgreSQL 17 внутри вашей сети. Укажите порталу этот сервер, и локальные приложения откроются, вызовут REST, обновят токены и получат события без связи с облаком.
+PocketAuth24 — независимый сервер для самостоятельного размещения. Он отвечает на OAuth-вызовы, которые коробочный портал Bitrix24 иначе отправил бы на облачный OAuth-сервер (`oauth.bitrix.info` / `oauth.bitrix24.tech`). Он работает как один контейнер с одной базой PostgreSQL 17 внутри вашей сети. Укажите порталу этот сервер, и локальные приложения откроются, вызовут REST, обновят токены и получат события без связи с облаком.
 
 > Независимый проект с открытым кодом. Не продукт Bitrix24. См. [отказ от ответственности](#отказ-от-ответственности).
 
-![Публичная страница статуса b24auth-server: состояние сервиса и базы данных, порталы, локальные приложения, активные пары токенов и доставки событий](docs/images/status-page.png)
+![Публичная страница статуса pocketauth24: состояние сервиса и базы данных, порталы, локальные приложения, активные пары токенов и доставки событий](docs/images/status-page.png)
 
 _Страница статуса по адресу `/`. Она показывает только агрегированные числа._
 
@@ -29,9 +29,9 @@ _Страница статуса по адресу `/`. Она показыва�
 
 Коробочный портал Bitrix24 зависит от облачного OAuth-сервера в части локальных приложений. Когда портал не выходит в интернет, локальные приложения не открываются, не могут вызывать REST с токенами, не могут обновлять токены и не получают онлайн-события.
 
-Команды в закрытых корпоративных сетях и регулируемых средах остаются с двумя плохими вариантами: отказаться от локальных приложений или открыть маршрут в интернет, который им не нужен. b24auth-server даёт третий: запустить OAuth-часть локальных приложений внутри собственной сети.
+Команды в закрытых корпоративных сетях и регулируемых средах остаются с двумя плохими вариантами: отказаться от локальных приложений или открыть маршрут в интернет, который им не нужен. PocketAuth24 даёт третий: запустить OAuth-часть локальных приложений внутри собственной сети.
 
-**Это выгодно и при наличии интернета.** Если порталы ваших клиентов запускают только ваши локальные приложения, удалённый облачный OAuth-сервер даёт мало: запуск приложений, проверка и обновление токенов всё равно идут на сервер, который вы не контролируете. Его доступность и сетевой путь до него вне вашей власти. Когда b24auth-server стоит рядом с порталом, эта зависимость переходит в инфраструктуру, которую вы эксплуатируете и отслеживаете сами. Компромисс: после переключения портал больше не использует облачный OAuth-сервер, поэтому приложения Маркетплейса на нём перестают работать. Такая схема подходит для порталов, которые используют только локальные приложения.
+**Это выгодно и при наличии интернета.** Если порталы ваших клиентов запускают только ваши локальные приложения, удалённый облачный OAuth-сервер даёт мало: запуск приложений, проверка и обновление токенов всё равно идут на сервер, который вы не контролируете. Его доступность и сетевой путь до него вне вашей власти. Когда PocketAuth24 стоит рядом с порталом, эта зависимость переходит в инфраструктуру, которую вы эксплуатируете и отслеживаете сами. Компромисс: после переключения портал больше не использует облачный OAuth-сервер, поэтому приложения Маркетплейса на нём перестают работать. Такая схема подходит для порталов, которые используют только локальные приложения.
 
 ## ✨ Преимущества
 
@@ -60,7 +60,7 @@ _Страница статуса по адресу `/`. Она показыва�
 ```mermaid
 sequenceDiagram
     participant P as Bitrix24 on-premise portal
-    participant S as b24auth-server
+    participant S as PocketAuth24
     participant A as Local application
     P->>S: Register (allowlisted host)
     S-->>P: Service credentials
@@ -96,13 +96,13 @@ OAuth-трафик между порталом, локальными прило�
 
 ```bash
 # Outside the closed network
-docker build -t b24auth-server:<version> .
+docker build -t pocketauth24:<version> .
 docker pull postgres:17
-docker save b24auth-server:<version> postgres:17 -o b24auth-server-<version>.tar
+docker save pocketauth24:<version> postgres:17 -o pocketauth24-<version>.tar
 
 # Inside the closed network (copy the tar and docker-compose.yml first)
-docker load -i b24auth-server-<version>.tar
-docker tag b24auth-server:<version> b24auth-server:local
+docker load -i pocketauth24-<version>.tar
+docker tag pocketauth24:<version> pocketauth24:local
 ```
 
 Создайте `.env` рядом с `docker-compose.yml`:
@@ -227,4 +227,4 @@ npm test
 
 ## Отказ от ответственности
 
-b24auth-server — независимый проект. Он не связан с Bitrix24, не одобрен и не сертифицирован Bitrix24. Фраза «замена облачного OAuth-сервера» описывает, что делает программа, а не отношения с вендором. Bitrix24 и другие товарные знаки принадлежат их владельцам.
+PocketAuth24 — независимый проект. Он не связан с Bitrix24, не одобрен и не сертифицирован Bitrix24. Фраза «замена облачного OAuth-сервера» описывает, что делает программа, а не отношения с вендором. Bitrix24 и другие товарные знаки принадлежат их владельцам.

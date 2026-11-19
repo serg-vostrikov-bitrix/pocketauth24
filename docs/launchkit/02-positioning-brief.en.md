@@ -22,7 +22,7 @@ A Bitrix24 on-premise portal relies on the cloud OAuth server (`oauth.bitrix.inf
 
 ## Main value proposition
 
-b24auth-server is an independent, self-hosted server that answers the OAuth calls a Bitrix24 on-premise portal would otherwise send to the cloud. It runs as one container plus one PostgreSQL 17 database inside your network. After the portal is pointed at it, local applications open, call REST, renew tokens and receive events with no connection to the cloud. One server can serve several portals. This was checked on a local test portal whose PHP container was cut off from the internet.
+PocketAuth24 is an independent, self-hosted server that answers the OAuth calls a Bitrix24 on-premise portal would otherwise send to the cloud. It runs as one container plus one PostgreSQL 17 database inside your network. After the portal is pointed at it, local applications open, call REST, renew tokens and receive events with no connection to the cloud. One server can serve several portals. This was checked on a local test portal whose PHP container was cut off from the internet.
 
 ## Key scenarios to emphasize
 

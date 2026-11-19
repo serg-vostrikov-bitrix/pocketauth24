@@ -1,10 +1,10 @@
-# b24auth-server
+# PocketAuth24
 
 [English](README.md) · **Deutsch** · [Italiano](README.it.md) · [Español](README.es.md) · [Português](README.pt.md) · [Русский](README.ru.md)
 
 **Lokale Anwendungen auf einem Bitrix24-On-Premise-Portal ohne Internetzugang weiter betreiben.**
 
-[![CI](https://github.com/serg-vostrikov-bitrix/b24auth-server/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/serg-vostrikov-bitrix/b24auth-server/actions/workflows/ci.yml)
+[![CI](https://github.com/serg-vostrikov-bitrix/pocketauth24/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/serg-vostrikov-bitrix/pocketauth24/actions/workflows/ci.yml)
 ![Tests](https://img.shields.io/badge/tests-69%20passing-brightgreen)
 ![Contract tests](https://img.shields.io/badge/contract--tested-captured%20cloud%20traffic-blue)
 ![Closed network](https://img.shields.io/badge/closed%20network-verified%20on%20test%20portal-blue)
@@ -17,11 +17,11 @@
 ![PostgreSQL 17](https://img.shields.io/badge/PostgreSQL-17-4169E1?logo=postgresql&logoColor=white)
 ![Docker](https://img.shields.io/badge/Docker-compose-2496ED?logo=docker&logoColor=white)
 
-b24auth-server ist ein unabhängiger, selbst gehosteter Server. Er beantwortet die OAuth-Aufrufe, die ein Bitrix24-On-Premise-Portal sonst an den Cloud-OAuth-Server (`oauth.bitrix.info` / `oauth.bitrix24.tech`) senden würde. Er läuft als ein Container mit einer PostgreSQL-17-Datenbank in Ihrem Netzwerk. Richten Sie das Portal auf den Server aus. Dann öffnen lokale Anwendungen, rufen REST auf, erneuern Tokens und empfangen Ereignisse ohne Verbindung zur Cloud.
+PocketAuth24 ist ein unabhängiger, selbst gehosteter Server. Er beantwortet die OAuth-Aufrufe, die ein Bitrix24-On-Premise-Portal sonst an den Cloud-OAuth-Server (`oauth.bitrix.info` / `oauth.bitrix24.tech`) senden würde. Er läuft als ein Container mit einer PostgreSQL-17-Datenbank in Ihrem Netzwerk. Richten Sie das Portal auf den Server aus. Dann öffnen lokale Anwendungen, rufen REST auf, erneuern Tokens und empfangen Ereignisse ohne Verbindung zur Cloud.
 
 > Unabhängiges Open-Source-Projekt. Kein Produkt von Bitrix24. Siehe den [Haftungsausschluss](#haftungsausschluss).
 
-![Die öffentliche Statusseite von b24auth-server: Zustand von Dienst und Datenbank, Portale, lokale Anwendungen, aktive Token-Paare und Ereigniszustellungen](docs/images/status-page.png)
+![Die öffentliche Statusseite von pocketauth24: Zustand von Dienst und Datenbank, Portale, lokale Anwendungen, aktive Token-Paare und Ereigniszustellungen](docs/images/status-page.png)
 
 _Die Statusseite unter `/`. Sie zeigt nur aggregierte Zahlen._
 
@@ -29,9 +29,9 @@ _Die Statusseite unter `/`. Sie zeigt nur aggregierte Zahlen._
 
 Ein Bitrix24-On-Premise-Portal hängt für seine lokalen Anwendungen vom Cloud-OAuth-Server ab. Wenn das Portal das Internet nicht erreicht, können lokale Anwendungen nicht öffnen, nicht mit Tokens per REST aufrufen, keine Tokens erneuern und erhalten keine Online-Ereignisse.
 
-Teams in geschlossenen Firmennetzwerken und regulierten Umgebungen haben dann zwei schlechte Optionen: auf lokale Anwendungen verzichten oder eine Internetroute öffnen, die sie nicht wollen. b24auth-server bietet eine dritte: die OAuth-Seite lokaler Anwendungen im eigenen Netzwerk betreiben.
+Teams in geschlossenen Firmennetzwerken und regulierten Umgebungen haben dann zwei schlechte Optionen: auf lokale Anwendungen verzichten oder eine Internetroute öffnen, die sie nicht wollen. PocketAuth24 bietet eine dritte: die OAuth-Seite lokaler Anwendungen im eigenen Netzwerk betreiben.
 
-**Es lohnt sich auch mit Internetzugang.** Wenn die Portale Ihrer Kunden nur Ihre eigenen lokalen Anwendungen betreiben, bringt der entfernte Cloud-OAuth-Server wenig: App-Starts, Token-Prüfungen und Erneuerungen gehen weiter an einen Server, den Sie nicht kontrollieren. Seine Verfügbarkeit und der Netzwerkpfad dorthin liegen nicht in Ihrer Hand. Mit b24auth-server neben dem Portal wandert diese Abhängigkeit in Infrastruktur, die Sie selbst betreiben und überwachen. Der Preis: Nach dem Wechsel nutzt das Portal den Cloud-OAuth-Server nicht mehr, daher funktionieren Marketplace-Anwendungen darauf nicht mehr. Diese Konfiguration ist für Portale gedacht, die nur lokale Anwendungen nutzen.
+**Es lohnt sich auch mit Internetzugang.** Wenn die Portale Ihrer Kunden nur Ihre eigenen lokalen Anwendungen betreiben, bringt der entfernte Cloud-OAuth-Server wenig: App-Starts, Token-Prüfungen und Erneuerungen gehen weiter an einen Server, den Sie nicht kontrollieren. Seine Verfügbarkeit und der Netzwerkpfad dorthin liegen nicht in Ihrer Hand. Mit PocketAuth24 neben dem Portal wandert diese Abhängigkeit in Infrastruktur, die Sie selbst betreiben und überwachen. Der Preis: Nach dem Wechsel nutzt das Portal den Cloud-OAuth-Server nicht mehr, daher funktionieren Marketplace-Anwendungen darauf nicht mehr. Diese Konfiguration ist für Portale gedacht, die nur lokale Anwendungen nutzen.
 
 ## ✨ Vorteile
 
@@ -60,7 +60,7 @@ Teams in geschlossenen Firmennetzwerken und regulierten Umgebungen haben dann zw
 ```mermaid
 sequenceDiagram
     participant P as Bitrix24 on-premise portal
-    participant S as b24auth-server
+    participant S as PocketAuth24
     participant A as Local application
     P->>S: Register (allowlisted host)
     S-->>P: Service credentials
@@ -96,13 +96,13 @@ Es gibt kein veröffentlichtes Image: Bauen Sie es auf einem Rechner mit Interne
 
 ```bash
 # Outside the closed network
-docker build -t b24auth-server:<version> .
+docker build -t pocketauth24:<version> .
 docker pull postgres:17
-docker save b24auth-server:<version> postgres:17 -o b24auth-server-<version>.tar
+docker save pocketauth24:<version> postgres:17 -o pocketauth24-<version>.tar
 
 # Inside the closed network (copy the tar and docker-compose.yml first)
-docker load -i b24auth-server-<version>.tar
-docker tag b24auth-server:<version> b24auth-server:local
+docker load -i pocketauth24-<version>.tar
+docker tag pocketauth24:<version> pocketauth24:local
 ```
 
 Legen Sie `.env` neben `docker-compose.yml` an:
@@ -227,4 +227,4 @@ Konfiguration: `BASE_URL`, `DATABASE_URL`, `PORTAL_ALLOWLIST` (siehe [`.env.exam
 
 ## Haftungsausschluss
 
-b24auth-server ist ein unabhängiges Projekt. Es ist nicht mit Bitrix24 verbunden und wird von Bitrix24 weder unterstützt noch zertifiziert. "Ersatz für den Cloud-OAuth-Server" beschreibt, was die Software tut, und keine Beziehung zu einem Hersteller. Bitrix24 und andere Marken gehören ihren jeweiligen Inhabern.
+PocketAuth24 ist ein unabhängiges Projekt. Es ist nicht mit Bitrix24 verbunden und wird von Bitrix24 weder unterstützt noch zertifiziert. "Ersatz für den Cloud-OAuth-Server" beschreibt, was die Software tut, und keine Beziehung zu einem Hersteller. Bitrix24 und andere Marken gehören ihren jeweiligen Inhabern.

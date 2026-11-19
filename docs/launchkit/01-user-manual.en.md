@@ -1,8 +1,8 @@
-# b24auth-server User Manual
+# PocketAuth24 User Manual
 
 ## What The App Does
 
-b24auth-server is a self-hosted replacement for the Bitrix24 cloud OAuth server (`oauth.bitrix.info` / `oauth.bitrix24.tech`). It lets local applications on Bitrix24 on-premise portals work in a closed network, where the portal cannot reach the internet.
+PocketAuth24 is a self-hosted replacement for the Bitrix24 cloud OAuth server (`oauth.bitrix.info` / `oauth.bitrix24.tech`). It lets local applications on Bitrix24 on-premise portals work in a closed network, where the portal cannot reach the internet.
 
 You run it as one container plus one PostgreSQL 17 database inside your network. You then point the portal at it. After that, the portal registers itself on the server, local applications get tokens from it, and the server delivers portal events to application handlers.
 
@@ -18,7 +18,7 @@ One server can serve several portals.
 
 ## Main User Value
 
-Without internet access the portal cannot reach the cloud OAuth server, so local applications cannot open, call REST methods, renew tokens or receive online events. With b24auth-server in the closed network, the following work with no internet access:
+Without internet access the portal cannot reach the cloud OAuth server, so local applications cannot open, call REST methods, renew tokens or receive online events. With PocketAuth24 in the closed network, the following work with no internet access:
 
 - opening a local application in the portal (with or without an install page);
 - REST calls from the application with the issued tokens;
@@ -159,8 +159,8 @@ There is no CD or release pipeline and no published image. You build the image y
 
 ### Steps
 
-1. **What you deploy.** One container (`b24auth-server`) and one PostgreSQL 17 database. The service listens on plain HTTP port 3000; TLS ends at your reverse proxy.
-2. **Move the image into the closed network.** On a machine with internet access: `docker build -t b24auth-server:<version> .`, `docker pull postgres:17`, `docker save b24auth-server:<version> postgres:17 -o b24auth-server-<version>.tar`. Copy the tar file and `docker-compose.yml` into the closed network, then `docker load -i b24auth-server-<version>.tar` and `docker tag b24auth-server:<version> b24auth-server:local`.
+1. **What you deploy.** One container (`pocketauth24`) and one PostgreSQL 17 database. The service listens on plain HTTP port 3000; TLS ends at your reverse proxy.
+2. **Move the image into the closed network.** On a machine with internet access: `docker build -t pocketauth24:<version> .`, `docker pull postgres:17`, `docker save pocketauth24:<version> postgres:17 -o pocketauth24-<version>.tar`. Copy the tar file and `docker-compose.yml` into the closed network, then `docker load -i pocketauth24-<version>.tar` and `docker tag pocketauth24:<version> pocketauth24:local`.
 3. **Configure.** Create `.env` next to `docker-compose.yml`:
 
    | Variable | Example | Meaning |

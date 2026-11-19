@@ -1,5 +1,5 @@
 {
-  "name": "b24auth-server",
+  "name": "pocketauth24",
   "version": "0.1.0",
   "description": "",
   "directories": {
@@ -20,16 +20,16 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/serg-vostrikov-bitrix/b24auth-server.git"
+    "url": "git+https://github.com/serg-vostrikov-bitrix/pocketauth24.git"
   },
   "keywords": [],
   "author": "",
   "license": "MIT",
   "type": "module",
   "bugs": {
-    "url": "https://github.com/serg-vostrikov-bitrix/b24auth-server/issues"
+    "url": "https://github.com/serg-vostrikov-bitrix/pocketauth24/issues"
   },
-  "homepage": "https://github.com/serg-vostrikov-bitrix/b24auth-server#readme",
+  "homepage": "https://github.com/serg-vostrikov-bitrix/pocketauth24#readme",
   "private": "true",
   "engines": {
     "node": ">=24"
