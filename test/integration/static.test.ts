@@ -57,3 +57,20 @@ it('Without index.html in webRoot, / returns the JSON 404', async () => {
     await bare.close();
   }
 });
+
+it('GET /admin and /admin/* return index.html with the security headers', async () => {
+  for (const url of ['/admin', '/admin/', '/admin/tokens', '/admin/users/42']) {
+    const res = await t.app.inject({ method: 'GET', url });
+    expect(res.statusCode).toBe(200);
+    expect(res.headers['content-type']).toMatch(/^text\/html/);
+    expect(res.body).toContain('<div id="root">');
+    expect(res.headers['content-security-policy']).toBe(CSP);
+    expect(res.headers['cache-control']).toBe('no-cache');
+  }
+});
+
+it('Unknown paths under /api/admin keep the JSON 404', async () => {
+  const res = await t.app.inject({ method: 'GET', url: '/api/admin/nothing' });
+  expect(res.statusCode).toBe(404);
+  expect(res.json()).toEqual({ error: 'not_found' });
+});

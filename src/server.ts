@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import { migrate } from 'drizzle-orm/node-postgres/migrator';
+import { deleteExpiredSessions } from './admin/sessions.js';
 import { buildApp } from './app.js';
 import { CLEANUP_INTERVAL_MS, loadConfig, PORT } from './config.js';
 import { createDb } from './db.js';
@@ -14,8 +15,12 @@ const webRoot = fileURLToPath(new URL('../public', import.meta.url));
 const app = await buildApp({ config, db, webRoot });
 
 const cleanup = setInterval(() => {
-  deleteExpiredPairs(db, new Date()).catch((err: unknown) => {
+  const now = new Date();
+  deleteExpiredPairs(db, now).catch((err: unknown) => {
     app.log.error({ err }, 'token_cleanup_failed');
+  });
+  deleteExpiredSessions(db, now).catch((err: unknown) => {
+    app.log.error({ err }, 'session_cleanup_failed');
   });
 }, CLEANUP_INTERVAL_MS);
 

@@ -1,0 +1,16 @@
+{
+  "change": "admin-panel",
+  "phase": "design",
+  "mode": "compact",
+  "canonical_spec": "openspec",
+  "generated_by": "comet-handoff.sh",
+  "context_hash": "bcb0d846f020272316af3bcd995cce3e6ea5ac1c9b7ad13cec8da3016bbc5bf0",
+  "files": [
+    { "path": "docs/openspec/changes/admin-panel/proposal.md", "sha256": "36d7d22dc0ebdbcb090f229338f79657dfad8fa56865972a3b7787bf1498ecf3" },
+    { "path": "docs/openspec/changes/admin-panel/design.md", "sha256": "7e3584dcd7a1886cc4bb1c0617ba93cc922f86840c99d01a5281705819453b7a" },
+    { "path": "docs/openspec/changes/admin-panel/tasks.md", "sha256": "f36f717780c8dba5ffddab634ae08b2d87f1409f5842bd4e63573cfe65c3f492" },
+    { "path": "docs/openspec/changes/admin-panel/specs/admin-auth/spec.md", "sha256": "41b21c14064aa46cbd6c832682a82bebbdb8d65b424ec6a2a3befd569b8c1a57" },
+    { "path": "docs/openspec/changes/admin-panel/specs/admin-data-browser/spec.md", "sha256": "5c7be95e1350cfcfd52f2ca539915d6f3f249482b042141036195d88ea67bbeb" },
+    { "path": "docs/openspec/changes/admin-panel/specs/admin-users/spec.md", "sha256": "fe85432395be61c81d08c5fbb84d5ba9e13f0ef75a51422f815f6148eafbbf5a" }
+  ]
+}

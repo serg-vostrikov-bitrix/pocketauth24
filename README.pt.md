@@ -5,9 +5,8 @@
 **Mantenha as aplicações locais funcionando em um portal Bitrix24 on-premise sem acesso à internet.**
 
 [![CI](https://github.com/serg-vostrikov-bitrix/pocketauth24/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/serg-vostrikov-bitrix/pocketauth24/actions/workflows/ci.yml)
-![Tests](https://img.shields.io/badge/tests-69%20passing-brightgreen)
 ![Contract tests](https://img.shields.io/badge/contract--tested-captured%20cloud%20traffic-blue)
-![Closed network](https://img.shields.io/badge/closed%20network-verified%20on%20test%20portal-blue)
+![Closed network](https://img.shields.io/badge/closed%20network-verified-blue)
 ![Dependabot](https://img.shields.io/badge/Dependabot-enabled-025E8C?logo=dependabot)
 [![License: MIT](https://img.shields.io/badge/license-MIT-yellow)](LICENSE)
 <br>
@@ -21,7 +20,7 @@ O PocketAuth24 é um servidor independente e auto-hospedado. Ele responde às ch
 
 > Projeto de código aberto independente. Não é um produto da Bitrix24. Veja o [aviso legal](#aviso-legal).
 
-![A página de status pública do pocketauth24: estado do serviço e do banco de dados, portais, aplicações locais, pares de tokens ativos e entregas de eventos](docs/images/status-page.png)
+![A página de status pública do PocketAuth24: estado do serviço e do banco de dados, portais, aplicações locais, pares de tokens ativos e entregas de eventos](docs/images/status-page.png)
 
 _A página de status em `/`. Ela mostra apenas contagens agregadas._
 
@@ -45,15 +44,16 @@ Equipes em redes corporativas fechadas e ambientes regulados ficam com duas opç
 
 ## 🧩 Funcionalidades disponíveis hoje
 
-| Área                   | O que você recebe                                                                                                                                                                                                                                                                                                        |
-| ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Registro do portal** | O portal se registra sozinho na sua próxima chamada OAuth. O registro é limitado a uma lista de permissões (`PORTAL_ALLOWLIST`, comparada por host e porta). Toda chamada ao serviço é autenticada com as credenciais do próprio portal, e todos os dados ficam restritos ao portal que chama.                           |
-| **Aplicações locais**  | Crie, atualize e exclua aplicações locais no portal como de costume. O servidor emite `client_id` (`local.<14 hex>.<8 digits>`) e `client_secret` e mantém o seu registro sincronizado. Excluir uma app remove todos os seus tokens.                                                                                     |
-| **Tokens**             | `rest.authorize` emite pares de tokens para o usuário correto, incluindo não administradores; as páginas de instalação abrem com tokens. `rest.check` valida tokens. O scope do token é a interseção entre o scope solicitado e o da aplicação.                                                                          |
-| **Renovação**          | `/oauth/token/` (GET ou POST) com `grant_type=refresh_token`. Os refresh tokens são reutilizáveis até expirar, como observado no tráfego da nuvem capturado. Os access tokens duram 3600 s e os refresh tokens 180 dias; os pares expirados são excluídos a cada hora.                                                   |
-| **Eventos**            | `rest.event.call` entrega cada evento ao manipulador da aplicação por HTTP POST, incluindo `ONAPPINSTALL` com tokens recém-emitidos. O portal recebe uma resposta imediata.                                                                                                                                              |
-| **Segurança**          | Armazenamento com hash de tokens e segredos, tokens de uma fonte aleatória criptograficamente segura, ocultação nos logs (sem query strings, URLs de manipuladores sem credenciais), porta da app vinculada ao loopback (`127.0.0.1:3000`) em `docker-compose.yml`.                                                      |
-| **Operação**           | Uma página de status pública em `/` (estado do serviço e do banco de dados, contagens de portais, aplicações, pares de tokens ativos e entregas de eventos) e os mesmos dados em JSON em `/api/status`. `/health` retorna HTTP 503 quando o PostgreSQL não responde. Logs JSON, barra final aceita em todos os caminhos. |
+| Área                        | O que você recebe                                                                                                                                                                                                                                                                                                                                                         |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Registro do portal**      | O portal se registra sozinho na sua próxima chamada OAuth. O registro é limitado a uma lista de permissões (`PORTAL_ALLOWLIST`, comparada por host e porta). Toda chamada ao serviço é autenticada com as credenciais do próprio portal, e todos os dados ficam restritos ao portal que chama.                                                                            |
+| **Aplicações locais**       | Crie, atualize e exclua aplicações locais no portal como de costume. O servidor emite `client_id` (`local.<14 hex>.<8 digits>`) e `client_secret` e mantém o seu registro sincronizado. Excluir uma app remove todos os seus tokens.                                                                                                                                      |
+| **Tokens**                  | `rest.authorize` emite pares de tokens para o usuário correto, incluindo não administradores; as páginas de instalação abrem com tokens. `rest.check` valida tokens. O scope do token é a interseção entre o scope solicitado e o da aplicação.                                                                                                                           |
+| **Renovação**               | `/oauth/token/` (GET ou POST) com `grant_type=refresh_token`. Os refresh tokens são reutilizáveis até expirar, como observado no tráfego da nuvem capturado. Os access tokens duram 3600 s e os refresh tokens 180 dias; os pares expirados são excluídos a cada hora.                                                                                                    |
+| **Eventos**                 | `rest.event.call` entrega cada evento ao manipulador da aplicação por HTTP POST, incluindo `ONAPPINSTALL` com tokens recém-emitidos. O portal recebe uma resposta imediata.                                                                                                                                                                                               |
+| **Segurança**               | Armazenamento com hash de tokens e segredos, tokens de uma fonte aleatória criptograficamente segura, ocultação nos logs (sem query strings, URLs de manipuladores sem credenciais), porta da app vinculada ao loopback (`127.0.0.1:3000`) em `docker-compose.yml`.                                                                                                       |
+| **Operação**                | Uma página de status pública em `/` (estado do serviço e do banco de dados, contagens de portais, aplicações, pares de tokens ativos e entregas de eventos) e os mesmos dados em JSON em `/api/status`. `/health` retorna HTTP 503 quando o PostgreSQL não responde. Logs JSON, barra final aceita em todos os caminhos.                                                  |
+| **Painel de administração** | Um painel de administração multiusuário em `/admin`: tabelas somente leitura e pesquisáveis de portais, aplicações locais, metadados de tokens (sem tokens nem hashes) e contadores diários de eventos. A senha do superusuário é definida apenas pela CLI; o superusuário gerencia os visualizadores no painel. As sessões duram 12 horas; os logins têm limite de taxa. |
 
 ## ⚙️ Como funciona
 
@@ -83,7 +83,7 @@ O tráfego OAuth entre o portal, as aplicações locais e o servidor permanece d
 
 | Verificação                       | O que cobre                                                                                                                                                                                                                                                                                                                                 |
 | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **69 testes automatizados**       | Testes de integração com PostgreSQL real para registro do portal, registro de aplicações, serviço de tokens, entrega de eventos, roteamento e health, além de testes unitários.                                                                                                                                                             |
+| **Testes automatizados**          | Testes de integração com PostgreSQL real para registro do portal, registro de aplicações, serviço de tokens, entrega de eventos, roteamento e health, além de testes unitários.                                                                                                                                                             |
 | **Testes de contrato**            | Formatos de resposta e códigos de erro comparados com o tráfego capturado entre um portal de teste (`rest` 26.1100) e `oauth.bitrix.info`.                                                                                                                                                                                                  |
 | **Smoke test do contêiner (CI)**  | O contêiner inicia, `/health` responde, a página de status e `/api/status` respondem, um portal se registra, não há logs de nível error, o processo não roda como root.                                                                                                                                                                     |
 | **Ponta a ponta em rede fechada** | Uma checklist de 10 passos em um portal de teste Docker local (`rest` 26.1100) cujo contêiner PHP foi isolado da internet: registro, criação da app, página de instalação com tokens, REST como administrador e não administrador, `ONAPPINSTALL` com tokens, renovação e renovação repetida, exclusão. Todos os 10 passos foram aprovados. |
@@ -107,12 +107,13 @@ docker tag pocketauth24:<version> pocketauth24:local
 
 Crie `.env` ao lado de `docker-compose.yml`:
 
-| Variável            | Exemplo                                         | Significado                                                                                      |
-| ------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `BASE_URL`          | `https://auth.corp.local`                       | URL pública atrás do proxy; torna-se `server_endpoint`.                                          |
-| `DATABASE_URL`      | `postgres://b24auth:<password>@db:5432/b24auth` | Conexão com o banco de dados.                                                                    |
-| `PORTAL_ALLOWLIST`  | `portal.corp.local,crm.corp.local:8443`         | `host[:port]` dos portais autorizados a se registrar; liste explicitamente as portas não padrão. |
-| `POSTGRES_PASSWORD` | `<password>`                                    | A mesma senha de `DATABASE_URL`.                                                                 |
+| Variável            | Exemplo                                         | Significado                                                                                                                                                                                  |
+| ------------------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `BASE_URL`          | `https://auth.corp.local`                       | URL pública atrás do proxy; torna-se `server_endpoint`.                                                                                                                                      |
+| `DATABASE_URL`      | `postgres://b24auth:<password>@db:5432/b24auth` | Conexão com o banco de dados.                                                                                                                                                                |
+| `PORTAL_ALLOWLIST`  | `portal.corp.local,crm.corp.local:8443`         | `host[:port]` dos portais autorizados a se registrar; liste explicitamente as portas não padrão.                                                                                             |
+| `POSTGRES_PASSWORD` | `<password>`                                    | A mesma senha de `DATABASE_URL`.                                                                                                                                                             |
+| `TRUST_PROXY`       | `true`                                          | Opcional. Aceita apenas `true` ou `false`. Defina `true` somente quando o proxy sobrescreve `X-Forwarded-For` com o IP do cliente (nginx: `$remote_addr`, não `$proxy_add_x_forwarded_for`). |
 
 `BASE_URL`, `DATABASE_URL` e `PORTAL_ALLOWLIST` são obrigatórias; o servidor não inicia sem elas. Depois:
 
@@ -180,10 +181,10 @@ Conheça estes pontos antes de implantar:
 - **Os eventos são entregues uma vez**, com tempo limite de 10 segundos. Não são armazenados nem repetidos, são perdidos em uma reinicialização e são descartados acima de 200 entregas simultâneas no total ou 100 entregas simultâneas para um host manipulador. Veja [Desempenho da entrega de eventos](#-desempenho-da-entrega-de-eventos).
 - **Instância única.** As migrações rodam na inicialização sem bloqueio.
 - **Não suportado:** verificações de licença, o grant `authorization_code`, tratamento no servidor de install/uninstall. As durações dos tokens são fixas; os corpos das requisições são limitados a 10 MB.
-- **Apenas página de status.** A interface é uma página de status somente leitura em `/`. Ainda não há interface de administração.
+- **Painel de administração somente leitura.** O painel mostra dados, mas não pode alterar portais, aplicações ou tokens. Não tem SSO, autenticação de dois fatores nem log de auditoria. Restrinja `/admin` e `/api/admin` no proxy.
 - **Testado** com o módulo `rest` do portal 26.1100.
 
-Etapas posteriores propostas, sem datas: OAuth 2.0 completo e introspecção (incluindo revogação na desinstalação e verificações de scope), uma fila persistente de eventos com novas tentativas e recursos de operação como uma página de administração e a migração de um portal já registrado.
+Etapas posteriores propostas, sem datas: OAuth 2.0 completo e introspecção (incluindo revogação na desinstalação e verificações de scope), uma fila persistente de eventos com novas tentativas e recursos de operação como a migração de um portal já registrado.
 
 ## 🔁 CI/CD
 
