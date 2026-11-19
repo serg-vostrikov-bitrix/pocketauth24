@@ -9,8 +9,8 @@
 
 ## 3. Indexes
 
-- [ ] 3.1 Declare the three indexes in `src/schema.ts` and generate the Drizzle migration `drizzle/0003_*.sql`
-- [ ] 3.2 Check that migrations apply on a clean database and on the current schema
+- [x] 3.1 Declare the three indexes in `src/schema.ts` and generate the Drizzle migration `drizzle/0003_*.sql`
+- [x] 3.2 Check that migrations apply on a clean database and on the current schema
 
 ## 4. Documentation
 
