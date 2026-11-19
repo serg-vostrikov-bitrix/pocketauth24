@@ -55,7 +55,7 @@ base-ref: 6c449ccc93ac7c4e9835baf69741f5263b69d0bc
 
 - Produces: `Config.tokenPruningKeep: number | null` (`null` means pruning is off). `TEST_CONFIG.tokenPruningKeep === 5`.
 
-- [ ] **Step 1: Write the failing tests** — append to `test/unit/config.test.ts`:
+- [x] **Step 1: Write the failing tests** — append to `test/unit/config.test.ts`:
 
 ```ts
 const keep = (env: Record<string, string | undefined> = {}) =>
@@ -93,12 +93,12 @@ it('an invalid TOKEN_PRUNING_KEEP throws also when pruning is off', () => {
 });
 ```
 
-- [ ] **Step 2: Run the tests and see them fail**
+- [x] **Step 2: Run the tests and see them fail**
 
 Run: `npm test -- test/unit/config.test.ts`
 Expected: FAIL; `tokenPruningKeep` is `undefined`, and the throw cases do not throw.
 
-- [ ] **Step 3: Implement** in `src/config.ts`:
+- [x] **Step 3: Implement** in `src/config.ts`:
 
 ```ts
 export type Config = {
@@ -137,12 +137,12 @@ const pruningKeep = parseTokenPruningKeep(env.TOKEN_PRUNING_KEEP);
 
 In `test/helpers.ts`, add `tokenPruningKeep: 5,` to `TEST_CONFIG`.
 
-- [ ] **Step 4: Run the tests and see them pass**
+- [x] **Step 4: Run the tests and see them pass**
 
 Run: `npm test -- test/unit/config.test.ts` then `npm run typecheck`
 Expected: PASS; no type errors.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add src/config.ts test/unit/config.test.ts test/helpers.ts
@@ -166,7 +166,7 @@ Write 2.2 (tests) first, then 2.1 (implementation). Check off both ids at the en
 - Consumes: `Config.tokenPruningKeep` (Task 1.1).
 - Produces: `startApp(options: { databaseUrl?: string; webRoot?: string; config?: Config })`. `issuePair` signature does not change.
 
-- [ ] **Step 1 (2.2): Add the `config` option to `startApp`** in `test/helpers.ts`:
+- [x] **Step 1 (2.2): Add the `config` option to `startApp`** in `test/helpers.ts`:
 
 ```ts
 export async function startApp(
@@ -181,7 +181,7 @@ export async function startApp(
   });
 ```
 
-- [ ] **Step 2 (2.2): Write the failing tests** — append to `test/integration/token-service.test.ts`. Add `TEST_CONFIG` to the `../helpers.js` import. `truncateAll` in the top-level `beforeEach` resets ids, so the first application has id 1 and the second id 2.
+- [x] **Step 2 (2.2): Write the failing tests** — append to `test/integration/token-service.test.ts`. Add `TEST_CONFIG` to the `../helpers.js` import. `truncateAll` in the top-level `beforeEach` resets ids, so the first application has id 1 and the second id 2.
 
 ```ts
 async function authorizeTimes(
@@ -276,12 +276,12 @@ describe('Pruning', () => {
 
 Note: `TestApp` is already imported as a type. `tsconfig.json` has no `noUncheckedIndexedAccess`, so `oldest` is typed `TokenResponse`; do not add a `!` (the type-checked ESLint config rejects an unnecessary assertion).
 
-- [ ] **Step 3 (2.2): Run the tests and see them fail**
+- [x] **Step 3 (2.2): Run the tests and see them fail**
 
 Run: `npm test -- test/integration/token-service.test.ts`
 Expected: FAIL in "Old expired pairs are deleted" (`{ '1:5': 6 }` instead of 5, refresh returns 200) and in "Other users and applications are not touched" (`'1:5': 7`). "Live access tokens are kept" and "Pruning is off" pass already; this is correct, they guard against over-deletion.
 
-- [ ] **Step 4 (2.1): Implement the prune** in `src/tokens.ts`.
+- [x] **Step 4 (2.1): Implement the prune** in `src/tokens.ts`.
 
 Imports:
 
@@ -333,17 +333,17 @@ await db.transaction(async (tx) => {
 
 `now` is the existing `const now = Date.now();` at the top of `issuePair`. Leave the `return tokenResponse(...)` as it is.
 
-- [ ] **Step 5: Run the tests and see them pass**
+- [x] **Step 5: Run the tests and see them pass**
 
 Run: `npm test -- test/integration/token-service.test.ts`
 Expected: PASS, all tests in the file, old and new.
 
-- [ ] **Step 6: Run the full suite, typecheck and lint**
+- [x] **Step 6: Run the full suite, typecheck and lint**
 
 Run: `npm test` then `npm run typecheck` then `npm run lint`
 Expected: all PASS. `test/integration/event-delivery.test.ts` also calls `issuePair` through event auth; it must stay green.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add src/tokens.ts test/helpers.ts test/integration/token-service.test.ts
@@ -363,7 +363,7 @@ git commit -m "feat(tokens): prune old expired token pairs on issue"
 
 - Produces: indexes `token_pairs_app_user_created_idx`, `token_pairs_created_at_idx`, `applications_portal_id_idx`.
 
-- [ ] **Step 1: Declare the indexes** in `src/schema.ts`.
+- [x] **Step 1: Declare the indexes** in `src/schema.ts`.
 
 `applications` gets a third argument:
 
@@ -393,7 +393,7 @@ export const applications = pgTable(
   ],
 ```
 
-- [ ] **Step 2: Generate the migration**
+- [x] **Step 2: Generate the migration**
 
 Run: `npm run db:generate -- --name token_pair_indexes`
 Expected: `drizzle/0003_token_pair_indexes.sql` with exactly three `CREATE INDEX` statements:
@@ -406,12 +406,12 @@ CREATE INDEX "token_pairs_created_at_idx" ON "token_pairs" USING btree ("created
 
 The order of the lines can differ. If the file has any other statement (for example `ALTER TABLE`), stop: the schema and the snapshot `0002` do not match. Do not edit the generated SQL by hand.
 
-- [ ] **Step 3: Typecheck and lint**
+- [x] **Step 3: Typecheck and lint**
 
 Run: `npm run typecheck` then `npm run lint`
 Expected: PASS (`drizzle/` is in `.prettierignore`).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add src/schema.ts drizzle/0003_token_pair_indexes.sql drizzle/meta/0003_snapshot.json drizzle/meta/_journal.json
@@ -424,7 +424,7 @@ git commit -m "feat(db): add indexes for token pruning, token list and cascades"
 
 **Files:** none changed.
 
-- [ ] **Step 1: Apply on the current schema.** The test database is at migration `0002` from earlier runs (if it is not, run `npm test` once on the base ref first). Run the suite; `test/global-setup.ts` applies `0003` only.
+- [x] **Step 1: Apply on the current schema.** The test database is at migration `0002` from earlier runs (if it is not, run `npm test` once on the base ref first). Run the suite; `test/global-setup.ts` applies `0003` only.
 
 Run: `npm test`
 Expected: PASS. Then confirm the indexes:
@@ -435,7 +435,7 @@ node -e "const pg=require('pg');const c=new pg.Client(process.env.TEST_DATABASE_
 
 Expected: three rows.
 
-- [ ] **Step 2: Apply on a clean database.** Drop the test database; `test/global-setup.ts` creates it again and runs `0000`..`0003`.
+- [x] **Step 2: Apply on a clean database.** Drop the test database; `test/global-setup.ts` creates it again and runs `0000`..`0003`.
 
 ```bash
 node -e "const pg=require('pg');const u=new URL(process.env.TEST_DATABASE_URL||'postgres://b24auth:b24auth@localhost:5432/b24auth_test');const n=u.pathname.slice(1);u.pathname='/postgres';const c=new pg.Client(u.toString());c.connect().then(()=>c.query('drop database if exists \"'+n+'\" with (force)')).then(()=>c.end())"
@@ -444,7 +444,7 @@ npm test
 
 Expected: PASS. Run the index query from Step 1 again; expected three rows.
 
-- [ ] **Step 3: Record the evidence** (command output of both runs) for Comet verify. No commit.
+- [x] **Step 3: Record the evidence** (command output of both runs) for Comet verify. No commit.
 
 ---
 
@@ -454,21 +454,21 @@ Expected: PASS. Run the index query from Step 1 again; expected three rows.
 
 - Modify: `docs/deployment.md:30-37`
 
-- [ ] **Step 1: Add two rows** after the `TRUST_PROXY` row:
+- [x] **Step 1: Add two rows** after the `TRUST_PROXY` row:
 
 ```markdown
 | `TOKEN_PRUNING` | `true` | Optional, default `true`. Accepts only `true` or `false`. If `true`, each new token pair deletes the older pairs of the same application and user that are not among the newest `TOKEN_PRUNING_KEEP` pairs and whose access token has expired. A pair with a live access token stays. If `false`, each pair stays until its refresh token expires, as in the Bitrix24 cloud |
 | `TOKEN_PRUNING_KEEP` | `5` | Optional, default `5`. A positive integer: the number of newest pairs that each application and user keep. The server reads it also when `TOKEN_PRUNING` is `false` |
 ```
 
-- [ ] **Step 2: Replace the sentence** `If \`TRUST_PROXY\` has any other value, the server stops at start.` with:
+- [x] **Step 2: Replace the sentence** `If \`TRUST_PROXY\` has any other value, the server stops at start.` with:
 
 ```markdown
 If `TRUST_PROXY` or `TOKEN_PRUNING` has any other value, or `TOKEN_PRUNING_KEEP` is not a positive
 integer, the server stops at start with an error that names the variable.
 ```
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 git add docs/deployment.md
@@ -483,29 +483,29 @@ git commit -m "docs(deployment): document TOKEN_PRUNING and TOKEN_PRUNING_KEEP"
 
 - Modify: `README.md:122-131` (variable table in "Quick start") and the same table in `README.de.md`, `README.it.md`, `README.es.md`, `README.pt.md`, `README.ru.md` (also around line 122-131)
 
-- [ ] **Step 1: Load `sepia-refactor`** (CLAUDE.md rule 4) and write the English text with it. Do not add facts beyond Task 4.1.
+- [x] **Step 1: Load `sepia-refactor`** (CLAUDE.md rule 4) and write the English text with it. Do not add facts beyond Task 4.1.
 
-- [ ] **Step 2: Add two rows to `README.md`** after the `TRUST_PROXY` row (end each cell with a period, as the other rows do):
+- [x] **Step 2: Add two rows to `README.md`** after the `TRUST_PROXY` row (end each cell with a period, as the other rows do):
 
 ```markdown
 | `TOKEN_PRUNING` | `true` | Optional, default `true`. Accepts only `true` or `false`. Each new token pair deletes the older pairs of the same application and user whose access token has expired, past the newest `TOKEN_PRUNING_KEEP`. |
 | `TOKEN_PRUNING_KEEP` | `5` | Optional, default `5`. Positive integer: how many newest pairs each application and user keep. |
 ```
 
-- [ ] **Step 3: Add the note** to `README.md` directly after the sentence that starts `` `BASE_URL`, `DATABASE_URL` and `PORTAL_ALLOWLIST` are required``:
+- [x] **Step 3: Add the note** to `README.md` directly after the sentence that starts `` `BASE_URL`, `DATABASE_URL` and `PORTAL_ALLOWLIST` are required``:
 
 ```markdown
 `TOKEN_PRUNING=false` keeps every pair until its refresh token expires, as the Bitrix24 cloud does.
 ```
 
-- [ ] **Step 4: Make the same change in the five translations.** Same rows, same position, same note. Translate the prose in the table and the note; keep `TOKEN_PRUNING`, `TOKEN_PRUNING_KEEP`, `true`, `false`, `5` and "Bitrix24" as they are. Follow the wording style of the `TRUST_PROXY` row in each file (for example, German "Optional.", Russian "Необязательная.").
+- [x] **Step 4: Make the same change in the five translations.** Same rows, same position, same note. Translate the prose in the table and the note; keep `TOKEN_PRUNING`, `TOKEN_PRUNING_KEEP`, `true`, `false`, `5` and "Bitrix24" as they are. Follow the wording style of the `TRUST_PROXY` row in each file (for example, German "Optional.", Russian "Необязательная.").
 
-- [ ] **Step 5: Format and lint**
+- [x] **Step 5: Format and lint**
 
 Run: `npx prettier --write README.md README.de.md README.it.md README.es.md README.pt.md README.ru.md` then `npm run lint`
 Expected: PASS. Prettier realigns the table columns.
 
-- [ ] **Step 6: Check parity.** Each file has the two new rows and one note:
+- [x] **Step 6: Check parity.** Each file has the two new rows and one note:
 
 ```bash
 grep -c "TOKEN_PRUNING" README.md README.de.md README.it.md README.es.md README.pt.md README.ru.md
@@ -513,7 +513,7 @@ grep -c "TOKEN_PRUNING" README.md README.de.md README.it.md README.es.md README.
 
 Expected: the same count in all six files.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 git add README.md README.de.md README.it.md README.es.md README.pt.md README.ru.md
@@ -524,5 +524,17 @@ git commit -m "docs(readme): document token pair pruning in all languages"
 
 ## Final check
 
-- [ ] `npm test`, `npm run typecheck`, `npm run lint` all PASS.
-- [ ] All seven ids in `docs/openspec/changes/token-pair-pruning/tasks.md` are checked.
+- [x] `npm test`, `npm run typecheck`, `npm run lint` all PASS.
+- [x] All seven ids in `docs/openspec/changes/token-pair-pruning/tasks.md` are checked.
+
+---
+
+## Scope update after code review (tasks 2.3, 2.4, 2.5)
+
+The first code review found that "last X of all pairs" deletes the refresh token a backend keeps.
+The user chose "prune only used pairs". Done in commits 3581e3d, 69bd077, a62822e, f8c5853 and
+1e13c8b; see the Design Doc section 2 and `.comet/handoff/code-review.md`.
+
+- [x] 2.3 `token_pairs.refreshed_at`, set on refresh; prune only used pairs; event pairs without a delivered refresh token are used from the start; partial index on used pairs.
+- [x] 2.4 Integration tests: old used pairs deleted, unused pairs kept, repeat use keeps the first time, event pair marking.
+- [x] 2.5 README, five translations and `docs/deployment.md` wording.
