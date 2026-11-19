@@ -3,6 +3,7 @@ import { Navigate, Route, Routes, useNavigate } from 'react-router';
 import { apiGet, setUnauthorizedHandler, type AdminUser } from './api';
 import { Layout } from './Layout';
 import { LoginPage } from './LoginPage';
+import { ApplicationsPage, EventsPage, PortalsPage, TokensPage } from './pages';
 import './admin.css';
 
 export function AdminApp() {
@@ -30,7 +31,10 @@ export function AdminApp() {
   return (
     <Routes>
       <Route element={<Layout user={user} onLogout={() => setUser(null)} />}>
-        <Route path="portals" element={<h1 className="admin-title">Portals</h1>} />
+        <Route path="portals" element={<PortalsPage />} />
+        <Route path="applications" element={<ApplicationsPage />} />
+        <Route path="tokens" element={<TokensPage />} />
+        <Route path="events" element={<EventsPage />} />
         <Route path="*" element={<Navigate to="/admin/portals" replace />} />
       </Route>
     </Routes>

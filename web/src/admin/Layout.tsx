@@ -11,7 +11,9 @@ const LINKS: readonly (readonly [string, string])[] = [
 export function Layout({ user, onLogout }: { user: AdminUser; onLogout: () => void }) {
   const links = user.role === 'superuser' ? [...LINKS, ['users', 'Users'] as const] : LINKS;
   const logout = (): void => {
-    apiSend('POST', '/logout').finally(onLogout);
+    apiSend('POST', '/logout')
+      .catch(() => {})
+      .finally(onLogout);
   };
   return (
     <div className="admin-shell">
