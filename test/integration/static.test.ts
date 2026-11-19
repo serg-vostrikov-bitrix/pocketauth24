@@ -11,8 +11,8 @@ let webRoot: string;
 let emptyRoot: string;
 let t: TestApp;
 beforeAll(async () => {
-  webRoot = await mkdtemp(join(tmpdir(), 'b24auth-web-'));
-  emptyRoot = await mkdtemp(join(tmpdir(), 'b24auth-web-empty-'));
+  webRoot = await mkdtemp(join(tmpdir(), 'pocketauth24-web-'));
+  emptyRoot = await mkdtemp(join(tmpdir(), 'pocketauth24-web-empty-'));
   await writeFile(join(webRoot, 'index.html'), '<!doctype html><div id="root"></div>');
   await mkdir(join(webRoot, 'assets'));
   await writeFile(join(webRoot, 'assets', 'index-abc123.js'), 'console.log(1);');

@@ -14,7 +14,7 @@ export function AdminApp() {
 
   useEffect(() => {
     const previous = document.title;
-    document.title = 'b24auth-server admin';
+    document.title = 'PocketAuth24 admin';
     return () => {
       document.title = previous;
     };

@@ -18,7 +18,7 @@ export function Layout({ user, onLogout }: { user: AdminUser; onLogout: () => vo
   return (
     <div className="admin-shell">
       <nav className="admin-sidebar" aria-label="Admin">
-        <span className="admin-brand">b24auth-server</span>
+        <span className="admin-brand">PocketAuth24</span>
         <ul className="admin-nav">
           {links.map(([path, label]) => (
             <li key={path}>

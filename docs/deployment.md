@@ -1,8 +1,8 @@
-# Deploying b24auth-server in a closed network
+# Deploying PocketAuth24 in a closed network
 
 ## 1. What you deploy
 
-One container (`b24auth-server`) and one PostgreSQL 17 database. TLS terminates at your
+One container (`pocketauth24`) and one PostgreSQL 17 database. TLS terminates at your
 reverse proxy; the service listens on plain HTTP port 3000. One server can serve several
 portals.
 
@@ -10,16 +10,16 @@ portals.
 
 On a machine with internet access (base images: official `node:24-alpine` from Docker Hub):
 
-    docker build -t b24auth-server:<version> .
+    docker build -t pocketauth24:<version> .
     docker pull postgres:17
-    docker save b24auth-server:<version> postgres:17 -o b24auth-server-<version>.tar
+    docker save pocketauth24:<version> postgres:17 -o pocketauth24-<version>.tar
 
 Copy the tar file and `docker-compose.yml` into the closed network, then:
 
-    docker load -i b24auth-server-<version>.tar
-    docker tag b24auth-server:<version> b24auth-server:local
+    docker load -i pocketauth24-<version>.tar
+    docker tag pocketauth24:<version> pocketauth24:local
 
-`docker-compose.yml` references the image as `b24auth-server:local`; the `docker tag` step
+`docker-compose.yml` references the image as `pocketauth24:local`; the `docker tag` step
 makes Compose use the loaded image instead of trying to build it (there is no source or
 internet access in the closed network).
 

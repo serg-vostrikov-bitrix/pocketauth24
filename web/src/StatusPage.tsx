@@ -47,7 +47,7 @@ export function StatusPage() {
     <main className="page">
       <header className="hero">
         <Gyroscope state={gyroState} />
-        <h1 className="title">b24auth-server</h1>
+        <h1 className="title">PocketAuth24</h1>
         <div className="pills">
           <StatusPill label="Service" value={service} />
           <StatusPill label="Database" value={database} />

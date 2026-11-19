@@ -28,7 +28,7 @@ export function LoginPage({ onLogin }: { onLogin: (user: AdminUser) => void }) {
   return (
     <main className="admin-login">
       <Gyroscope state={error ? 'error' : 'ok'} />
-      <h1 className="admin-login-title">b24auth-server admin</h1>
+      <h1 className="admin-login-title">PocketAuth24 admin</h1>
       {error?.error === 'no_superuser' && (
         <div className="admin-notice" role="alert">
           <p>No superuser exists yet. Run this command on the server, then log in:</p>
