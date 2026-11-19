@@ -1,0 +1,14 @@
+{
+  "change": "token-pair-pruning",
+  "phase": "design",
+  "mode": "compact",
+  "canonical_spec": "openspec",
+  "generated_by": "comet-handoff.sh",
+  "context_hash": "16a6ef0c1a1c6691b6b09256219fcfc3ff19f3526db21cae37ad6377b7e6ce8c",
+  "files": [
+    { "path": "docs/openspec/changes/token-pair-pruning/proposal.md", "sha256": "cbaef73f8583e82ae9176fe99410b49a73dcaa5172307379e9ad47c22fdf67bf" },
+    { "path": "docs/openspec/changes/token-pair-pruning/design.md", "sha256": "c6e2feff8824f573e14dc12719f0578ab6e608186004e397d36e1b5f642bc8cc" },
+    { "path": "docs/openspec/changes/token-pair-pruning/tasks.md", "sha256": "e99c564f267660db414c5d30de1d0382c72198d112f29e8e878c929f76e307b3" },
+    { "path": "docs/openspec/changes/token-pair-pruning/specs/token-service/spec.md", "sha256": "17372983edf9ee5456f28380cd5ff3d93bbf8fbdb9bbb0d1bba2910f3b840652" }
+  ]
+}
