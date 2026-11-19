@@ -120,7 +120,7 @@ export async function issuePair(
         })
         .where(eq(tokenPairs.id, input.refreshedPairId))
         .returning({ id: tokenPairs.id });
-      if (marked.length === 0) fail('invalid_grant', '');
+      if (marked.length === 0) fail('invalid_grant', '', 400, 'refresh_token_pruned');
     }
     await tx.insert(tokenPairs).values({
       applicationId: app.id,

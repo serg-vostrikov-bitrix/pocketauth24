@@ -1,7 +1,12 @@
 import { sql } from 'drizzle-orm';
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { tokenPairs } from '../../src/schema.js';
-import { deleteExpiredPairs, type RefreshResponse, type TokenResponse } from '../../src/tokens.js';
+import { applications, portals, tokenPairs } from '../../src/schema.js';
+import {
+  deleteExpiredPairs,
+  issuePair,
+  type RefreshResponse,
+  type TokenResponse,
+} from '../../src/tokens.js';
 import {
   addApp,
   authorize,
@@ -243,6 +248,29 @@ describe('token-service', () => {
     expect(reasons).toEqual(
       expect.arrayContaining(['refresh_token_unknown', 'refresh_token_expired']),
     );
+  });
+
+  it('A pair pruned before its refresh is marked gets invalid_grant', async () => {
+    // refresh() reads the pair, then a parallel issue prunes it before the mark. issuePair sees
+    // the same state when it gets the id of a pair that no longer exists.
+    await issued();
+    const [app] = await t.db.select().from(applications);
+    const [portal] = await t.db.select().from(portals);
+    const [pair] = await t.db.select().from(tokenPairs);
+    await t.db.delete(tokenPairs);
+
+    const issue = issuePair(t.db, TEST_CONFIG, app, portal, {
+      scope: pair.scope,
+      userId: pair.userId,
+      params: pair.params,
+      refreshedPairId: pair.id,
+    });
+
+    await expect(issue).rejects.toMatchObject({
+      code: 'invalid_grant',
+      reason: 'refresh_token_pruned',
+    });
+    expect(await t.db.select().from(tokenPairs)).toEqual([]);
   });
 
   it('Wrong application secret', async () => {
