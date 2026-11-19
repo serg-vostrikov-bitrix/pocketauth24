@@ -64,6 +64,18 @@ it('GET /portals returns the documented fields and no secret', async () => {
   expect(res.text).not.toContain(stored.secretHash);
 });
 
+it('GET /portals counts the applications of each portal', async () => {
+  const portal = await registerPortal(t.app);
+  await addApp(t.app, portal);
+  await addApp(t.app, portal);
+  await registerPortal(t.app, `${OTHER_PORTAL}/`);
+  const res = await list('portals');
+  const counts = Object.fromEntries(
+    res.body.rows.map((row) => [String(row.origin), row.applications]),
+  );
+  expect(counts).toEqual({ [PORTAL]: 2, [OTHER_PORTAL]: 0 });
+});
+
 it('GET /applications returns the documented fields and no secret', async () => {
   const portal = await registerPortal(t.app);
   const app = await addApp(t.app, portal);

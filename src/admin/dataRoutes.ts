@@ -14,7 +14,9 @@ const PORTAL_COLUMNS: readonly Column[] = [
   { key: 'clientId', sql: portals.clientId, filter: 'text' },
   {
     key: 'applications',
-    sql: sql<number>`(select count(*)::int from ${applications} where ${applications.portalId} = ${portals.id})`,
+    // Qualify both columns: in a select, Drizzle renders a column without its table, and a bare
+    // "id" inside the subquery resolves to applications.id.
+    sql: sql<number>`(select count(*)::int from ${applications} where ${applications}.${sql.identifier(applications.portalId.name)} = ${portals}.${sql.identifier(portals.id.name)})`,
     filter: 'none',
   },
   { key: 'createdAt', sql: portals.createdAt, filter: 'date' },
