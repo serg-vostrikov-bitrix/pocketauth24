@@ -9,7 +9,7 @@
 
 - [x] 2.3 Add `token_pairs.refreshed_at`, set it on refresh, and prune only used pairs (code review finding: the "last X of all pairs" rule deleted the refresh token a backend keeps)
 - [x] 2.4 Update the integration tests for used-only pruning, with a test that an unused pair survives newer pairs
-- [ ] 2.5 Update README (and five translations) and `docs/deployment.md` wording for used-only pruning
+- [x] 2.5 Update README (and five translations) and `docs/deployment.md` wording for used-only pruning
 
 ## 3. Indexes
 
