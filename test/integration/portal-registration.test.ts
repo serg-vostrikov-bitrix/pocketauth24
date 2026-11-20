@@ -104,7 +104,7 @@ describe('portal-registration', () => {
 
   it('Unknown method', async () => {
     const creds = await registerPortal(t.app);
-    const res = await rpc(t.app, creds, 'application.install');
+    const res = await rpc(t.app, creds, 'application.unknown');
     expect(res.status).toBe(400);
     expect(res.body.error).toBe('ERROR_METHOD_NOT_FOUND');
   });

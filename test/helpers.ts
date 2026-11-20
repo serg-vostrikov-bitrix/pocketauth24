@@ -278,3 +278,18 @@ export async function addCatalogEntry(
     scope: entry.scope,
   });
 }
+
+export type InstallResult = { client_id: string; version: number; status: string; scope: string[] };
+
+export async function install(
+  app: FastifyInstance,
+  portal: Credentials,
+  clientId: string = CATALOG_APP.clientId,
+  extra: Record<string, unknown> = {},
+): Promise<RpcResponse<InstallResult>> {
+  return rpc<InstallResult>(app, portal, 'application.install', {
+    CLIENT_ID: clientId,
+    VERSION: 3,
+    ...extra,
+  });
+}

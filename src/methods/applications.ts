@@ -1,7 +1,7 @@
 import { randomInt } from 'node:crypto';
 import { and, eq } from 'drizzle-orm';
 import { defineMethod, fail } from '../bitrix.js';
-import { applications } from '../schema.js';
+import { applications, marketplaceApps } from '../schema.js';
 import { normalizeScope, randomHex, sha256 } from '../tokens.js';
 
 export const scopeSchema = {
@@ -100,3 +100,65 @@ export const applicationDelete = defineMethod<DeleteBody>(deleteSchema, async (c
   if (deleted.length === 0) fail('ERROR_OAUTH', 'Application not found');
   return true;
 });
+
+type InstallBody = { CLIENT_ID: string; VERSION: string | number };
+
+// The portal always sends VERSION. CHECK_HASH and INSTALL_HASH protect paid installs in the
+// cloud; the catalog is the access control here, so the server ignores them.
+const installSchema = {
+  type: 'object',
+  required: ['CLIENT_ID', 'VERSION'],
+  properties: {
+    CLIENT_ID: { type: 'string' },
+    VERSION: { anyOf: [{ type: 'string' }, { type: 'integer' }] },
+  },
+} as const;
+
+export const applicationInstall = defineMethod<InstallBody>(installSchema, async (ctx, body) => {
+  const [entry] = await ctx.db
+    .select()
+    .from(marketplaceApps)
+    .where(eq(marketplaceApps.clientId, body.CLIENT_ID))
+    .limit(1);
+  if (!entry) {
+    fail(
+      'ERROR_OAUTH',
+      'Application is not in the PocketAuth24 catalog',
+      400,
+      'client_id_not_in_catalog',
+    );
+  }
+  // The upsert keeps the row id, so the tokens of an earlier install stay valid.
+  await ctx.db
+    .insert(applications)
+    .values({
+      portalId: ctx.portal.id,
+      clientId: entry.clientId,
+      secretHash: null,
+      title: entry.title,
+      redirectUri: '',
+      scope: entry.scope,
+      marketplaceAppId: entry.id,
+    })
+    .onConflictDoUpdate({
+      target: [applications.portalId, applications.clientId],
+      set: { title: entry.title, scope: entry.scope },
+    });
+  return {
+    client_id: entry.clientId,
+    version: Number(body.VERSION),
+    status: 'F',
+    scope: entry.scope.split(',').filter(Boolean),
+  };
+});
+
+export const applicationInstallSubscription = defineMethod<Record<string, unknown>>(
+  { type: 'object' },
+  async () =>
+    fail(
+      'ERROR_OAUTH',
+      'Subscription applications are not supported',
+      400,
+      'subscription_not_supported',
+    ),
+);
