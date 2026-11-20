@@ -3,7 +3,8 @@ import { eq, sql } from 'drizzle-orm';
 import { afterAll, beforeAll, beforeEach, expect, it } from 'vitest';
 import { verifyPassword } from '../../src/admin/password.js';
 import { createDb, type Db } from '../../src/db.js';
-import { adminSessions, adminUsers } from '../../src/schema.js';
+import { adminSessions, adminUsers, marketplaceApps } from '../../src/schema.js';
+import { sha256 } from '../../src/tokens.js';
 import { DEAD_DATABASE_URL, TEST_DATABASE_URL, truncateAll } from '../helpers.js';
 
 type CliResult = { code: number | null; stdout: string; stderr: string };
@@ -186,5 +187,93 @@ it(
     expect(res.code).toBe(1);
     expect(res.stderr).not.toContain('b24auth:b24auth');
     expect(res.stderr).not.toMatch(/\n\s+at /);
+  },
+);
+
+const SECRET = 'partner-secret-123';
+const ADD = [
+  'marketplace',
+  'add',
+  '--client-id',
+  'app.a1.1',
+  '--title',
+  'Partner app',
+  '--scope',
+  'crm, user',
+  '--secret-stdin',
+];
+
+it('marketplace add stores only the hash of the secret', { timeout: 20_000 }, async () => {
+  const res = await runCli(ADD, `${SECRET}\n`);
+  expect(res.code).toBe(0);
+  expect(res.stdout.trim()).toBe('Catalog entry "app.a1.1" saved.');
+  expect(res.stdout + res.stderr).not.toContain(SECRET);
+  const [row] = await db.select().from(marketplaceApps);
+  expect(row).toMatchObject({ clientId: 'app.a1.1', title: 'Partner app', scope: 'crm,user' });
+  expect(row.secretHash).toBe(sha256(SECRET));
+});
+
+it('marketplace list shows no secret and no hash', { timeout: 30_000 }, async () => {
+  await runCli(ADD, `${SECRET}\n`);
+  const res = await runCli(['marketplace', 'list']);
+  expect(res.code).toBe(0);
+  expect(res.stdout).toBe('app.a1.1\tPartner app\tcrm,user\n');
+  expect(res.stdout + res.stderr).not.toContain(SECRET);
+  expect(res.stdout + res.stderr).not.toContain(sha256(SECRET));
+});
+
+it('marketplace remove deletes the entry', { timeout: 30_000 }, async () => {
+  await runCli(ADD, `${SECRET}\n`);
+  const res = await runCli(['marketplace', 'remove', '--client-id', 'app.a1.1']);
+  expect(res.code).toBe(0);
+  expect(res.stdout.trim()).toBe('Removed');
+  expect(await db.$count(marketplaceApps)).toBe(0);
+});
+
+it('marketplace remove of an unknown entry exits with 1', { timeout: 20_000 }, async () => {
+  const res = await runCli(['marketplace', 'remove', '--client-id', 'app.none.1']);
+  expect(res.code).toBe(1);
+  expect(res.stderr).toContain('app.none.1');
+});
+
+it.each([
+  { name: 'an empty secret', args: ADD, stdin: '\n' },
+  {
+    name: 'no --title',
+    args: ['marketplace', 'add', '--client-id', 'app.a1.1', '--scope', 'crm', '--secret-stdin'],
+    stdin: `${SECRET}\n`,
+  },
+  {
+    name: 'a local client_id',
+    args: [
+      'marketplace',
+      'add',
+      '--client-id',
+      'local.0123456789abcd.00000001',
+      '--title',
+      'X',
+      '--scope',
+      'crm',
+      '--secret-stdin',
+    ],
+    stdin: `${SECRET}\n`,
+  },
+])(
+  'marketplace add refuses $name and changes nothing',
+  { timeout: 20_000 },
+  async ({ args, stdin }) => {
+    const res = await runCli(args, stdin);
+    expect(res.code).toBe(1);
+    expect(await db.$count(marketplaceApps)).toBe(0);
+  },
+);
+
+it(
+  'marketplace add without a TTY and without --secret-stdin exits with 2',
+  { timeout: 20_000 },
+  async () => {
+    const res = await runCli(ADD.filter((arg) => arg !== '--secret-stdin'));
+    expect(res.code).toBe(2);
+    expect(res.stderr).toContain('--secret-stdin');
   },
 );
