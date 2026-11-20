@@ -115,7 +115,8 @@ service credentials; apps and tokens are kept.
 Local apps created while the portal used the cloud have credentials only the cloud knows.
 Re-create each local app on the portal (Developer resources → Other → Local application) and
 update its `client_id` / `client_secret` in the application's own configuration.
-Marketplace applications are not supported in a closed network.
+Marketplace applications of other vendors do not work with PocketAuth24. Your own Marketplace
+application can work: see [7b. Marketplace applications of a partner](#7b-marketplace-applications-of-a-partner).
 
 ## 7. Application token renewal URL
 
@@ -138,6 +139,45 @@ Applications renew tokens at `/oauth/token/`. Most SDKs (CRest, official SDKs) h
   that still use `BX24`.
 - Apps usually load `BX24` from `//api.bitrix24.com/api/v1/`, which is unreachable in a closed
   network. Serve a copy of that script from an internal host and point the apps at it.
+
+## 7b. Marketplace applications of a partner
+
+A partner can serve its own Marketplace application through PocketAuth24. The partner knows the
+`client_id` and the `client_secret` of the application. Applications of other vendors do not
+work, because their secrets are only in the cloud.
+
+1. Add the application to the catalog. The command asks for the `client_secret` twice and shows
+   nothing on the screen:
+
+   ```bash
+   docker compose exec app node dist/cli.js marketplace add --client-id app.a1.1 --title "Partner app" --scope crm,user
+   ```
+
+   For a script, send the secret on standard input:
+
+   ```bash
+   printf '%s\n' "$CLIENT_SECRET" | docker compose exec -T app node dist/cli.js marketplace add --client-id app.a1.1 --title "Partner app" --scope crm,user --secret-stdin
+   ```
+
+2. Install the application on the portal from the Marketplace as usual. The portal calls
+   `application.install`, and PocketAuth24 records the install with status `F`.
+3. Configure the application backend to renew tokens at `server_endpoint` from the token answer or
+   from the event `auth` block. Do not use `oauth.bitrix.info`: the cloud does not know these
+   tokens and rejects them.
+
+Other commands:
+
+- `marketplace list` shows the `client_id`, the title and the scope of each entry. It never shows
+  the secret or its hash.
+- `marketplace add` with a known `client_id` replaces the secret, the title and the scope. A new
+  secret applies to all portals at once. A new scope applies to a portal after its next
+  `application.install`.
+- `marketplace remove --client-id app.a1.1` deletes the entry, all its installs and all their
+  tokens. If you remove an entry by mistake, add it again. Each portal installs the application
+  again when a user opens it. The old tokens do not come back.
+
+A portal that calls `application.install` for a `client_id` outside the catalog gets the error
+`Application is not in the PocketAuth24 catalog`. Subscription applications are not supported.
 
 ## 8. Events
 
