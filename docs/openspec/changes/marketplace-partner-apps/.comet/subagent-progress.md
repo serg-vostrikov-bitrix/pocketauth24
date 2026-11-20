@@ -1,10 +1,10 @@
 # Subagent progress — marketplace-partner-apps
 
 - review_mode: standard
-- Current plan task: Task 7: Renewal with the catalog secret (tasks.md 4.2, 4.3 renewal part)
-- OpenSpec tasks: 4.2, 4.3
+- Current plan task: Task 8: Install rows in the admin panel (tasks.md 5.1)
+- OpenSpec tasks: 5.1
 - Stage: implementing
-- Model: sonnet
-- BASE: 5c137d1
-- Risk signals (planned): security-sensitive (secret check)
+- Model: haiku
+- BASE: 1ac9ad1
+- Risk signals (planned): none
 - Review-fix round: 0

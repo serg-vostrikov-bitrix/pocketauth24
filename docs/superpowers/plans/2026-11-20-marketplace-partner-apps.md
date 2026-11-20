@@ -1537,7 +1537,7 @@ EOF
 **Interfaces:**
 - Consumes: `addCatalogEntry`, `install`, `CATALOG_APP` (Tasks 2, 4).
 
-- [ ] **Step 1: Write the test**
+- [x] **Step 1: Write the test**
 
 In `test/integration/admin-data.test.ts`, add `addCatalogEntry`, `CATALOG_APP` and `install` to the helpers import, `marketplaceApps` to the schema import, and add:
 
@@ -1569,13 +1569,13 @@ it('GET /applications shows a Marketplace install and no secret or hash', async 
 });
 ```
 
-- [ ] **Step 2: Run the test**
+- [x] **Step 2: Run the test**
 
 Run: `npx vitest run test/integration/admin-data.test.ts -t "Marketplace install"`
 Expected: PASS without a code change. The applications and tokens views select named columns and join `portals` with an inner join, so install rows appear and no hash is selected.
 If it fails, change only `APPLICATION_COLUMNS` or `TOKEN_COLUMNS` in `src/admin/dataRoutes.ts` so that the install row shows and no secret column is selected. Do not add write routes.
 
-- [ ] **Step 3: Commit**
+- [x] **Step 3: Commit**
 
 ```bash
 npx prettier --write test/integration/admin-data.test.ts

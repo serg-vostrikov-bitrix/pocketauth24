@@ -25,7 +25,7 @@
 
 ## 5. Admin panel
 
-- [ ] 5.1 Make sure the applications view shows install rows and never shows a hash; add a test
+- [x] 5.1 Make sure the applications view shows install rows and never shows a hash; add a test
 
 ## 6. Documentation
 
