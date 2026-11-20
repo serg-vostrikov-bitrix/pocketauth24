@@ -57,8 +57,15 @@ export type TokenResponse = {
   server_endpoint: string;
   client_endpoint: string;
   member_id: string;
-  status: 'L';
+  status: AppStatus;
 };
+
+export type AppStatus = 'L' | 'F';
+
+// F (free) for a Marketplace install, L for a local application. No paid statuses.
+export function appStatus(app: Pick<Application, 'marketplaceAppId'>): AppStatus {
+  return app.marketplaceAppId === null ? 'L' : 'F';
+}
 
 export type RefreshResponse = TokenResponse & { user_id: number };
 
@@ -82,6 +89,7 @@ export function tokenResponse(
     accessExpiresAt: Date;
     scope: string;
   },
+  status: AppStatus,
 ): TokenResponse {
   return {
     access_token: pair.accessToken,
@@ -93,7 +101,7 @@ export function tokenResponse(
     server_endpoint: `${config.baseUrl}/rest/`,
     client_endpoint: `${portal.origin}/rest/`,
     member_id: memberId(portal),
-    status: 'L',
+    status,
   };
 }
 
@@ -161,12 +169,12 @@ export async function issuePair(
         ),
       );
   });
-  return tokenResponse(config, portal, {
-    accessToken,
-    refreshToken,
-    accessExpiresAt,
-    scope: input.scope,
-  });
+  return tokenResponse(
+    config,
+    portal,
+    { accessToken, refreshToken, accessExpiresAt, scope: input.scope },
+    appStatus(app),
+  );
 }
 
 export type CheckResult = {
@@ -176,7 +184,7 @@ export type CheckResult = {
   scope: string;
   client_id: string;
   parameters: Record<string, unknown>;
-  status: 'L';
+  status: AppStatus;
 };
 
 // The cloud returns numeric PARAMS values (LOCAL_USER, TZ_OFFSET, ...) as numbers.
@@ -191,7 +199,11 @@ function numericParams(params: Record<string, unknown>): Record<string, unknown>
 
 export async function check(db: Db, portal: Portal, token: string): Promise<CheckResult> {
   const [row] = await db
-    .select({ pair: tokenPairs, clientId: applications.clientId })
+    .select({
+      pair: tokenPairs,
+      clientId: applications.clientId,
+      marketplaceAppId: applications.marketplaceAppId,
+    })
     .from(tokenPairs)
     .innerJoin(applications, eq(tokenPairs.applicationId, applications.id))
     .where(and(eq(tokenPairs.accessHash, sha256(token)), eq(applications.portalId, portal.id)))
@@ -208,7 +220,7 @@ export async function check(db: Db, portal: Portal, token: string): Promise<Chec
     scope: row.pair.scope,
     client_id: row.clientId,
     parameters: numericParams(row.pair.params),
-    status: 'L',
+    status: appStatus(row),
   };
 }
 

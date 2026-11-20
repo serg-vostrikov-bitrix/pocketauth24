@@ -2,7 +2,9 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vites
 import { EVENT_HOST_IN_FLIGHT_CAP, EVENT_IN_FLIGHT_CAP } from '../../src/config.js';
 import {
   addApp,
+  addCatalogEntry,
   eventItem,
+  install,
   md5,
   PORTAL,
   registerPortal,
@@ -36,6 +38,42 @@ async function counterRows(): Promise<{ day: string; outcome: string; count: num
 }
 
 describe('event-delivery', () => {
+  it('Install event reaches a Marketplace install', async () => {
+    await addCatalogEntry(t.db);
+    const portal = await registerPortal(t.app);
+    await install(t.app, portal);
+    const handler = await startHandler();
+    try {
+      await rpc(t.app, portal, 'rest.event.call', {
+        QUERY: [
+          eventItem(handler.url, {
+            client_id: 'app.a1.1',
+            event: 'ONAPPINSTALL',
+            auth: { LOCAL_USER: '1', application_token: 'apptoken123' },
+            additional: { sendAuth: '1', sendRefreshToken: '1' },
+          }),
+        ],
+      });
+
+      await vi.waitFor(() => {
+        expect(handler.requests).toHaveLength(1);
+      });
+      const auth = handler.requests[0].auth as Record<string, unknown>;
+      expect(auth).toMatchObject({
+        domain: 'portal.test',
+        server_endpoint: 'https://auth.test/rest/',
+        member_id: md5(portal.client_id),
+        user_id: '1',
+        scope: 'crm,user',
+        status: 'F',
+      });
+      expect(auth.access_token).toMatch(/^[0-9a-f]{64}$/);
+      expect(auth.refresh_token).toMatch(/^[0-9a-f]{64}$/);
+    } finally {
+      await handler.close();
+    }
+  });
+
   it.each([
     { status: 200, outcome: 'delivered' },
     { status: 500, outcome: 'failed' },

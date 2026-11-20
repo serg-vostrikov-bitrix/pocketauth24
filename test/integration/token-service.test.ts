@@ -9,7 +9,9 @@ import {
 } from '../../src/tokens.js';
 import {
   addApp,
+  addCatalogEntry,
   authorize,
+  install,
   md5,
   OTHER_PORTAL,
   registerPortal,
@@ -53,6 +55,20 @@ function refreshParams(app: Credentials, refreshToken: string): Record<string, s
 }
 
 describe('token-service', () => {
+  it('Status of a Marketplace application', async () => {
+    await addCatalogEntry(t.db);
+    const portal = await registerPortal(t.app);
+    await install(t.app, portal);
+
+    const token = await authorize(t.app, portal, 'app.a1.1');
+    const checked = await rpc<{ status: string; client_id: string }>(t.app, portal, 'rest.check', {
+      TOKEN: token.access_token,
+    });
+
+    expect(token.status).toBe('F');
+    expect(checked.body.result).toMatchObject({ client_id: 'app.a1.1', status: 'F' });
+  });
+
   it('Fields present', async () => {
     const portal = await registerPortal(t.app);
     const app = await addApp(t.app, portal);
