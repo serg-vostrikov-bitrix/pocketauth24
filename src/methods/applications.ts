@@ -1,5 +1,5 @@
 import { randomInt } from 'node:crypto';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, isNotNull, isNull } from 'drizzle-orm';
 import { defineMethod, fail } from '../bitrix.js';
 import { applications, marketplaceApps } from '../schema.js';
 import { normalizeScope, randomHex, sha256 } from '../tokens.js';
@@ -85,7 +85,14 @@ export const applicationUpdate = defineMethod<UpdateBody>(updateSchema, async (c
       ...(body.REDIRECT_URI !== undefined ? { redirectUri: body.REDIRECT_URI } : {}),
       ...(body.SCOPE !== undefined ? { scope: normalizeScope(body.SCOPE) } : {}),
     })
-    .where(and(eq(applications.clientId, body.CLIENT_ID), eq(applications.portalId, ctx.portal.id)))
+    .where(
+      and(
+        eq(applications.clientId, body.CLIENT_ID),
+        eq(applications.portalId, ctx.portal.id),
+        // Local applications only: a Marketplace install changes through application.install.
+        isNull(applications.marketplaceAppId),
+      ),
+    )
     .returning({ id: applications.id });
   if (updated.length === 0) fail('ERROR_OAUTH', 'Application not found');
   return true;
@@ -95,9 +102,31 @@ export const applicationDelete = defineMethod<DeleteBody>(deleteSchema, async (c
   // token_pairs rows go with the application (ON DELETE CASCADE).
   const deleted = await ctx.db
     .delete(applications)
-    .where(and(eq(applications.clientId, body.CLIENT_ID), eq(applications.portalId, ctx.portal.id)))
+    .where(
+      and(
+        eq(applications.clientId, body.CLIENT_ID),
+        eq(applications.portalId, ctx.portal.id),
+        // Local applications only: a Marketplace install changes through application.install.
+        isNull(applications.marketplaceAppId),
+      ),
+    )
     .returning({ id: applications.id });
   if (deleted.length === 0) fail('ERROR_OAUTH', 'Application not found');
+  return true;
+});
+
+// The portal calls uninstall also when the install never reached the server, so a missing row
+// is not an error. token_pairs rows go with the install (ON DELETE CASCADE).
+export const applicationUninstall = defineMethod<DeleteBody>(deleteSchema, async (ctx, body) => {
+  await ctx.db
+    .delete(applications)
+    .where(
+      and(
+        eq(applications.portalId, ctx.portal.id),
+        eq(applications.clientId, body.CLIENT_ID),
+        isNotNull(applications.marketplaceAppId),
+      ),
+    );
   return true;
 });
 

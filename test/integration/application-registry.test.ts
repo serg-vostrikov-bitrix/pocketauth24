@@ -215,3 +215,61 @@ describe('application-registry: Marketplace install', () => {
     });
   });
 });
+
+describe('application-registry: Marketplace uninstall', () => {
+  it('Uninstall removes tokens', async () => {
+    await addCatalogEntry(t.db);
+    const first = await registerPortal(t.app);
+    const second = await registerPortal(t.app, `${OTHER_PORTAL}/`);
+    await install(t.app, first);
+    await install(t.app, second);
+    const firstToken = await authorize(t.app, first, 'app.a1.1');
+    const secondToken = await authorize(t.app, second, 'app.a1.1');
+
+    const res = await rpc(t.app, first, 'application.uninstall', { CLIENT_ID: 'app.a1.1' });
+
+    expect(res.body).toEqual({ result: true });
+    const checked = await rpc(t.app, first, 'rest.check', { TOKEN: firstToken.access_token });
+    expect(checked.body.error).toBe('invalid_token');
+    const renewed = await tokenRequest(t.app, 'POST', {
+      grant_type: 'refresh_token',
+      client_id: 'app.a1.1',
+      client_secret: CATALOG_APP.secret,
+      refresh_token: firstToken.refresh_token,
+    });
+    expect(renewed.statusCode).toBe(400);
+    const other = await rpc(t.app, second, 'rest.check', { TOKEN: secondToken.access_token });
+    expect(other.status).toBe(200);
+    expect(await t.db.$count(marketplaceApps)).toBe(1);
+  });
+
+  it('Uninstall of a missing install returns true', async () => {
+    const portal = await registerPortal(t.app);
+    const res = await rpc(t.app, portal, 'application.uninstall', { CLIENT_ID: 'app.a1.1' });
+    expect(res.body).toEqual({ result: true });
+  });
+
+  it('Uninstall does not delete a local application', async () => {
+    const portal = await registerPortal(t.app);
+    const local = await addApp(t.app, portal);
+    const res = await rpc(t.app, portal, 'application.uninstall', { CLIENT_ID: local.client_id });
+    expect(res.body).toEqual({ result: true });
+    expect(await t.db.$count(applications)).toBe(1);
+  });
+
+  it.each(['application.update', 'application.delete'])(
+    '%s does not change a Marketplace install',
+    async (method) => {
+      await addCatalogEntry(t.db);
+      const portal = await registerPortal(t.app);
+      await install(t.app, portal);
+      const res = await rpc(t.app, portal, method, { CLIENT_ID: 'app.a1.1', TITLE: 'Changed' });
+      expect(res.body).toEqual({
+        error: 'ERROR_OAUTH',
+        error_description: 'Application not found',
+      });
+      const [row] = await t.db.select().from(applications);
+      expect(row).toMatchObject({ clientId: 'app.a1.1', title: 'Partner app' });
+    },
+  );
+});
