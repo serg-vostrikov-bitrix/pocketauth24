@@ -1740,7 +1740,7 @@ EOF
 
 **Files:** none changed, unless a check fails.
 
-- [ ] **Step 1: Run lint, type check, build and the full suite (tasks.md 7.1)**
+- [x] **Step 1: Run lint, type check, build and the full suite (tasks.md 7.1)**
 
 Run each command and record the result for the verify report:
 

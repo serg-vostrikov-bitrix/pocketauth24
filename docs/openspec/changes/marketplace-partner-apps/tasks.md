@@ -35,5 +35,5 @@
 
 ## 7. Verification
 
-- [ ] 7.1 Run lint, type check and the full test suite
+- [x] 7.1 Run lint, type check and the full test suite
 - [ ] 7.2 Install a real Marketplace application of the partner on a local test portal that uses PocketAuth24, or record in the verify report that this check was not possible
