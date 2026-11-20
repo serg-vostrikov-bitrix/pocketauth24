@@ -231,7 +231,7 @@ export async function refresh(
   if (row.app.clientId !== input.clientId) {
     fail('invalid_client', '', 400, 'client_id_mismatch');
   }
-  if (!hashMatches(row.app.secretHash, input.clientSecret)) {
+  if (row.app.secretHash === null || !hashMatches(row.app.secretHash, input.clientSecret)) {
     fail('invalid_client', '', 400, 'client_secret_mismatch');
   }
   if (row.pair.refreshExpiresAt.getTime() <= Date.now()) {

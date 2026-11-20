@@ -67,7 +67,7 @@ export async function startApp(
 
 export async function truncateAll(db: Db): Promise<void> {
   await db.execute(
-    sql`TRUNCATE portals, applications, token_pairs, event_counters, admin_users, admin_sessions RESTART IDENTITY CASCADE`,
+    sql`TRUNCATE portals, applications, token_pairs, marketplace_apps, event_counters, admin_users, admin_sessions RESTART IDENTITY CASCADE`,
   );
 }
 

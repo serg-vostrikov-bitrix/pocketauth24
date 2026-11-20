@@ -29,6 +29,13 @@
       "when": 1795098059261,
       "tag": "0003_token_pair_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1795197058549,
+      "tag": "0004_marketplace_apps",
+      "breakpoints": true
     }
   ]
 }
