@@ -3,7 +3,14 @@ import { and, desc, eq, isNotNull, lt, lte, notInArray, sql } from 'drizzle-orm'
 import { fail } from './bitrix.js';
 import { ACCESS_TTL_SECONDS, REFRESH_TTL_SECONDS, type Config } from './config.js';
 import type { Db } from './db.js';
-import { applications, portals, tokenPairs, type Application, type Portal } from './schema.js';
+import {
+  applications,
+  marketplaceApps,
+  portals,
+  tokenPairs,
+  type Application,
+  type Portal,
+} from './schema.js';
 
 export function sha256(value: string): string {
   return createHash('sha256').update(value).digest('hex');
@@ -232,10 +239,16 @@ export async function refresh(
   input: RefreshInput,
 ): Promise<RefreshResponse> {
   const [row] = await db
-    .select({ pair: tokenPairs, app: applications, portal: portals })
+    .select({
+      pair: tokenPairs,
+      app: applications,
+      portal: portals,
+      catalogSecretHash: marketplaceApps.secretHash,
+    })
     .from(tokenPairs)
     .innerJoin(applications, eq(tokenPairs.applicationId, applications.id))
     .innerJoin(portals, eq(applications.portalId, portals.id))
+    .leftJoin(marketplaceApps, eq(applications.marketplaceAppId, marketplaceApps.id))
     .where(eq(tokenPairs.refreshHash, sha256(input.refreshToken)))
     .limit(1);
   // The cloud gives no description here, so the log-only reason tells the cases apart.
@@ -243,7 +256,10 @@ export async function refresh(
   if (row.app.clientId !== input.clientId) {
     fail('invalid_client', '', 400, 'client_id_mismatch');
   }
-  if (row.app.secretHash === null || !hashMatches(row.app.secretHash, input.clientSecret)) {
+  // A Marketplace install has no secret of its own: the catalog secret applies to all portals.
+  // Both null means a broken row: reject it, never accept it.
+  const secretHash = row.catalogSecretHash ?? row.app.secretHash;
+  if (secretHash === null || !hashMatches(secretHash, input.clientSecret)) {
     fail('invalid_client', '', 400, 'client_secret_mismatch');
   }
   if (row.pair.refreshExpiresAt.getTime() <= Date.now()) {

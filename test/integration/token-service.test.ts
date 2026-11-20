@@ -11,6 +11,7 @@ import {
   addApp,
   addCatalogEntry,
   authorize,
+  CATALOG_APP,
   install,
   md5,
   OTHER_PORTAL,
@@ -55,6 +56,62 @@ function refreshParams(app: Credentials, refreshToken: string): Record<string, s
 }
 
 describe('token-service', () => {
+  async function installed(): Promise<{ portal: Credentials; token: TokenResponse }> {
+    await addCatalogEntry(t.db);
+    const portal = await registerPortal(t.app);
+    await install(t.app, portal);
+    const token = await authorize(t.app, portal, 'app.a1.1');
+    return { portal, token };
+  }
+
+  function catalogRefresh(refreshToken: string, secret: string = CATALOG_APP.secret) {
+    return {
+      grant_type: 'refresh_token',
+      client_id: 'app.a1.1',
+      client_secret: secret,
+      refresh_token: refreshToken,
+    };
+  }
+
+  it('Partner backend renews a token', async () => {
+    const { portal, token } = await installed();
+    const other = await registerPortal(t.app, `${OTHER_PORTAL}/`);
+    await install(t.app, other);
+
+    const res = await tokenRequest(t.app, 'POST', catalogRefresh(token.refresh_token));
+
+    expect(res.statusCode).toBe(200);
+    const renewed = res.json<TokenResponse & { user_id: number }>();
+    expect(renewed).toMatchObject({ user_id: 5, status: 'F' });
+    const onA = await rpc<{ scope: string }>(t.app, portal, 'rest.check', {
+      TOKEN: renewed.access_token,
+    });
+    expect(onA.body.result?.scope).toBe('crm,user');
+    // A refresh token of portal A never gives tokens for portal B.
+    const onB = await rpc(t.app, other, 'rest.check', { TOKEN: renewed.access_token });
+    expect(onB.body.error).toBe('invalid_token');
+  });
+
+  it('Rotate the secret', async () => {
+    const { token } = await installed();
+    await addCatalogEntry(t.db, { ...CATALOG_APP, secret: 'rotated-secret-456' });
+    t.logs.length = 0;
+
+    const old = await tokenRequest(t.app, 'POST', catalogRefresh(token.refresh_token));
+    const fresh = await tokenRequest(
+      t.app,
+      'POST',
+      catalogRefresh(token.refresh_token, 'rotated-secret-456'),
+    );
+
+    expect(old.statusCode).toBe(400);
+    expect(old.json<{ error: string }>().error).toBe('invalid_client');
+    expect(t.logs.find((l) => l.msg === 'request_failed')).toMatchObject({
+      reason: 'client_secret_mismatch',
+    });
+    expect(fresh.statusCode).toBe(200);
+  });
+
   it('Status of a Marketplace application', async () => {
     await addCatalogEntry(t.db);
     const portal = await registerPortal(t.app);
