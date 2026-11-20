@@ -1134,7 +1134,7 @@ EOF
 - Consumes: `install`, `addCatalogEntry`, `CATALOG_APP` (Tasks 2, 4).
 - Produces: `applicationUninstall` (`Method`); RPC route `/rest/application.uninstall`.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 Append to `test/integration/application-registry.test.ts`:
 
@@ -1197,12 +1197,12 @@ describe('application-registry: Marketplace uninstall', () => {
 
 Note: the existing "Foreign application" test shows the exact error body of `Application not found`. If it uses a different shape, use that shape here.
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npx vitest run test/integration/application-registry.test.ts -t "Marketplace uninstall"`
 Expected: FAIL. `application.uninstall` answers `ERROR_METHOD_NOT_FOUND`; `application.update` and `application.delete` change the install row.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `src/methods/applications.ts`, change the drizzle import to `import { and, eq, isNotNull, isNull } from 'drizzle-orm';`.
 
@@ -1240,12 +1240,12 @@ export const applicationUninstall = defineMethod<DeleteBody>(deleteSchema, async
 
 In `src/routes/rpc.ts`, import `applicationUninstall` and add `'application.uninstall': applicationUninstall,` to `methods`.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npx vitest run test/integration/application-registry.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 npx prettier --write src/methods/applications.ts src/routes/rpc.ts test/integration/application-registry.test.ts

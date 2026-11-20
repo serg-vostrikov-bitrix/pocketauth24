@@ -13,9 +13,9 @@
 
 - [x] 3.1 Implement `application.install`: catalog lookup, upsert of the install row, the result shape from the spec
 - [x] 3.2 Reject a `client_id` outside the catalog and `application.install.subscription` through `fail()` with the two reasons
-- [ ] 3.3 Implement `application.uninstall` (idempotent, calling portal only)
-- [ ] 3.4 Limit `application.update` and `application.delete` to local rows
-- [ ] 3.5 Tests for each scenario in the `application-registry` delta spec, including the `request_failed` reasons
+- [x] 3.3 Implement `application.uninstall` (idempotent, calling portal only)
+- [x] 3.4 Limit `application.update` and `application.delete` to local rows
+- [x] 3.5 Tests for each scenario in the `application-registry` delta spec, including the `request_failed` reasons
 
 ## 4. Tokens and events
 
