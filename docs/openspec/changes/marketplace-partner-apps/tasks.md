@@ -20,8 +20,8 @@
 ## 4. Tokens and events
 
 - [x] 4.1 Return `status` `F` for install rows and `L` for local rows in `rest.authorize`, `rest.check` and event auth
-- [ ] 4.2 Check the catalog secret in `refresh` (D4)
-- [ ] 4.3 Tests: authorize, check, renewal with the catalog secret, rotation, wrong secret, no cross-portal renewal, `ONAPPINSTALL` delivery for an install row
+- [x] 4.2 Check the catalog secret in `refresh` (D4)
+- [x] 4.3 Tests: authorize, check, renewal with the catalog secret, rotation, wrong secret, no cross-portal renewal, `ONAPPINSTALL` delivery for an install row
 
 ## 5. Admin panel
 

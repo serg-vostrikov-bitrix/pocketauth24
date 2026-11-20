@@ -1,10 +1,10 @@
 # Subagent progress — marketplace-partner-apps
 
 - review_mode: standard
-- Current plan task: Task 6: Status F for install rows (tasks.md 4.1, 4.3 status and event parts)
-- OpenSpec tasks: 4.1 (4.3 after Task 7)
+- Current plan task: Task 7: Renewal with the catalog secret (tasks.md 4.2, 4.3 renewal part)
+- OpenSpec tasks: 4.2, 4.3
 - Stage: implementing
 - Model: sonnet
-- BASE: e1e1f5d
-- Risk signals (planned): public API (token response contract)
+- BASE: 5c137d1
+- Risk signals (planned): security-sensitive (secret check)
 - Review-fix round: 0

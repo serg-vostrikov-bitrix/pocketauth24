@@ -1405,7 +1405,7 @@ EOF
 - Consumes: `marketplaceApps` (Task 1); `install`, `addCatalogEntry`, `CATALOG_APP` (Tasks 2, 4).
 - Produces: `refresh` accepts the catalog `client_secret` for an install row. No signature change.
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 In `test/integration/token-service.test.ts`, add `CATALOG_APP` and `OTHER_PORTAL` to the helpers import (if not there yet), then add inside `describe('token-service', ...)`:
 
@@ -1469,12 +1469,12 @@ In `test/integration/token-service.test.ts`, add `CATALOG_APP` and `OTHER_PORTAL
 
 `Credentials`, `TokenResponse`, `addApp`, `refreshParams` already exist in this file. Import any missing name from `../helpers.js` or `../../src/tokens.js`.
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npx vitest run test/integration/token-service.test.ts -t "renews|Rotate"`
 Expected: FAIL. The renewal answers 400 `invalid_client`, because the install row has no secret hash.
 
-- [ ] **Step 3: Implement the catalog secret check**
+- [x] **Step 3: Implement the catalog secret check**
 
 In `src/tokens.ts`, add `marketplaceApps` to the schema import. In `refresh`, replace the select and the secret check:
 
@@ -1505,12 +1505,12 @@ In `src/tokens.ts`, add `marketplaceApps` to the schema import. In `refresh`, re
 
 The `client_id` check (`row.app.clientId !== input.clientId`) stays as it is. For an install row, `applications.client_id` equals the catalog `client_id`.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npx vitest run test/integration/token-service.test.ts test/contract/cloud-shapes.test.ts`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 npx prettier --write src/tokens.ts test/integration/token-service.test.ts
