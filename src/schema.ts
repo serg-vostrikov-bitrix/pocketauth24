@@ -22,6 +22,16 @@ export const portals = pgTable('portals', {
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
 });
 
+// The catalog of Marketplace applications that this server serves. Only the CLI changes it.
+export const marketplaceApps = pgTable('marketplace_apps', {
+  id: bigserial('id', { mode: 'number' }).primaryKey(),
+  clientId: text('client_id').notNull().unique(),
+  secretHash: text('secret_hash').notNull(),
+  title: text('title').notNull(),
+  scope: text('scope').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+});
+
 export const applications = pgTable(
   'applications',
   {
@@ -29,14 +39,28 @@ export const applications = pgTable(
     portalId: bigint('portal_id', { mode: 'number' })
       .notNull()
       .references(() => portals.id, { onDelete: 'cascade' }),
-    clientId: text('client_id').notNull().unique(),
-    secretHash: text('secret_hash').notNull(),
+    clientId: text('client_id').notNull(),
+    // Null for a Marketplace install: its secret is in marketplace_apps.
+    secretHash: text('secret_hash'),
     title: text('title').notNull(),
     redirectUri: text('redirect_uri').notNull(),
     scope: text('scope').notNull(),
+    // Null: a local application. Set: a Marketplace install of this catalog entry.
+    marketplaceAppId: bigint('marketplace_app_id', { mode: 'number' }).references(
+      () => marketplaceApps.id,
+      { onDelete: 'cascade' },
+    ),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [index('applications_portal_id_idx').on(table.portalId)],
+  (table) => [
+    index('applications_portal_id_idx').on(table.portalId),
+    // A local client_id is unique in the whole database.
+    uniqueIndex('applications_local_client_id_idx')
+      .on(table.clientId)
+      .where(sql`marketplace_app_id is null`),
+    // One Marketplace client_id can be installed on many portals, once on each.
+    uniqueIndex('applications_portal_client_id_idx').on(table.portalId, table.clientId),
+  ],
 );
 
 export const tokenPairs = pgTable(
@@ -76,6 +100,7 @@ export const tokenPairs = pgTable(
 
 export type Portal = typeof portals.$inferSelect;
 export type Application = typeof applications.$inferSelect;
+export type MarketplaceApp = typeof marketplaceApps.$inferSelect;
 export type TokenPair = typeof tokenPairs.$inferSelect;
 
 export type Outcome = 'delivered' | 'failed' | 'dropped';

@@ -98,3 +98,25 @@ before and after the run. The app pages loaded `BX24` from a local copy on the a
 | 9 | Pass | Both apps: renewal and repeated renewal with the same refresh token gave working new pairs. |
 | 10 | Pass | After deletion, old and renewed tokens got `invalid_token`; renewal failed. |
 
+
+### Run 2026-11-20 (Marketplace application of a partner)
+
+Local Docker portal (`rest` 26.1100, region `en`), server image built from the branch of the change
+`marketplace-partner-apps`, run in a container on the portal network. The portal DNS blocks all
+Bitrix domains. For this run only `util.bitrixsoft.com` (the Marketplace host) was allowed. The
+block was restored after the run. The Marketplace application was `integrations24.infobipsms`
+(`client_id` `app.5e66375c3bb019.14544740`). We added it to the catalog with a test secret, so
+the run checks the server and the portal, not the backend of the vendor.
+
+| Step | Result | Notes |
+|---|---|---|
+| Catalog | Pass | `marketplace add` with `--secret-stdin`; `marketplace list` showed no secret and no hash. |
+| Registration | Pass | `/oauth/register/`, then `application.list` returned `[]`. |
+| Install | Pass | `Marketplace\Application::install` of the portal got the install data from the Marketplace and called `application.install`. The portal stored the app with `STATUS=F`, `VERSION=2`, the catalog scope and an empty `CLIENT_SECRET`. |
+| Open | Pass | The portal auth provider (`rest.authorize`) issued a token pair with `status` `F`. |
+| REST | Pass | `user.current` with the app access token returned the admin (`rest.check`). |
+| Renewal | Pass | `/oauth/token/` with the catalog `client_id` and secret returned a new pair with `status` `F`. The new access token worked for `user.current`. A wrong secret got `invalid_client`. |
+| Uninstall | Pass | `AppTable::uninstall` called `application.uninstall`. The old access token got `invalid_token`, and renewal got `invalid_grant`. |
+
+Not checked: the app page in a browser. The backend of the vendor renews tokens at the cloud
+OAuth server and calls the portal from the internet, so it cannot work with this local portal.

@@ -9,8 +9,9 @@ import { hashPassword } from '../src/admin/password.js';
 import { buildApp } from '../src/app.js';
 import type { Config } from '../src/config.js';
 import { createDb, type Db } from '../src/db.js';
+import { upsertCatalogEntry } from '../src/marketplace.js';
 import { adminUsers } from '../src/schema.js';
-import type { TokenResponse } from '../src/tokens.js';
+import { sha256, type TokenResponse } from '../src/tokens.js';
 
 // Tests TRUNCATE this database; never point it at real data.
 export const TEST_DATABASE_URL =
@@ -67,7 +68,7 @@ export async function startApp(
 
 export async function truncateAll(db: Db): Promise<void> {
   await db.execute(
-    sql`TRUNCATE portals, applications, token_pairs, event_counters, admin_users, admin_sessions RESTART IDENTITY CASCADE`,
+    sql`TRUNCATE portals, applications, token_pairs, marketplace_apps, event_counters, admin_users, admin_sessions RESTART IDENTITY CASCADE`,
   );
 }
 
@@ -257,4 +258,38 @@ export async function loginAs(
     throw new Error(`login failed: ${res.statusCode} ${res.body}`);
   }
   return `b24a_session=${session.value}`;
+}
+
+export const CATALOG_APP = {
+  clientId: 'app.a1.1',
+  secret: 'partner-secret-123',
+  title: 'Partner app',
+  scope: 'crm,user',
+} as const;
+
+export async function addCatalogEntry(
+  db: Db,
+  entry: { clientId: string; secret: string; title: string; scope: string } = CATALOG_APP,
+): Promise<void> {
+  await upsertCatalogEntry(db, {
+    clientId: entry.clientId,
+    secretHash: sha256(entry.secret),
+    title: entry.title,
+    scope: entry.scope,
+  });
+}
+
+export type InstallResult = { client_id: string; version: number; status: string; scope: string[] };
+
+export async function install(
+  app: FastifyInstance,
+  portal: Credentials,
+  clientId: string = CATALOG_APP.clientId,
+  extra: Record<string, unknown> = {},
+): Promise<RpcResponse<InstallResult>> {
+  return rpc<InstallResult>(app, portal, 'application.install', {
+    CLIENT_ID: clientId,
+    VERSION: 3,
+    ...extra,
+  });
 }

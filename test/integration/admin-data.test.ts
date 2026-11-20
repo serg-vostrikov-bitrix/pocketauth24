@@ -1,10 +1,19 @@
 import { eq } from 'drizzle-orm';
 import { afterEach, beforeEach, expect, it } from 'vitest';
-import { applications, eventCounters, portals, tokenPairs } from '../../src/schema.js';
+import {
+  applications,
+  eventCounters,
+  marketplaceApps,
+  portals,
+  tokenPairs,
+} from '../../src/schema.js';
 import {
   addApp,
+  addCatalogEntry,
   authorize,
+  CATALOG_APP,
   createSuperuser,
+  install,
   loginAs,
   OTHER_PORTAL,
   PORTAL,
@@ -94,6 +103,34 @@ it('GET /applications returns the documented fields and no secret', async () => 
   const [stored] = await t.db.select({ secretHash: applications.secretHash }).from(applications);
   expect(res.text).not.toMatch(/secret/i);
   expect(res.text).not.toContain(stored.secretHash);
+});
+
+it('GET /applications shows a Marketplace install and no secret or hash', async () => {
+  await addCatalogEntry(t.db);
+  const portal = await registerPortal(t.app);
+  await install(t.app, portal);
+  await authorize(t.app, portal, 'app.a1.1');
+
+  const apps = await list('applications');
+  const tokens = await list('tokens');
+
+  expect(apps.body.total).toBe(1);
+  expect(apps.body.rows[0]).toMatchObject({
+    portal: PORTAL,
+    clientId: 'app.a1.1',
+    title: 'Partner app',
+    redirectUri: '',
+    scope: 'crm,user',
+  });
+  expect(tokens.body.rows[0]).toMatchObject({ clientId: 'app.a1.1', application: 'Partner app' });
+  const [entry] = await t.db
+    .select({ secretHash: marketplaceApps.secretHash })
+    .from(marketplaceApps);
+  for (const res of [apps, tokens]) {
+    expect(res.text).not.toMatch(/secret/i);
+    expect(res.text).not.toContain(entry.secretHash);
+    expect(res.text).not.toContain(CATALOG_APP.secret);
+  }
 });
 
 it('Data routes need a session', async () => {

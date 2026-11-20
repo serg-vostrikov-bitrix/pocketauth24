@@ -1,0 +1,9 @@
+{
+  "action": "pr",
+  "targetBranch": "claude/partner-apps-service-integration-fa778c",
+  "remote": "origin",
+  "schemaVersion": 1,
+  "changeIdentity": "run:af7da578-b3c2-4e27-a737-f32eab987677",
+  "authorizationId": "4c14ddbc-83a5-41ca-a6fc-b29cba140280",
+  "authorizedRemoteUrl": "https://github.com/serg-vostrikov-bitrix/pocketauth24.git"
+}

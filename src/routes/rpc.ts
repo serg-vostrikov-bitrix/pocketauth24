@@ -5,6 +5,9 @@ import { fail, ok, type DeliveryState, type Method } from '../bitrix.js';
 import {
   applicationAdd,
   applicationDelete,
+  applicationInstall,
+  applicationInstallSubscription,
+  applicationUninstall,
   applicationList,
   applicationUpdate,
 } from '../methods/applications.js';
@@ -24,6 +27,9 @@ export const methods: Record<string, Method> = {
   'application.list': applicationList,
   'application.update': applicationUpdate,
   'application.delete': applicationDelete,
+  'application.install': applicationInstall,
+  'application.uninstall': applicationUninstall,
+  'application.install.subscription': applicationInstallSubscription,
   'rest.authorize': restAuthorize,
   'rest.check': restCheck,
   'rest.event.call': restEventCall,

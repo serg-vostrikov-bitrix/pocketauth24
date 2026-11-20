@@ -59,3 +59,7 @@ the cause: `refresh_token_unknown`, `refresh_token_expired`, `refresh_token_prun
 request deleted the token pair during the refresh), `client_id_mismatch`,
 `client_secret_mismatch`, `client_id_unknown`, `authorization_code_not_supported` or
 `host_not_allowed: <host>`.
+
+Some causes share one client-visible error code. For `ERROR_OAUTH` from the install methods,
+`reason` is `client_id_not_in_catalog` (`application.install` for a `client_id` that is not in
+the Marketplace catalog) or `subscription_not_supported` (`application.install.subscription`).

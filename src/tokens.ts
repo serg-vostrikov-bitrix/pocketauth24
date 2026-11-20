@@ -3,7 +3,14 @@ import { and, desc, eq, isNotNull, lt, lte, notInArray, sql } from 'drizzle-orm'
 import { fail } from './bitrix.js';
 import { ACCESS_TTL_SECONDS, REFRESH_TTL_SECONDS, type Config } from './config.js';
 import type { Db } from './db.js';
-import { applications, portals, tokenPairs, type Application, type Portal } from './schema.js';
+import {
+  applications,
+  marketplaceApps,
+  portals,
+  tokenPairs,
+  type Application,
+  type Portal,
+} from './schema.js';
 
 export function sha256(value: string): string {
   return createHash('sha256').update(value).digest('hex');
@@ -57,8 +64,15 @@ export type TokenResponse = {
   server_endpoint: string;
   client_endpoint: string;
   member_id: string;
-  status: 'L';
+  status: AppStatus;
 };
+
+export type AppStatus = 'L' | 'F';
+
+// F (free) for a Marketplace install, L for a local application. No paid statuses.
+export function appStatus(app: Pick<Application, 'marketplaceAppId'>): AppStatus {
+  return app.marketplaceAppId === null ? 'L' : 'F';
+}
 
 export type RefreshResponse = TokenResponse & { user_id: number };
 
@@ -82,6 +96,7 @@ export function tokenResponse(
     accessExpiresAt: Date;
     scope: string;
   },
+  status: AppStatus,
 ): TokenResponse {
   return {
     access_token: pair.accessToken,
@@ -93,7 +108,7 @@ export function tokenResponse(
     server_endpoint: `${config.baseUrl}/rest/`,
     client_endpoint: `${portal.origin}/rest/`,
     member_id: memberId(portal),
-    status: 'L',
+    status,
   };
 }
 
@@ -161,12 +176,12 @@ export async function issuePair(
         ),
       );
   });
-  return tokenResponse(config, portal, {
-    accessToken,
-    refreshToken,
-    accessExpiresAt,
-    scope: input.scope,
-  });
+  return tokenResponse(
+    config,
+    portal,
+    { accessToken, refreshToken, accessExpiresAt, scope: input.scope },
+    appStatus(app),
+  );
 }
 
 export type CheckResult = {
@@ -176,7 +191,7 @@ export type CheckResult = {
   scope: string;
   client_id: string;
   parameters: Record<string, unknown>;
-  status: 'L';
+  status: AppStatus;
 };
 
 // The cloud returns numeric PARAMS values (LOCAL_USER, TZ_OFFSET, ...) as numbers.
@@ -191,7 +206,11 @@ function numericParams(params: Record<string, unknown>): Record<string, unknown>
 
 export async function check(db: Db, portal: Portal, token: string): Promise<CheckResult> {
   const [row] = await db
-    .select({ pair: tokenPairs, clientId: applications.clientId })
+    .select({
+      pair: tokenPairs,
+      clientId: applications.clientId,
+      marketplaceAppId: applications.marketplaceAppId,
+    })
     .from(tokenPairs)
     .innerJoin(applications, eq(tokenPairs.applicationId, applications.id))
     .where(and(eq(tokenPairs.accessHash, sha256(token)), eq(applications.portalId, portal.id)))
@@ -208,7 +227,7 @@ export async function check(db: Db, portal: Portal, token: string): Promise<Chec
     scope: row.pair.scope,
     client_id: row.clientId,
     parameters: numericParams(row.pair.params),
-    status: 'L',
+    status: appStatus(row),
   };
 }
 
@@ -220,10 +239,16 @@ export async function refresh(
   input: RefreshInput,
 ): Promise<RefreshResponse> {
   const [row] = await db
-    .select({ pair: tokenPairs, app: applications, portal: portals })
+    .select({
+      pair: tokenPairs,
+      app: applications,
+      portal: portals,
+      catalogSecretHash: marketplaceApps.secretHash,
+    })
     .from(tokenPairs)
     .innerJoin(applications, eq(tokenPairs.applicationId, applications.id))
     .innerJoin(portals, eq(applications.portalId, portals.id))
+    .leftJoin(marketplaceApps, eq(applications.marketplaceAppId, marketplaceApps.id))
     .where(eq(tokenPairs.refreshHash, sha256(input.refreshToken)))
     .limit(1);
   // The cloud gives no description here, so the log-only reason tells the cases apart.
@@ -231,7 +256,10 @@ export async function refresh(
   if (row.app.clientId !== input.clientId) {
     fail('invalid_client', '', 400, 'client_id_mismatch');
   }
-  if (!hashMatches(row.app.secretHash, input.clientSecret)) {
+  // A Marketplace install has no secret of its own: the catalog secret applies to all portals.
+  // Both null means a broken row: reject it, never accept it.
+  const secretHash = row.catalogSecretHash ?? row.app.secretHash;
+  if (secretHash === null || !hashMatches(secretHash, input.clientSecret)) {
     fail('invalid_client', '', 400, 'client_secret_mismatch');
   }
   if (row.pair.refreshExpiresAt.getTime() <= Date.now()) {
