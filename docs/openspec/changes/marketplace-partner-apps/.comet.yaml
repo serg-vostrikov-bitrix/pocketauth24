@@ -1,6 +1,6 @@
 workflow: full
 language: en
-phase: build
+phase: archive
 context_compression: off
 build_mode: subagent-driven-development
 build_pause: null
@@ -8,18 +8,18 @@ subagent_dispatch: confirmed
 tdd_mode: tdd
 review_mode: standard
 isolation: current
-verify_mode: null
+verify_mode: full
 auto_transition: true
 base_ref: 34699913aeb1f6ad458ad6454641ed67e6e3229c
 design_doc: docs/superpowers/specs/2026-11-20-marketplace-partner-apps-design.md
 plan: docs/superpowers/plans/2026-11-20-marketplace-partner-apps.md
-verify_result: pending
+verify_result: pass
 verify_failures: 0
-verification_report: null
+verification_report: docs/superpowers/reports/2026-11-20-marketplace-partner-apps-verify.md
 branch_status: pending
 created_at: 2026-11-20
-verified_at: null
-archive_confirmation: null
+verified_at: 2026-11-20
+archive_confirmation: pending
 archived: false
 bound_branch: claude/partner-apps-service-integration-fa778c
 direct_override: null
@@ -29,3 +29,4 @@ classic_profile: full
 classic_migration: 1
 run_id: af7da578-b3c2-4e27-a737-f32eab987677
 change_id: c02d3bed-b8ea-ee6a-83e8-9e8063b11bf3
+check_epoch: 2
