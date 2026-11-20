@@ -890,7 +890,7 @@ EOF
   - `type InstallResult = { client_id: string; version: number; status: string; scope: string[] }`
   - `install(app: FastifyInstance, portal: Credentials, clientId?: string, extra?: Record<string, unknown>): Promise<RpcResponse<InstallResult>>` (default `clientId` = `CATALOG_APP.clientId`, sends `VERSION: 3`)
 
-- [ ] **Step 1: Add the `install` helper**
+- [x] **Step 1: Add the `install` helper**
 
 In `test/helpers.ts`:
 
@@ -911,7 +911,7 @@ export async function install(
 }
 ```
 
-- [ ] **Step 2: Write the failing tests**
+- [x] **Step 2: Write the failing tests**
 
 In `test/integration/application-registry.test.ts`, extend the helpers import with `addCatalogEntry`, `CATALOG_APP`, `install`, `PORTAL`. Add `marketplaceApps` to the schema import. Add `rpc` usage as already imported. Then append:
 
@@ -1009,12 +1009,12 @@ describe('application-registry: Marketplace install', () => {
 
 Note: `OTHER_PORTAL` and `authorize` are already imported in this file. `PORTAL` is not needed if unused; drop it from the import to keep lint green.
 
-- [ ] **Step 3: Run the tests to verify they fail**
+- [x] **Step 3: Run the tests to verify they fail**
 
 Run: `npx vitest run test/integration/application-registry.test.ts -t "Marketplace install"`
 Expected: FAIL. The server answers `ERROR_METHOD_NOT_FOUND`.
 
-- [ ] **Step 4: Implement the methods**
+- [x] **Step 4: Implement the methods**
 
 In `src/methods/applications.ts`, change the schema import to `import { applications, marketplaceApps } from '../schema.js';` and add:
 
@@ -1089,7 +1089,7 @@ In `src/routes/rpc.ts`, import `applicationInstall` and `applicationInstallSubsc
   'application.install.subscription': applicationInstallSubscription,
 ```
 
-- [ ] **Step 5: Add the reasons to `docs/logging.md` (tasks.md 6.1)**
+- [x] **Step 5: Add the reasons to `docs/logging.md` (tasks.md 6.1)**
 
 In the paragraph after the events table that starts "Some error responses have no description", the reasons describe error responses without a description. The two new reasons have a description, so add a new paragraph after it:
 
@@ -1099,12 +1099,12 @@ Some causes share one client-visible error code. For `ERROR_OAUTH` from the inst
 the Marketplace catalog) or `subscription_not_supported` (`application.install.subscription`).
 ```
 
-- [ ] **Step 6: Run the tests to verify they pass**
+- [x] **Step 6: Run the tests to verify they pass**
 
 Run: `npx vitest run test/integration/application-registry.test.ts`
 Expected: PASS. The new tests and all existing tests pass.
 
-- [ ] **Step 7: Commit**
+- [x] **Step 7: Commit**
 
 ```bash
 npx prettier --write src/methods/applications.ts src/routes/rpc.ts test/helpers.ts test/integration/application-registry.test.ts docs/logging.md

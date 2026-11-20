@@ -11,8 +11,8 @@
 
 ## 3. RPC methods
 
-- [ ] 3.1 Implement `application.install`: catalog lookup, upsert of the install row, the result shape from the spec
-- [ ] 3.2 Reject a `client_id` outside the catalog and `application.install.subscription` through `fail()` with the two reasons
+- [x] 3.1 Implement `application.install`: catalog lookup, upsert of the install row, the result shape from the spec
+- [x] 3.2 Reject a `client_id` outside the catalog and `application.install.subscription` through `fail()` with the two reasons
 - [ ] 3.3 Implement `application.uninstall` (idempotent, calling portal only)
 - [ ] 3.4 Limit `application.update` and `application.delete` to local rows
 - [ ] 3.5 Tests for each scenario in the `application-registry` delta spec, including the `request_failed` reasons
@@ -29,7 +29,7 @@
 
 ## 6. Documentation
 
-- [ ] 6.1 Add the two reasons to `docs/logging.md`
+- [x] 6.1 Add the two reasons to `docs/logging.md`
 - [ ] 6.2 Add a partner section to `docs/deployment.md`: CLI commands, renewal at `server_endpoint`, effect of `marketplace remove`
 - [ ] 6.3 Update the limits and features in `README.md` with Sepia, then the same change in the five translations
 
