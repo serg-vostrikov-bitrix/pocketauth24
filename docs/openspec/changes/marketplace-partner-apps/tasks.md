@@ -31,7 +31,7 @@
 
 - [x] 6.1 Add the two reasons to `docs/logging.md`
 - [x] 6.2 Add a partner section to `docs/deployment.md`: CLI commands, renewal at `server_endpoint`, effect of `marketplace remove`
-- [ ] 6.3 Update the limits and features in `README.md` with Sepia, then the same change in the five translations
+- [x] 6.3 Update the limits and features in `README.md` with Sepia, then the same change in the five translations
 
 ## 7. Verification
 

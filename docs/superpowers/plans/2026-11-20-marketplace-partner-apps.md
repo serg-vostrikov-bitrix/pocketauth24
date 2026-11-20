@@ -1679,11 +1679,11 @@ EOF
 
 The English `README.md` is the source. All six files change in one commit (CLAUDE.md rule 3).
 
-- [ ] **Step 1: Load the `sepia-refactor` skill**
+- [x] **Step 1: Load the `sepia-refactor` skill**
 
 Use the Skill tool: `sepia-refactor`. Apply it only to the prose below. Rule 2 (STE) still applies. Sepia must not add facts: take every fact from the Design Doc and `docs/deployment.md` section 7b.
 
-- [ ] **Step 2: Change the English text in `README.md`**
+- [x] **Step 2: Change the English text in `README.md`**
 
 Make these minimal edits. The text below is the draft input for `sepia-refactor`:
 
@@ -1698,7 +1698,7 @@ Make these minimal edits. The text below is the draft input for `sepia-refactor`
 
 Do not change code blocks, commands or configuration keys. Run Sepia on the changed sentences only.
 
-- [ ] **Step 3: Apply the same change to the five translations**
+- [x] **Step 3: Apply the same change to the five translations**
 
 For each of `README.de.md`, `README.it.md`, `README.es.md`, `README.pt.md`, `README.ru.md`:
 - Make the same edits in the same places: the same sentences in "Why" and "Benefits", the same new table row in the same position, the same limits.
@@ -1707,7 +1707,7 @@ For each of `README.de.md`, `README.it.md`, `README.es.md`, `README.pt.md`, `REA
 - Keep the language switcher under the title unchanged.
 - If you link a heading, fix the in-page anchor to match the translated heading. The link to `docs/deployment.md` stays as it is (English only).
 
-- [ ] **Step 4: Check the structure**
+- [x] **Step 4: Check the structure**
 
 Run (Git Bash):
 
@@ -1720,7 +1720,7 @@ Expected: all six files have the same count of headings and the same count of ta
 Run: `npx prettier --check README*.md`
 Expected: PASS.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 git add README.md README.de.md README.it.md README.es.md README.pt.md README.ru.md

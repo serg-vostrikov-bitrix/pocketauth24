@@ -1,10 +1,10 @@
 # Subagent progress — marketplace-partner-apps
 
 - review_mode: standard
-- Current plan task: Task 9: Partner section in the deployment guide (tasks.md 6.2)
-- OpenSpec tasks: 6.2
+- Current plan task: Task 10: README and five translations (tasks.md 6.3)
+- OpenSpec tasks: 6.3
 - Stage: implementing
 - Model: sonnet
-- BASE: 20f453b
+- BASE: 338dce0
 - Risk signals (planned): none
 - Review-fix round: 0
