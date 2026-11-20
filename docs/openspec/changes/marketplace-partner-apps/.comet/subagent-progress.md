@@ -1,10 +1,10 @@
 # Subagent progress — marketplace-partner-apps
 
 - review_mode: standard
-- Current plan task: Task 8: Install rows in the admin panel (tasks.md 5.1)
-- OpenSpec tasks: 5.1
+- Current plan task: Task 9: Partner section in the deployment guide (tasks.md 6.2)
+- OpenSpec tasks: 6.2
 - Stage: implementing
-- Model: haiku
-- BASE: 1ac9ad1
+- Model: sonnet
+- BASE: 20f453b
 - Risk signals (planned): none
 - Review-fix round: 0

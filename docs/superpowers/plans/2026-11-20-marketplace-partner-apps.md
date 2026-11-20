@@ -1594,7 +1594,7 @@ EOF
 **Files:**
 - Modify: `docs/deployment.md` (end of section 6 "Re-create local applications"; new section 6b after section 7 or a new `## 7b.` — keep the numbering style of the file)
 
-- [ ] **Step 1: Change the last sentence of section 6**
+- [x] **Step 1: Change the last sentence of section 6**
 
 Replace:
 
@@ -1609,7 +1609,7 @@ Marketplace applications of other vendors do not work with PocketAuth24. Your ow
 application can work: see [7b. Marketplace applications of a partner](#7b-marketplace-applications-of-a-partner).
 ```
 
-- [ ] **Step 2: Add the section after section 7a**
+- [x] **Step 2: Add the section after section 7a**
 
 ```markdown
 ## 7b. Marketplace applications of a partner
@@ -1654,12 +1654,12 @@ A portal that calls `application.install` for a `client_id` outside the catalog 
 
 Check that the code fences inside the list render (indent them by three spaces as above).
 
-- [ ] **Step 3: Check the format**
+- [x] **Step 3: Check the format**
 
 Run: `npx prettier --check docs/deployment.md`
 Expected: PASS (run `npx prettier --write docs/deployment.md` if not).
 
-- [ ] **Step 4: Commit**
+- [x] **Step 4: Commit**
 
 ```bash
 git add docs/deployment.md
