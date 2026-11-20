@@ -1754,7 +1754,7 @@ npm test
 Expected: all four exit with code 0. The contract tests in `test/contract/cloud-shapes.test.ts` pass without change.
 If a check fails, fix the cause in the task that owns the file, run the check again, and commit the fix with a conventional message (`fix(...)`) and the trailer `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 
-- [ ] **Step 2: Live install on a test portal (tasks.md 7.2)**
+- [x] **Step 2: Live install on a test portal (tasks.md 7.2)**
 
 This check needs the user: a local test portal that uses PocketAuth24 and a real Marketplace application of the partner with its `client_id` and `client_secret`.
 
@@ -1766,7 +1766,7 @@ This check needs the user: a local test portal that uses PocketAuth24 and a real
   4. Renew a token from the application backend at `server_endpoint`.
   5. Uninstall the application. Make sure that the old token fails `rest.check`.
 
-- [ ] **Step 3: Check off `tasks.md`**
+- [x] **Step 3: Check off `tasks.md`**
 
 Mark each finished item in `docs/openspec/changes/marketplace-partner-apps/tasks.md` as `- [x]`. Leave 7.2 open if it was not checked, and give the reason in the verify report.
 
