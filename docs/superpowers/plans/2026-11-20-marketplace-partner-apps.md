@@ -4,6 +4,8 @@ design-doc: docs/superpowers/specs/2026-11-20-marketplace-partner-apps-design.md
 base-ref: 34699913aeb1f6ad458ad6454641ed67e6e3229c
 ---
 
+<!-- comet-task-authority: docs/openspec/changes/marketplace-partner-apps/tasks.md -->
+
 # Marketplace Partner Applications Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
@@ -67,6 +69,8 @@ All tests in this plan are integration tests on a real PostgreSQL.
 
 ### Task 1: Data model and migration (tasks.md 1.1, 1.2)
 
+<!-- comet-task-ref:6cdf7094-5cd9-4bad-a7a1-ff2e74deddbd --> <!-- comet-task-ref:756e369c-62c2-4be8-8b28-c7eb0712374b -->
+
 **Files:**
 - Modify: `src/schema.ts` (the `applications` table, lines 25-40; add `marketplaceApps` above it)
 - Modify: `src/tokens.ts` (`refresh`, the `hashMatches(row.app.secretHash, ...)` line)
@@ -78,7 +82,7 @@ All tests in this plan are integration tests on a real PostgreSQL.
 - Produces: `marketplaceApps` table object and `MarketplaceApp` type in `src/schema.ts`; `applications.marketplaceAppId: number | null`; `Application.secretHash: string | null`.
 - Produces: `truncateAll(db)` also truncates `marketplace_apps`.
 
-- [x] **Step 1: Write the failing migration test**
+- **Step 1: Write the failing migration test**
 
 Create `test/integration/migration.test.ts`. It builds a separate database, applies migrations 0000-0003 from a copy of `drizzle/` with a cut journal, inserts a local application with raw SQL, applies all migrations, and checks that the local application still works.
 
@@ -216,12 +220,12 @@ it(
 ```
 
 Note: `TokenResponse` is exported from `src/tokens.ts`. If `test/helpers.ts` does not re-export it, import it from `../../src/tokens.js` instead.
-- [x] **Step 2: Run the test to verify it fails**
+- **Step 2: Run the test to verify it fails**
 
 Run: `npx vitest run test/integration/migration.test.ts`
 Expected: FAIL. `relation "marketplace_apps" does not exist`.
 
-- [x] **Step 3: Change the schema**
+- **Step 3: Change the schema**
 
 In `src/schema.ts`, add this table above `applications`:
 
@@ -278,7 +282,7 @@ Add next to the other types:
 export type MarketplaceApp = typeof marketplaceApps.$inferSelect;
 ```
 
-- [x] **Step 4: Keep `refresh` type-safe for a null hash**
+- **Step 4: Keep `refresh` type-safe for a null hash**
 
 In `src/tokens.ts` `refresh`, replace:
 
@@ -294,7 +298,7 @@ with:
 
 Task 7 replaces this check with the catalog secret.
 
-- [x] **Step 5: Truncate the catalog in tests**
+- **Step 5: Truncate the catalog in tests**
 
 In `test/helpers.ts` `truncateAll`, change the statement to:
 
@@ -302,7 +306,7 @@ In `test/helpers.ts` `truncateAll`, change the statement to:
     sql`TRUNCATE portals, applications, token_pairs, marketplace_apps, event_counters, admin_users, admin_sessions RESTART IDENTITY CASCADE`,
 ```
 
-- [x] **Step 6: Generate the migration**
+- **Step 6: Generate the migration**
 
 Run: `npx drizzle-kit generate --name marketplace_apps`
 Expected: new files `drizzle/0004_marketplace_apps.sql` and `drizzle/meta/0004_snapshot.json`, and a fifth entry in `drizzle/meta/_journal.json`.
@@ -332,7 +336,7 @@ Check these rules:
 - The file has no `UPDATE`, `INSERT` or `DELETE` statement (no data change).
 - If drizzle-kit asks an interactive question (rename or create), answer "create".
 
-- [x] **Step 7: Run the migration test and the existing suite**
+- **Step 7: Run the migration test and the existing suite**
 
 Run: `npx vitest run test/integration/migration.test.ts`
 Expected: PASS.
@@ -340,7 +344,7 @@ Expected: PASS.
 Run: `npm run typecheck && npm test`
 Expected: PASS. Existing tests still pass. The local `client_id` uniqueness now comes from the partial index.
 
-- [x] **Step 8: Commit**
+- **Step 8: Commit**
 
 ```bash
 npx prettier --write src/schema.ts src/tokens.ts test/helpers.ts test/integration/migration.test.ts
@@ -361,6 +365,8 @@ EOF
 
 ### Task 2: Catalog database functions (tasks.md 2.3, cascade part)
 
+<!-- comet-task-ref:fd8cc69c-aa54-4d43-b1fd-cc12f7c358d6 -->
+
 **Files:**
 - Create: `src/marketplace.ts`
 - Modify: `test/helpers.ts` (add `CATALOG_APP`, `addCatalogEntry`)
@@ -377,7 +383,7 @@ EOF
   - `CATALOG_APP = { clientId: 'app.a1.1', secret: 'partner-secret-123', title: 'Partner app', scope: 'crm,user' }`
   - `addCatalogEntry(db: Db, entry?: { clientId: string; secret: string; title: string; scope: string }): Promise<void>`
 
-- [x] **Step 1: Add the test helpers**
+- **Step 1: Add the test helpers**
 
 In `test/helpers.ts`, add the imports `import { upsertCatalogEntry } from '../src/marketplace.js';` and `import { sha256 } from '../src/tokens.js';` (merge with the existing `type TokenResponse` import from `../src/tokens.js`). Then add:
 
@@ -402,7 +408,7 @@ export async function addCatalogEntry(
 }
 ```
 
-- [x] **Step 2: Write the failing tests**
+- **Step 2: Write the failing tests**
 
 Create `test/integration/marketplace-catalog.test.ts`:
 
@@ -472,12 +478,12 @@ describe('marketplace-catalog', () => {
 });
 ```
 
-- [x] **Step 3: Run the tests to verify they fail**
+- **Step 3: Run the tests to verify they fail**
 
 Run: `npx vitest run test/integration/marketplace-catalog.test.ts`
 Expected: FAIL. `Cannot find module '../src/marketplace.js'`.
 
-- [x] **Step 4: Implement `src/marketplace.ts`**
+- **Step 4: Implement `src/marketplace.ts`**
 
 ```ts
 import { asc, eq } from 'drizzle-orm';
@@ -521,12 +527,12 @@ export async function removeCatalogEntry(db: Db, clientId: string): Promise<bool
 }
 ```
 
-- [x] **Step 5: Run the tests to verify they pass**
+- **Step 5: Run the tests to verify they pass**
 
 Run: `npx vitest run test/integration/marketplace-catalog.test.ts`
 Expected: PASS (1 test).
 
-- [x] **Step 6: Commit**
+- **Step 6: Commit**
 
 ```bash
 npx prettier --write src/marketplace.ts test/helpers.ts test/integration/marketplace-catalog.test.ts
@@ -545,6 +551,8 @@ EOF
 
 ### Task 3: Catalog CLI commands (tasks.md 2.1, 2.2, 2.3)
 
+<!-- comet-task-ref:e6a01415-e645-4e47-8fab-eb63bc44125f --> <!-- comet-task-ref:a2f4bacb-e0f5-4328-8389-1cb2a60e0d14 --> <!-- comet-task-ref:fd8cc69c-aa54-4d43-b1fd-cc12f7c358d6 -->
+
 **Files:**
 - Modify: `src/cli.ts`
 - Test: `test/integration/admin-cli.test.ts` (append tests; reuse `runCli`)
@@ -556,7 +564,7 @@ EOF
   - `marketplace list` → one line per entry: `<client_id>\t<title>\t<scope>`, exit 0
   - `marketplace remove --client-id <id>` → stdout `Removed`, exit 0; unknown id → exit 1
 
-- [x] **Step 1: Write the failing CLI tests**
+- **Step 1: Write the failing CLI tests**
 
 Append to `test/integration/admin-cli.test.ts`. Add `marketplaceApps` to the schema import and `sha256` from `../../src/tokens.js`.
 
@@ -643,12 +651,12 @@ it(
 );
 ```
 
-- [x] **Step 2: Run the tests to verify they fail**
+- **Step 2: Run the tests to verify they fail**
 
 Run: `npx vitest run test/integration/admin-cli.test.ts -t "marketplace"`
 Expected: FAIL. `parseArgs` rejects the unknown option `--client-id` (exit 1 with the usage text).
 
-- [x] **Step 3: Implement the commands in `src/cli.ts`**
+- **Step 3: Implement the commands in `src/cli.ts`**
 
 Add imports:
 
@@ -851,12 +859,12 @@ async function main(argv: string[]): Promise<number> {
 }
 ```
 
-- [x] **Step 4: Run the CLI tests**
+- **Step 4: Run the CLI tests**
 
 Run: `npx vitest run test/integration/admin-cli.test.ts`
 Expected: PASS. All new `marketplace` tests and all existing `superuser set-password` tests pass.
 
-- [x] **Step 5: Commit**
+- **Step 5: Commit**
 
 ```bash
 npx prettier --write src/cli.ts test/integration/admin-cli.test.ts
@@ -876,6 +884,8 @@ EOF
 
 ### Task 4: `application.install` and the two rejections (tasks.md 3.1, 3.2, 3.5 install part, 6.1)
 
+<!-- comet-task-ref:9b113e7c-a90b-492d-b3ed-ad03dc8c3cb9 --> <!-- comet-task-ref:bfea99b8-5a4b-44aa-9a24-a2558b0a87fa --> <!-- comet-task-ref:c7275654-2b49-4ec5-a15e-7b9d484a4be1 --> <!-- comet-task-ref:300705f3-86eb-4ab2-9eb8-ad664d216ee0 -->
+
 **Files:**
 - Modify: `src/methods/applications.ts`
 - Modify: `src/routes/rpc.ts` (`methods` map and import)
@@ -890,7 +900,7 @@ EOF
   - `type InstallResult = { client_id: string; version: number; status: string; scope: string[] }`
   - `install(app: FastifyInstance, portal: Credentials, clientId?: string, extra?: Record<string, unknown>): Promise<RpcResponse<InstallResult>>` (default `clientId` = `CATALOG_APP.clientId`, sends `VERSION: 3`)
 
-- [x] **Step 1: Add the `install` helper**
+- **Step 1: Add the `install` helper**
 
 In `test/helpers.ts`:
 
@@ -911,7 +921,7 @@ export async function install(
 }
 ```
 
-- [x] **Step 2: Write the failing tests**
+- **Step 2: Write the failing tests**
 
 In `test/integration/application-registry.test.ts`, extend the helpers import with `addCatalogEntry`, `CATALOG_APP`, `install`, `PORTAL`. Add `marketplaceApps` to the schema import. Add `rpc` usage as already imported. Then append:
 
@@ -1009,12 +1019,12 @@ describe('application-registry: Marketplace install', () => {
 
 Note: `OTHER_PORTAL` and `authorize` are already imported in this file. `PORTAL` is not needed if unused; drop it from the import to keep lint green.
 
-- [x] **Step 3: Run the tests to verify they fail**
+- **Step 3: Run the tests to verify they fail**
 
 Run: `npx vitest run test/integration/application-registry.test.ts -t "Marketplace install"`
 Expected: FAIL. The server answers `ERROR_METHOD_NOT_FOUND`.
 
-- [x] **Step 4: Implement the methods**
+- **Step 4: Implement the methods**
 
 In `src/methods/applications.ts`, change the schema import to `import { applications, marketplaceApps } from '../schema.js';` and add:
 
@@ -1089,7 +1099,7 @@ In `src/routes/rpc.ts`, import `applicationInstall` and `applicationInstallSubsc
   'application.install.subscription': applicationInstallSubscription,
 ```
 
-- [x] **Step 5: Add the reasons to `docs/logging.md` (tasks.md 6.1)**
+- **Step 5: Add the reasons to `docs/logging.md` (tasks.md 6.1)**
 
 In the paragraph after the events table that starts "Some error responses have no description", the reasons describe error responses without a description. The two new reasons have a description, so add a new paragraph after it:
 
@@ -1099,12 +1109,12 @@ Some causes share one client-visible error code. For `ERROR_OAUTH` from the inst
 the Marketplace catalog) or `subscription_not_supported` (`application.install.subscription`).
 ```
 
-- [x] **Step 6: Run the tests to verify they pass**
+- **Step 6: Run the tests to verify they pass**
 
 Run: `npx vitest run test/integration/application-registry.test.ts`
 Expected: PASS. The new tests and all existing tests pass.
 
-- [x] **Step 7: Commit**
+- **Step 7: Commit**
 
 ```bash
 npx prettier --write src/methods/applications.ts src/routes/rpc.ts test/helpers.ts test/integration/application-registry.test.ts docs/logging.md
@@ -1125,6 +1135,8 @@ EOF
 
 ### Task 5: `application.uninstall` and local-only update and delete (tasks.md 3.3, 3.4, 3.5 rest)
 
+<!-- comet-task-ref:41a50a05-5bc2-47ce-928a-702d019ea4d2 --> <!-- comet-task-ref:d7735ad3-d6b5-4dce-be4f-51655c799cde --> <!-- comet-task-ref:c7275654-2b49-4ec5-a15e-7b9d484a4be1 -->
+
 **Files:**
 - Modify: `src/methods/applications.ts` (`applicationUpdate`, `applicationDelete`, new `applicationUninstall`)
 - Modify: `src/routes/rpc.ts`
@@ -1134,7 +1146,7 @@ EOF
 - Consumes: `install`, `addCatalogEntry`, `CATALOG_APP` (Tasks 2, 4).
 - Produces: `applicationUninstall` (`Method`); RPC route `/rest/application.uninstall`.
 
-- [x] **Step 1: Write the failing tests**
+- **Step 1: Write the failing tests**
 
 Append to `test/integration/application-registry.test.ts`:
 
@@ -1197,12 +1209,12 @@ describe('application-registry: Marketplace uninstall', () => {
 
 Note: the existing "Foreign application" test shows the exact error body of `Application not found`. If it uses a different shape, use that shape here.
 
-- [x] **Step 2: Run the tests to verify they fail**
+- **Step 2: Run the tests to verify they fail**
 
 Run: `npx vitest run test/integration/application-registry.test.ts -t "Marketplace uninstall"`
 Expected: FAIL. `application.uninstall` answers `ERROR_METHOD_NOT_FOUND`; `application.update` and `application.delete` change the install row.
 
-- [x] **Step 3: Implement**
+- **Step 3: Implement**
 
 In `src/methods/applications.ts`, change the drizzle import to `import { and, eq, isNotNull, isNull } from 'drizzle-orm';`.
 
@@ -1240,12 +1252,12 @@ export const applicationUninstall = defineMethod<DeleteBody>(deleteSchema, async
 
 In `src/routes/rpc.ts`, import `applicationUninstall` and add `'application.uninstall': applicationUninstall,` to `methods`.
 
-- [x] **Step 4: Run the tests to verify they pass**
+- **Step 4: Run the tests to verify they pass**
 
 Run: `npx vitest run test/integration/application-registry.test.ts`
 Expected: PASS.
 
-- [x] **Step 5: Commit**
+- **Step 5: Commit**
 
 ```bash
 npx prettier --write src/methods/applications.ts src/routes/rpc.ts test/integration/application-registry.test.ts
@@ -1265,6 +1277,8 @@ EOF
 
 ### Task 6: Status `F` for install rows (tasks.md 4.1, 4.3 status and event parts)
 
+<!-- comet-task-ref:1dc56066-0f9c-47ab-88b1-04d4f483d53c --> <!-- comet-task-ref:88c99449-ac67-4781-94fd-eed36c4c6a03 -->
+
 **Files:**
 - Modify: `src/tokens.ts` (`TokenResponse`, `tokenResponse`, `issuePair`, `CheckResult`, `check`)
 - Test: `test/integration/token-service.test.ts`, `test/integration/event-delivery.test.ts`
@@ -1277,7 +1291,7 @@ EOF
   - `tokenResponse(config, portal, pair, status: AppStatus): TokenResponse`
   - `TokenResponse.status: AppStatus`, `CheckResult.status: AppStatus`
 
-- [x] **Step 1: Write the failing tests**
+- **Step 1: Write the failing tests**
 
 In `test/integration/token-service.test.ts`, add `addCatalogEntry` and `install` to the helpers import, then add inside the `describe('token-service', ...)` block:
 
@@ -1337,12 +1351,12 @@ In `test/integration/event-delivery.test.ts`, add `addCatalogEntry` and `install
   });
 ```
 
-- [x] **Step 2: Run the tests to verify they fail**
+- **Step 2: Run the tests to verify they fail**
 
 Run: `npx vitest run test/integration/token-service.test.ts test/integration/event-delivery.test.ts -t "Marketplace"`
 Expected: FAIL. `status` is `'L'`, expected `'F'`.
 
-- [x] **Step 3: Implement**
+- **Step 3: Implement**
 
 In `src/tokens.ts`:
 
@@ -1373,12 +1387,12 @@ export function appStatus(app: Pick<Application, 'marketplaceAppId'>): AppStatus
 
 The callers of `issuePair` (`rest.authorize`, event auth in `src/methods/events.ts`, `refresh`) already pass the `applications` row. They need no change.
 
-- [x] **Step 4: Run the tests to verify they pass**
+- **Step 4: Run the tests to verify they pass**
 
 Run: `npx vitest run test/integration/token-service.test.ts test/integration/event-delivery.test.ts test/contract/cloud-shapes.test.ts`
 Expected: PASS. The existing `status: 'L'` assertions for local apps still pass.
 
-- [x] **Step 5: Commit**
+- **Step 5: Commit**
 
 ```bash
 npx prettier --write src/tokens.ts test/integration/token-service.test.ts test/integration/event-delivery.test.ts
@@ -1397,6 +1411,8 @@ EOF
 
 ### Task 7: Renewal with the catalog secret (tasks.md 4.2, 4.3 renewal part)
 
+<!-- comet-task-ref:b2dbc691-6b55-474e-af7c-0aac4a67e6ed --> <!-- comet-task-ref:88c99449-ac67-4781-94fd-eed36c4c6a03 -->
+
 **Files:**
 - Modify: `src/tokens.ts` (`refresh`)
 - Test: `test/integration/token-service.test.ts`
@@ -1405,7 +1421,7 @@ EOF
 - Consumes: `marketplaceApps` (Task 1); `install`, `addCatalogEntry`, `CATALOG_APP` (Tasks 2, 4).
 - Produces: `refresh` accepts the catalog `client_secret` for an install row. No signature change.
 
-- [x] **Step 1: Write the failing tests**
+- **Step 1: Write the failing tests**
 
 In `test/integration/token-service.test.ts`, add `CATALOG_APP` and `OTHER_PORTAL` to the helpers import (if not there yet), then add inside `describe('token-service', ...)`:
 
@@ -1469,12 +1485,12 @@ In `test/integration/token-service.test.ts`, add `CATALOG_APP` and `OTHER_PORTAL
 
 `Credentials`, `TokenResponse`, `addApp`, `refreshParams` already exist in this file. Import any missing name from `../helpers.js` or `../../src/tokens.js`.
 
-- [x] **Step 2: Run the tests to verify they fail**
+- **Step 2: Run the tests to verify they fail**
 
 Run: `npx vitest run test/integration/token-service.test.ts -t "renews|Rotate"`
 Expected: FAIL. The renewal answers 400 `invalid_client`, because the install row has no secret hash.
 
-- [x] **Step 3: Implement the catalog secret check**
+- **Step 3: Implement the catalog secret check**
 
 In `src/tokens.ts`, add `marketplaceApps` to the schema import. In `refresh`, replace the select and the secret check:
 
@@ -1505,12 +1521,12 @@ In `src/tokens.ts`, add `marketplaceApps` to the schema import. In `refresh`, re
 
 The `client_id` check (`row.app.clientId !== input.clientId`) stays as it is. For an install row, `applications.client_id` equals the catalog `client_id`.
 
-- [x] **Step 4: Run the tests to verify they pass**
+- **Step 4: Run the tests to verify they pass**
 
 Run: `npx vitest run test/integration/token-service.test.ts test/contract/cloud-shapes.test.ts`
 Expected: PASS.
 
-- [x] **Step 5: Commit**
+- **Step 5: Commit**
 
 ```bash
 npx prettier --write src/tokens.ts test/integration/token-service.test.ts
@@ -1530,6 +1546,8 @@ EOF
 
 ### Task 8: Install rows in the admin panel (tasks.md 5.1)
 
+<!-- comet-task-ref:e757a5c9-3fda-4de9-a1d8-57c368c032b3 -->
+
 **Files:**
 - Test: `test/integration/admin-data.test.ts`
 - Modify (only if the test fails): `src/admin/dataRoutes.ts`
@@ -1537,7 +1555,7 @@ EOF
 **Interfaces:**
 - Consumes: `addCatalogEntry`, `install`, `CATALOG_APP` (Tasks 2, 4).
 
-- [x] **Step 1: Write the test**
+- **Step 1: Write the test**
 
 In `test/integration/admin-data.test.ts`, add `addCatalogEntry`, `CATALOG_APP` and `install` to the helpers import, `marketplaceApps` to the schema import, and add:
 
@@ -1569,13 +1587,13 @@ it('GET /applications shows a Marketplace install and no secret or hash', async 
 });
 ```
 
-- [x] **Step 2: Run the test**
+- **Step 2: Run the test**
 
 Run: `npx vitest run test/integration/admin-data.test.ts -t "Marketplace install"`
 Expected: PASS without a code change. The applications and tokens views select named columns and join `portals` with an inner join, so install rows appear and no hash is selected.
 If it fails, change only `APPLICATION_COLUMNS` or `TOKEN_COLUMNS` in `src/admin/dataRoutes.ts` so that the install row shows and no secret column is selected. Do not add write routes.
 
-- [x] **Step 3: Commit**
+- **Step 3: Commit**
 
 ```bash
 npx prettier --write test/integration/admin-data.test.ts
@@ -1591,10 +1609,12 @@ EOF
 
 ### Task 9: Partner section in the deployment guide (tasks.md 6.2)
 
+<!-- comet-task-ref:0078f3e6-29e7-4ebf-acae-e06a7ddd575d -->
+
 **Files:**
 - Modify: `docs/deployment.md` (end of section 6 "Re-create local applications"; new section 6b after section 7 or a new `## 7b.` — keep the numbering style of the file)
 
-- [x] **Step 1: Change the last sentence of section 6**
+- **Step 1: Change the last sentence of section 6**
 
 Replace:
 
@@ -1609,7 +1629,7 @@ Marketplace applications of other vendors do not work with PocketAuth24. Your ow
 application can work: see [7b. Marketplace applications of a partner](#7b-marketplace-applications-of-a-partner).
 ```
 
-- [x] **Step 2: Add the section after section 7a**
+- **Step 2: Add the section after section 7a**
 
 ```markdown
 ## 7b. Marketplace applications of a partner
@@ -1654,12 +1674,12 @@ A portal that calls `application.install` for a `client_id` outside the catalog 
 
 Check that the code fences inside the list render (indent them by three spaces as above).
 
-- [x] **Step 3: Check the format**
+- **Step 3: Check the format**
 
 Run: `npx prettier --check docs/deployment.md`
 Expected: PASS (run `npx prettier --write docs/deployment.md` if not).
 
-- [x] **Step 4: Commit**
+- **Step 4: Commit**
 
 ```bash
 git add docs/deployment.md
@@ -1674,16 +1694,18 @@ EOF
 
 ### Task 10: README and five translations (tasks.md 6.3)
 
+<!-- comet-task-ref:6e39698c-d5ee-4ffa-a8af-93ecdbf38a22 -->
+
 **Files:**
 - Modify: `README.md`, `README.de.md`, `README.it.md`, `README.es.md`, `README.pt.md`, `README.ru.md`
 
 The English `README.md` is the source. All six files change in one commit (CLAUDE.md rule 3).
 
-- [x] **Step 1: Load the `sepia-refactor` skill**
+- **Step 1: Load the `sepia-refactor` skill**
 
 Use the Skill tool: `sepia-refactor`. Apply it only to the prose below. Rule 2 (STE) still applies. Sepia must not add facts: take every fact from the Design Doc and `docs/deployment.md` section 7b.
 
-- [x] **Step 2: Change the English text in `README.md`**
+- **Step 2: Change the English text in `README.md`**
 
 Make these minimal edits. The text below is the draft input for `sepia-refactor`:
 
@@ -1698,7 +1720,7 @@ Make these minimal edits. The text below is the draft input for `sepia-refactor`
 
 Do not change code blocks, commands or configuration keys. Run Sepia on the changed sentences only.
 
-- [x] **Step 3: Apply the same change to the five translations**
+- **Step 3: Apply the same change to the five translations**
 
 For each of `README.de.md`, `README.it.md`, `README.es.md`, `README.pt.md`, `README.ru.md`:
 - Make the same edits in the same places: the same sentences in "Why" and "Benefits", the same new table row in the same position, the same limits.
@@ -1707,7 +1729,7 @@ For each of `README.de.md`, `README.it.md`, `README.es.md`, `README.pt.md`, `REA
 - Keep the language switcher under the title unchanged.
 - If you link a heading, fix the in-page anchor to match the translated heading. The link to `docs/deployment.md` stays as it is (English only).
 
-- [x] **Step 4: Check the structure**
+- **Step 4: Check the structure**
 
 Run (Git Bash):
 
@@ -1720,7 +1742,7 @@ Expected: all six files have the same count of headings and the same count of ta
 Run: `npx prettier --check README*.md`
 Expected: PASS.
 
-- [x] **Step 5: Commit**
+- **Step 5: Commit**
 
 ```bash
 git add README.md README.de.md README.it.md README.es.md README.pt.md README.ru.md
@@ -1738,9 +1760,11 @@ EOF
 
 ### Task 11: Verification (tasks.md 7.1, 7.2)
 
+<!-- comet-task-ref:d8991241-d9fb-4327-ad08-bbedca6d51ce --> <!-- comet-task-ref:5c67b688-1af8-488d-9021-90e2e9348240 -->
+
 **Files:** none changed, unless a check fails.
 
-- [x] **Step 1: Run lint, type check, build and the full suite (tasks.md 7.1)**
+- **Step 1: Run lint, type check, build and the full suite (tasks.md 7.1)**
 
 Run each command and record the result for the verify report:
 
@@ -1754,7 +1778,7 @@ npm test
 Expected: all four exit with code 0. The contract tests in `test/contract/cloud-shapes.test.ts` pass without change.
 If a check fails, fix the cause in the task that owns the file, run the check again, and commit the fix with a conventional message (`fix(...)`) and the trailer `Co-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`.
 
-- [x] **Step 2: Live install on a test portal (tasks.md 7.2)**
+- **Step 2: Live install on a test portal (tasks.md 7.2)**
 
 This check needs the user: a local test portal that uses PocketAuth24 and a real Marketplace application of the partner with its `client_id` and `client_secret`.
 
@@ -1766,7 +1790,7 @@ This check needs the user: a local test portal that uses PocketAuth24 and a real
   4. Renew a token from the application backend at `server_endpoint`.
   5. Uninstall the application. Make sure that the old token fails `rest.check`.
 
-- [x] **Step 3: Check off `tasks.md`**
+- **Step 3: Check off `tasks.md`**
 
 Mark each finished item in `docs/openspec/changes/marketplace-partner-apps/tasks.md` as `- [x]`. Leave 7.2 open if it was not checked, and give the reason in the verify report.
 
