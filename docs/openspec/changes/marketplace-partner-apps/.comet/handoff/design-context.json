@@ -1,0 +1,16 @@
+{
+  "change": "marketplace-partner-apps",
+  "phase": "design",
+  "mode": "compact",
+  "canonical_spec": "openspec",
+  "generated_by": "comet-handoff.sh",
+  "context_hash": "05964156e16a2d7eb44cbbd8714b3539ecc439ff5866ab2f1c74398d8c8584de",
+  "files": [
+    { "path": "docs/openspec/changes/marketplace-partner-apps/proposal.md", "sha256": "5ba02cf761f9e1cec03fdd792d9555d29630eb9e19cb370915a4298c5e0cf5c9" },
+    { "path": "docs/openspec/changes/marketplace-partner-apps/design.md", "sha256": "cbe125d487409e4e58944fb24f6c53a7962362b873ca4f93295ef0dbd17188f4" },
+    { "path": "docs/openspec/changes/marketplace-partner-apps/tasks.md", "sha256": "55e14c6553a2aa4ba603b0d3fee2e15c1b386a85673313222d873f5f1684b5cd" },
+    { "path": "docs/openspec/changes/marketplace-partner-apps/specs/application-registry/spec.md", "sha256": "88ac8a76f237adf36d2bdbae34ce727aea6e96e15d4b69839b8a711961e2436e" },
+    { "path": "docs/openspec/changes/marketplace-partner-apps/specs/marketplace-catalog/spec.md", "sha256": "312bbead1cdf2ed741c7cac41603a450a0f306c08b3ebf72f7ba734395228eec" },
+    { "path": "docs/openspec/changes/marketplace-partner-apps/specs/token-service/spec.md", "sha256": "804ab1a93c49b0f5f0fb83fc1ddc8da704a1a08e36479323de14720276b91887" }
+  ]
+}

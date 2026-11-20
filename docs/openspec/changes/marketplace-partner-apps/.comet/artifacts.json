@@ -1,0 +1,8 @@
+{
+  "openspec_proposal": "docs/openspec/changes/marketplace-partner-apps/proposal.md",
+  "openspec_design": "docs/openspec/changes/marketplace-partner-apps/design.md",
+  "openspec_tasks": "docs/openspec/changes/marketplace-partner-apps/tasks.md",
+  "openspec_delta_spec": "docs/openspec/changes/marketplace-partner-apps/specs/application-registry/spec.md",
+  "handoff_context": "docs/openspec/changes/marketplace-partner-apps/.comet/handoff/design-context.json",
+  "handoff_markdown": "docs/openspec/changes/marketplace-partner-apps/.comet/handoff/design-context.md"
+}
