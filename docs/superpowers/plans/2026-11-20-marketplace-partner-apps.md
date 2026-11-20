@@ -556,7 +556,7 @@ EOF
   - `marketplace list` → one line per entry: `<client_id>\t<title>\t<scope>`, exit 0
   - `marketplace remove --client-id <id>` → stdout `Removed`, exit 0; unknown id → exit 1
 
-- [ ] **Step 1: Write the failing CLI tests**
+- [x] **Step 1: Write the failing CLI tests**
 
 Append to `test/integration/admin-cli.test.ts`. Add `marketplaceApps` to the schema import and `sha256` from `../../src/tokens.js`.
 
@@ -643,12 +643,12 @@ it(
 );
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npx vitest run test/integration/admin-cli.test.ts -t "marketplace"`
 Expected: FAIL. `parseArgs` rejects the unknown option `--client-id` (exit 1 with the usage text).
 
-- [ ] **Step 3: Implement the commands in `src/cli.ts`**
+- [x] **Step 3: Implement the commands in `src/cli.ts`**
 
 Add imports:
 
@@ -851,12 +851,12 @@ async function main(argv: string[]): Promise<number> {
 }
 ```
 
-- [ ] **Step 4: Run the CLI tests**
+- [x] **Step 4: Run the CLI tests**
 
 Run: `npx vitest run test/integration/admin-cli.test.ts`
 Expected: PASS. All new `marketplace` tests and all existing `superuser set-password` tests pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 npx prettier --write src/cli.ts test/integration/admin-cli.test.ts

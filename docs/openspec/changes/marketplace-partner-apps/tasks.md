@@ -5,9 +5,9 @@
 
 ## 2. Catalog CLI
 
-- [ ] 2.1 Add `marketplace add` with hidden prompt and `--secret-stdin`, upsert by `client_id`
-- [ ] 2.2 Add `marketplace list` (no secret, no hash) and `marketplace remove`
-- [ ] 2.3 Tests: add, replace, list output without secrets, remove with cascade to installs and tokens
+- [x] 2.1 Add `marketplace add` with hidden prompt and `--secret-stdin`, upsert by `client_id`
+- [x] 2.2 Add `marketplace list` (no secret, no hash) and `marketplace remove`
+- [x] 2.3 Tests: add, replace, list output without secrets, remove with cascade to installs and tokens
 
 ## 3. RPC methods
 
