@@ -1277,7 +1277,7 @@ EOF
   - `tokenResponse(config, portal, pair, status: AppStatus): TokenResponse`
   - `TokenResponse.status: AppStatus`, `CheckResult.status: AppStatus`
 
-- [ ] **Step 1: Write the failing tests**
+- [x] **Step 1: Write the failing tests**
 
 In `test/integration/token-service.test.ts`, add `addCatalogEntry` and `install` to the helpers import, then add inside the `describe('token-service', ...)` block:
 
@@ -1337,12 +1337,12 @@ In `test/integration/event-delivery.test.ts`, add `addCatalogEntry` and `install
   });
 ```
 
-- [ ] **Step 2: Run the tests to verify they fail**
+- [x] **Step 2: Run the tests to verify they fail**
 
 Run: `npx vitest run test/integration/token-service.test.ts test/integration/event-delivery.test.ts -t "Marketplace"`
 Expected: FAIL. `status` is `'L'`, expected `'F'`.
 
-- [ ] **Step 3: Implement**
+- [x] **Step 3: Implement**
 
 In `src/tokens.ts`:
 
@@ -1373,12 +1373,12 @@ export function appStatus(app: Pick<Application, 'marketplaceAppId'>): AppStatus
 
 The callers of `issuePair` (`rest.authorize`, event auth in `src/methods/events.ts`, `refresh`) already pass the `applications` row. They need no change.
 
-- [ ] **Step 4: Run the tests to verify they pass**
+- [x] **Step 4: Run the tests to verify they pass**
 
 Run: `npx vitest run test/integration/token-service.test.ts test/integration/event-delivery.test.ts test/contract/cloud-shapes.test.ts`
 Expected: PASS. The existing `status: 'L'` assertions for local apps still pass.
 
-- [ ] **Step 5: Commit**
+- [x] **Step 5: Commit**
 
 ```bash
 npx prettier --write src/tokens.ts test/integration/token-service.test.ts test/integration/event-delivery.test.ts
