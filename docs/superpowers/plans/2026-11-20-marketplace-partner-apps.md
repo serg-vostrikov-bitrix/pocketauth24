@@ -377,7 +377,7 @@ EOF
   - `CATALOG_APP = { clientId: 'app.a1.1', secret: 'partner-secret-123', title: 'Partner app', scope: 'crm,user' }`
   - `addCatalogEntry(db: Db, entry?: { clientId: string; secret: string; title: string; scope: string }): Promise<void>`
 
-- [ ] **Step 1: Add the test helpers**
+- [x] **Step 1: Add the test helpers**
 
 In `test/helpers.ts`, add the imports `import { upsertCatalogEntry } from '../src/marketplace.js';` and `import { sha256 } from '../src/tokens.js';` (merge with the existing `type TokenResponse` import from `../src/tokens.js`). Then add:
 
@@ -402,7 +402,7 @@ export async function addCatalogEntry(
 }
 ```
 
-- [ ] **Step 2: Write the failing tests**
+- [x] **Step 2: Write the failing tests**
 
 Create `test/integration/marketplace-catalog.test.ts`:
 
@@ -472,12 +472,12 @@ describe('marketplace-catalog', () => {
 });
 ```
 
-- [ ] **Step 3: Run the tests to verify they fail**
+- [x] **Step 3: Run the tests to verify they fail**
 
 Run: `npx vitest run test/integration/marketplace-catalog.test.ts`
 Expected: FAIL. `Cannot find module '../src/marketplace.js'`.
 
-- [ ] **Step 4: Implement `src/marketplace.ts`**
+- [x] **Step 4: Implement `src/marketplace.ts`**
 
 ```ts
 import { asc, eq } from 'drizzle-orm';
@@ -521,12 +521,12 @@ export async function removeCatalogEntry(db: Db, clientId: string): Promise<bool
 }
 ```
 
-- [ ] **Step 5: Run the tests to verify they pass**
+- [x] **Step 5: Run the tests to verify they pass**
 
 Run: `npx vitest run test/integration/marketplace-catalog.test.ts`
 Expected: PASS (1 test).
 
-- [ ] **Step 6: Commit**
+- [x] **Step 6: Commit**
 
 ```bash
 npx prettier --write src/marketplace.ts test/helpers.ts test/integration/marketplace-catalog.test.ts
