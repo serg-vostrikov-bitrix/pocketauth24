@@ -1,7 +1,7 @@
 ## 1. Data model
 
-- [ ] 1.1 Add `marketplace_apps` and `applications.marketplace_app_id` to `src/schema.ts`; make `applications.secret_hash` nullable; replace the global unique on `applications.client_id` with the partial unique index for local rows and the unique index on `(portal_id, client_id)`
-- [ ] 1.2 Generate migration `drizzle/0004_marketplace_apps.sql` and check it on a database that already has local applications
+- [x] 1.1 Add `marketplace_apps` and `applications.marketplace_app_id` to `src/schema.ts`; make `applications.secret_hash` nullable; replace the global unique on `applications.client_id` with the partial unique index for local rows and the unique index on `(portal_id, client_id)`
+- [x] 1.2 Generate migration `drizzle/0004_marketplace_apps.sql` and check it on a database that already has local applications
 
 ## 2. Catalog CLI
 

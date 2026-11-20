@@ -78,7 +78,7 @@ All tests in this plan are integration tests on a real PostgreSQL.
 - Produces: `marketplaceApps` table object and `MarketplaceApp` type in `src/schema.ts`; `applications.marketplaceAppId: number | null`; `Application.secretHash: string | null`.
 - Produces: `truncateAll(db)` also truncates `marketplace_apps`.
 
-- [ ] **Step 1: Write the failing migration test**
+- [x] **Step 1: Write the failing migration test**
 
 Create `test/integration/migration.test.ts`. It builds a separate database, applies migrations 0000-0003 from a copy of `drizzle/` with a cut journal, inserts a local application with raw SQL, applies all migrations, and checks that the local application still works.
 
@@ -216,12 +216,12 @@ it(
 ```
 
 Note: `TokenResponse` is exported from `src/tokens.ts`. If `test/helpers.ts` does not re-export it, import it from `../../src/tokens.js` instead.
-- [ ] **Step 2: Run the test to verify it fails**
+- [x] **Step 2: Run the test to verify it fails**
 
 Run: `npx vitest run test/integration/migration.test.ts`
 Expected: FAIL. `relation "marketplace_apps" does not exist`.
 
-- [ ] **Step 3: Change the schema**
+- [x] **Step 3: Change the schema**
 
 In `src/schema.ts`, add this table above `applications`:
 
@@ -278,7 +278,7 @@ Add next to the other types:
 export type MarketplaceApp = typeof marketplaceApps.$inferSelect;
 ```
 
-- [ ] **Step 4: Keep `refresh` type-safe for a null hash**
+- [x] **Step 4: Keep `refresh` type-safe for a null hash**
 
 In `src/tokens.ts` `refresh`, replace:
 
@@ -294,7 +294,7 @@ with:
 
 Task 7 replaces this check with the catalog secret.
 
-- [ ] **Step 5: Truncate the catalog in tests**
+- [x] **Step 5: Truncate the catalog in tests**
 
 In `test/helpers.ts` `truncateAll`, change the statement to:
 
@@ -302,7 +302,7 @@ In `test/helpers.ts` `truncateAll`, change the statement to:
     sql`TRUNCATE portals, applications, token_pairs, marketplace_apps, event_counters, admin_users, admin_sessions RESTART IDENTITY CASCADE`,
 ```
 
-- [ ] **Step 6: Generate the migration**
+- [x] **Step 6: Generate the migration**
 
 Run: `npx drizzle-kit generate --name marketplace_apps`
 Expected: new files `drizzle/0004_marketplace_apps.sql` and `drizzle/meta/0004_snapshot.json`, and a fifth entry in `drizzle/meta/_journal.json`.
@@ -332,7 +332,7 @@ Check these rules:
 - The file has no `UPDATE`, `INSERT` or `DELETE` statement (no data change).
 - If drizzle-kit asks an interactive question (rename or create), answer "create".
 
-- [ ] **Step 7: Run the migration test and the existing suite**
+- [x] **Step 7: Run the migration test and the existing suite**
 
 Run: `npx vitest run test/integration/migration.test.ts`
 Expected: PASS.
@@ -340,7 +340,7 @@ Expected: PASS.
 Run: `npm run typecheck && npm test`
 Expected: PASS. Existing tests still pass. The local `client_id` uniqueness now comes from the partial index.
 
-- [ ] **Step 8: Commit**
+- [x] **Step 8: Commit**
 
 ```bash
 npx prettier --write src/schema.ts src/tokens.ts test/helpers.ts test/integration/migration.test.ts
