@@ -2,6 +2,8 @@
 comet_change: marketplace-partner-apps
 role: technical-design
 canonical_spec: openspec
+archived-with: 2026-11-20-marketplace-partner-apps
+status: final
 ---
 
 # Marketplace partner applications: technical design

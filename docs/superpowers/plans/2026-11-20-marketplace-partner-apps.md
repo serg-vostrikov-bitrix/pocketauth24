@@ -2,6 +2,7 @@
 change: marketplace-partner-apps
 design-doc: docs/superpowers/specs/2026-11-20-marketplace-partner-apps-design.md
 base-ref: 34699913aeb1f6ad458ad6454641ed67e6e3229c
+archived-with: 2026-11-20-marketplace-partner-apps
 ---
 
 <!-- comet-task-authority: docs/openspec/changes/marketplace-partner-apps/tasks.md -->
